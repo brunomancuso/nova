@@ -7,7 +7,8 @@ import { uploadDrill } from './cloud.js';
 // --- Local State ---
 let tempDrillData = null;
 let editingDrillKey = null;
-let selectedSaveCat = 'custom-a'; 
+let selectedSaveCat = 'custom-a';
+let _tableViewMode = localStorage.getItem('nova_editor_table_mode') === '1';
 
 // --- Public Module Functions ---
 
@@ -18,7 +19,7 @@ export function openEditor(key) {
     const chk = document.getElementById('chk-drill-random');
     if (chk) chk.checked = !!(currentDrills[key] && currentDrills[key].random);
 
-    if (currentDrills[key] && currentDrills[key][selectedLevel]) {
+    if (currentDrills[key] && currentDrills[key][selectedLevel]?.length) {
         tempDrillData = JSON.parse(JSON.stringify(currentDrills[key][selectedLevel]));
     } else {
         const def = calculateRPMs(5, 2, 'top');
@@ -34,6 +35,9 @@ export function openEditor(key) {
     }
 
     document.getElementById('editor-modal').classList.add('open');
+    // Sync edit-mode button state from persisted value
+    const modeBtn = document.querySelector('#editor-modal .btn-edit-mode');
+    if (modeBtn) modeBtn.classList.toggle('active', _tableViewMode);
     toggleBodyScroll(true);
 }
 
@@ -42,6 +46,15 @@ export function closeEditor() {
     editingDrillKey = null;
     tempDrillData = null;
     toggleBodyScroll(false);
+}
+
+export function toggleEditorMode() {
+    _tableViewMode = !_tableViewMode;
+    localStorage.setItem('nova_editor_table_mode', _tableViewMode ? '1' : '0');
+    // Update button active state
+    const btn = document.querySelector('#editor-modal .btn-edit-mode');
+    if (btn) btn.classList.toggle('active', _tableViewMode);
+    renderEditor();
 }
 
 export function saveDrillChanges() {
@@ -218,28 +231,53 @@ function renderEditor() {
                 <div class="editor-grid">
                     <div class="editor-field">
                         <div class="field-header"><label>Speed</label><span class="range-hint">0-10</span></div>
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,3,this)">−</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,5,this)">MED</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,8,this)">+</button>
+                        </div>
                         <input type="number" inputmode="decimal" id="inp-speed-${stepIndex}-${optIndex}" value="${speed}" step="0.5" min="0" max="10"
                             onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 7, this.value)">
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Spin</label><span class="range-hint" id="lbl-spin-${stepIndex}-${optIndex}">Max ${currentMaxSpin}</span></div>
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,2,this)">−</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,5,this)">MED</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,8,this)">+</button>
+                        </div>
                         <input type="number" inputmode="decimal" id="inp-spin-${stepIndex}-${optIndex}" value="${spin}" step="0.5" min="0" max="${currentMaxSpin}"
                             style="${spinStyle}"
                             oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 8, this.value)">
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Height</label><span class="range-hint">-50/100</span></div>
-                        <input type="number" inputmode="decimal" value="${ballParams[2]}" step="1" min="-50" max="100"
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,10,this)">−</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,50,this)">MED</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,90,this)">+</button>
+                        </div>
+                        <input type="number" inputmode="decimal" id="inp-height-${stepIndex}-${optIndex}" value="${ballParams[2]}" step="1" min="-50" max="100"
                             oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 2, this.value)">
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Drop</label><span class="range-hint">L/R</span></div>
-                        <input type="number" inputmode="decimal" value="${ballParams[3]}" step="0.5" min="-10" max="10"
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,-5,this)">−</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,0,this)">MED</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,5,this)">+</button>
+                        </div>
+                        <input type="number" inputmode="decimal" id="inp-drop-${stepIndex}-${optIndex}" value="${ballParams[3]}" step="0.5" min="-10" max="10"
                             onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 3, this.value)">
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>BPM</label><span class="range-hint">30-90</span></div>
-                        <input type="number" inputmode="decimal" value="${bpmValue}" step="1" min="30" max="90"
+                        <div class="preset-row">
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,40,this)">−</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,60,this)">MED</button>
+                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,80,this)">+</button>
+                        </div>
+                        <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="90"
                             oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 4, this.value)">
                     </div>
                     <div class="editor-field">
@@ -265,13 +303,83 @@ function renderEditor() {
             `;
             
             const label = stepOptions.length > 1 ? `<span class="option-label">Variant ${optIndex + 1}</span>` : '';
-            optDiv.innerHTML = label + toggleHtml + inputsHtml + actionsHtml;
+
+            if (_tableViewMode) {
+                // Compact view: reps stepper overlaid on canvas top-left
+                const spinSliderVal = type === 'back' ? -Math.min(spin, 10) : Math.min(spin, 10);
+                const spinColor    = spinSliderVal < 0 ? '#e53935' : '#43a047';
+                const heightColor  = ballParams[2] < 0 ? '#9e9e9e' : '#0984e3';
+                const canvasId = `editor-robot-canvas-${stepIndex}-${optIndex}`;
+                const compactToggleHtml = '';
+                const canvasHtml = `
+                    <div class="edit-mode-canvas-row">
+                        <div class="edit-mode-canvas-col">
+                            <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
+                                <span class="reps-label">Reps</span>
+                                <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
+                                <span class="reps-value">${ballParams[5]}</span>
+                                <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
+                            </div>
+                            <div style="position:relative;">
+                                <canvas id="${canvasId}" width="340" height="218" style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
+                            </div>
+                            <div class="speed-slider-row">
+                                <span class="bpm-slider-label">Speed</span>
+                                <span class="bpm-slider-limit">0</span>
+                                <input type="range" class="speed-slider-h"
+                                       min="0" max="10" step="0.1" value="${speed}"
+                                       oninput="window.handleEditModeSpeed(${stepIndex}, ${optIndex}, this.value)">
+                                <span class="bpm-slider-limit">10</span>
+                                <span class="bpm-slider-val" id="speed-val-${stepIndex}-${optIndex}">${speed}</span>
+                            </div>
+                        </div>
+                        <div class="bpm-slider-col">
+                            <span class="bpm-slider-limit">90</span>
+                            <input type="range" class="bpm-slider-v"
+                                   min="30" max="90" value="${bpmValue}"
+                                   oninput="window.handleEditModeBpm(${stepIndex}, ${optIndex}, this.value)">
+                            <span class="bpm-slider-limit">30</span>
+                            <span class="bpm-slider-label">BPM</span>
+                            <span class="bpm-slider-val" id="bpm-val-${stepIndex}-${optIndex}">${bpmValue}</span>
+                        </div>
+                        <div class="bpm-slider-col">
+                            <span class="bpm-slider-limit">+10</span>
+                            <input type="range" class="bpm-slider-v"
+                                   min="-10" max="10" step="0.1" value="${spinSliderVal}"
+                                   style="accent-color:${spinColor}"
+                                   oninput="window.handleEditModeSpin(${stepIndex}, ${optIndex}, this.value, this)">
+                            <span class="bpm-slider-limit">−10</span>
+                            <span class="bpm-slider-label">Spin</span>
+                            <span class="bpm-slider-val" id="spin-val-${stepIndex}-${optIndex}" style="color:${spinColor}">${spinSliderVal > 0 ? '+' : ''}${spinSliderVal}</span>
+                        </div>
+                        <div class="bpm-slider-col">
+                            <span class="bpm-slider-limit">100</span>
+                            <input type="range" class="bpm-slider-v"
+                                   min="-50" max="100" step="1" value="${ballParams[2]}"
+                                   style="accent-color:${heightColor}"
+                                   oninput="window.handleEditModeHeight(${stepIndex}, ${optIndex}, this.value, this)">
+                            <span class="bpm-slider-limit">−50</span>
+                            <span class="bpm-slider-label">Height</span>
+                            <span class="bpm-slider-val" id="height-val-${stepIndex}-${optIndex}" style="color:${heightColor}">${ballParams[2]}</span>
+                        </div>
+                    </div>`;
+                optDiv.innerHTML = label + compactToggleHtml + canvasHtml + actionsHtml;
+                requestAnimationFrame(() => {
+                    const c = document.getElementById(canvasId);
+                    if (c && window.drawStaticRobot) {
+                        window.drawStaticRobot(c, true);
+                        if (window.attachTableClickHint) window.attachTableClickHint(c);
+                    }
+                });
+            } else {
+                optDiv.innerHTML = label + toggleHtml + inputsHtml + actionsHtml;
+            }
             groupDiv.appendChild(optDiv);
         });
         modalBody.appendChild(groupDiv);
     });
 
-    // --- NEW: Add Button at Bottom of Sequence ---
+    // --- Add Button at Bottom of Sequence ---
     const addZone = document.createElement('div');
     addZone.className = 'swap-zone';
     addZone.style.margin = "-10px 0 20px 0"; 
@@ -305,6 +413,16 @@ window.handleScatterChange = (stepIdx, value) => {
     
     ball[10] = clamp(val, 0, 10);
     renderEditor();
+};
+
+window.applyPreset = (stepIdx, optIdx, paramIdx, value, btnEl) => {
+    const suffix = `${stepIdx}-${optIdx}`;
+    const idMap = { 2: `inp-height-${suffix}`, 3: `inp-drop-${suffix}`, 4: `inp-bpm-${suffix}`, 7: `inp-speed-${suffix}`, 8: `inp-spin-${suffix}` };
+    const el = document.getElementById(idMap[paramIdx]);
+    if (el) el.value = value;
+    btnEl.parentElement.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    window.handleEditorInput(stepIdx, optIdx, paramIdx, value);
 };
 
 window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
@@ -362,6 +480,58 @@ window.handleSwapSteps = (idxA, idxB) => {
     if (!tempDrillData) return;
     [tempDrillData[idxA], tempDrillData[idxB]] = [tempDrillData[idxB], tempDrillData[idxA]];
     renderEditor(); 
+};
+
+window.handleRepsStep = (stepIdx, optIdx, delta) => {
+    if (!tempDrillData) return;
+    const ball = tempDrillData[stepIdx][optIdx];
+    ball[5] = Math.max(1, Math.min(200, (ball[5] || 1) + delta));
+    renderEditor();
+};
+
+window.handleEditModeBpm = (stepIdx, optIdx, value) => {
+    if (!tempDrillData) return;
+    const bpm = clamp(parseFloat(value), 30, 90);
+    tempDrillData[stepIdx][optIdx][4] = (bpm - 30) / 0.6;
+    const el = document.getElementById(`bpm-val-${stepIdx}-${optIdx}`);
+    if (el) el.textContent = Math.round(bpm);
+};
+
+window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
+    if (!tempDrillData) return;
+    const h = clamp(parseFloat(value), -50, 100);
+    tempDrillData[stepIdx][optIdx][2] = h;
+    const color = h < 0 ? '#9e9e9e' : '#0984e3';
+    if (sliderEl) sliderEl.style.accentColor = color;
+    const el = document.getElementById(`height-val-${stepIdx}-${optIdx}`);
+    if (el) { el.textContent = h; el.style.color = color; }
+};
+
+window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
+    if (!tempDrillData) return;
+    const ball = tempDrillData[stepIdx][optIdx];
+    const v = clamp(parseFloat(value), 0, 10);
+    ball[7] = v;
+    const maxSpin = SPIN_LIMITS[v.toString()] ?? 10;
+    if (ball[8] > maxSpin) ball[8] = maxSpin;
+    const res = calculateRPMs(ball[7], ball[8], ball[9]);
+    ball[0] = res.top; ball[1] = res.bot;
+    const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
+    if (el) el.textContent = v;
+};
+
+window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
+    if (!tempDrillData) return;
+    const ball = tempDrillData[stepIdx][optIdx];
+    const v = parseFloat(value);
+    ball[8] = Math.abs(v);
+    ball[9] = v < 0 ? 'back' : 'top';
+    const res = calculateRPMs(ball[7], ball[8], ball[9]);
+    ball[0] = res.top; ball[1] = res.bot;
+    const color = v < 0 ? '#e53935' : '#43a047';
+    if (sliderEl) sliderEl.style.accentColor = color;
+    const el = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
+    if (el) { el.textContent = (v > 0 ? '+' : '') + v; el.style.color = color; }
 };
 
 window.handleToggleBallActive = (stepIdx) => {

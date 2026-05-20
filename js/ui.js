@@ -39,10 +39,11 @@ window.handleCreateNewDrill = (category) => {
 
     userCustomDrills[category].push({ name: newName, key: newKey });
 
+    const defaultBall = [[4123, 2233, 50, 0, 50, 1, 1, 5, 2, 'top']];
     currentDrills[newKey] = { 
-        1: [[[4123, 2233, 50, 0, 50, 1, 1, 5, 2, 'top']]], 
-        2: [], 
-        3: [],
+        1: [JSON.parse(JSON.stringify(defaultBall))], 
+        2: [JSON.parse(JSON.stringify(defaultBall))], 
+        3: [JSON.parse(JSON.stringify(defaultBall))],
         random: false 
     };
 
@@ -241,65 +242,21 @@ function createButton(container, key, label, allowSort, category) {
         grip.onclick = (e) => e.stopPropagation();
         btn.appendChild(grip);
     }
-    
+
+    // Edit button (pencil)
+    const editBtn = document.createElement('div');
+    editBtn.className = 'drill-edit-btn';
+    editBtn.innerHTML = '✎';
+    editBtn.title = 'Edit drill';
+    editBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    editBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+    editBtn.onclick = (e) => { e.stopPropagation(); openEditor(key); };
+    btn.appendChild(editBtn);
+
     btn.onclick = (e) => {
         if(btn.classList.contains('dragging')) return;
         window.handleDrillClick(key, btn);
     };
-
-    let pressTimer;
-    let startX = 0, startY = 0;
-    
-    const start = (e) => {
-        if (e.target.closest('.drill-grab-handle')) return;
-        if(btn.classList.contains('running')) return;
-        
-        if (e.type === 'touchstart') {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-        } else {
-            startX = e.clientX;
-            startY = e.clientY;
-        }
-
-        pressTimer = setTimeout(() => {
-            if (navigator.vibrate) navigator.vibrate(50);
-            openEditor(key);
-        }, 600);
-    };
-
-    const cancel = () => clearTimeout(pressTimer);
-
-    const move = (e) => {
-        if (!pressTimer) return;
-
-        let curX, curY;
-        if (e.type === 'touchmove') {
-            curX = e.touches[0].clientX;
-            curY = e.touches[0].clientY;
-        } else {
-            curX = e.clientX;
-            curY = e.clientY;
-        }
-
-        const diffX = Math.abs(curX - startX);
-        const diffY = Math.abs(curY - startY);
-
-        if (diffX > 10 || diffY > 10) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-        }
-    };
-    
-    btn.addEventListener('mousedown', start);
-    btn.addEventListener('mousemove', move);
-    btn.addEventListener('mouseup', cancel);
-    btn.addEventListener('mouseleave', cancel);
-
-    btn.addEventListener('touchstart', start, { passive: true });
-    btn.addEventListener('touchmove', move, { passive: true });
-    btn.addEventListener('touchend', cancel);
-    btn.addEventListener('touchcancel', cancel);
 
     container.appendChild(btn);
 }
@@ -352,8 +309,11 @@ export function updateDrillButtonStates() {
 }
 
 export function updateStatsUI() {
+    const text = `Balls: ${appStats.balls} | Drills: ${appStats.drills}`;
     const el = document.getElementById('stats-display');
-    if(el) el.textContent = `Balls: ${appStats.balls} | Drills: ${appStats.drills}`;
+    if(el) el.textContent = text;
+    const inline = document.getElementById('stats-inline-text');
+    if(inline) inline.textContent = text;
 }
 
 export function toggleMenu() {
@@ -424,4 +384,16 @@ export function showSessionSummary() {
 window.closeSummaryModal = () => {
     const modal = document.getElementById('summary-modal');
     if(modal) modal.classList.remove('open');
+};
+
+window.openSessionSummaryModal = () => {
+    const summary = getSessionSummary();
+    const dVal = document.getElementById('sum-drills-val');
+    const bVal = document.getElementById('sum-balls-val');
+    const tVal = document.getElementById('sum-time-val');
+    if(dVal) dVal.textContent = summary.drills;
+    if(bVal) bVal.textContent = summary.balls;
+    if(tVal) tVal.textContent = formatDuration(summary.duration);
+    const modal = document.getElementById('summary-modal');
+    if(modal) modal.classList.add('open');
 };

@@ -1,7 +1,8 @@
-import { currentDrills, selectedLevel, runMode, appStats, setLastPlayed } from './state.js';
+import { currentDrills, selectedLevel, runMode, appStats, setLastPlayed, userCustomDrills } from './state.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { log, showToast, clamp, toggleBodyScroll } from './utils.js';
 import { updateStatsUI, updateLastPlayedHighlight } from './ui.js';
+import { setActiveDrillName, simLog } from './simulator.js';
 
 let isRunning = false;
 let isPaused = false;
@@ -17,6 +18,7 @@ let startTimeout = null; // --- ADDED: Track the start delay
 
 let activeDrillParams = null;
 let activeDrillRandom = false;
+let activeDrillName = '';
 
 // UI Elements (Cached for performance)
 const ui = {
@@ -24,8 +26,54 @@ const ui = {
     display: document.getElementById('run-display'),
     label: document.getElementById('run-label'),
     progress: document.getElementById('run-progress'),
-    btnPause: document.getElementById('btn-pause')
+    btnPause: document.getElementById('btn-pause'),
+    inlineSection: document.getElementById('inline-run-section'),
+    inlineDisplay: document.getElementById('inline-run-display'),
+    inlineLabel: document.getElementById('inline-run-label'),
+    inlineBtnPause: document.getElementById('inline-btn-pause'),
 };
+
+function isInlineStop() { return document.body.classList.contains('inline-stop'); }
+
+function openRunUI() {
+    if (isInlineStop()) {
+        if (ui.inlineSection) ui.inlineSection.classList.add('active');
+    } else {
+        ui.overlay.classList.add('open');
+    }
+}
+
+function closeRunUI() {
+    ui.overlay.classList.remove('open');
+    if (ui.inlineSection) ui.inlineSection.classList.remove('active');
+}
+
+function setDisplay(val) {
+    ui.display.textContent = val;
+    if (ui.inlineDisplay) ui.inlineDisplay.textContent = val;
+}
+
+function setLabel(val) {
+    ui.label.textContent = val;
+    if (ui.inlineLabel) ui.inlineLabel.textContent = val;
+}
+
+function showPauseBtn(show) {
+    ui.btnPause.style.display = show ? 'block' : 'none';
+    if (ui.inlineBtnPause) ui.inlineBtnPause.style.display = show ? 'block' : 'none';
+}
+
+function updatePauseBtn(text, pulse) {
+    ui.btnPause.textContent = text;
+    if (ui.inlineBtnPause) ui.inlineBtnPause.textContent = text;
+    if (pulse) {
+        ui.btnPause.classList.add('pulse-anim');
+        if (ui.inlineBtnPause) ui.inlineBtnPause.classList.add('pulse-anim');
+    } else {
+        ui.btnPause.classList.remove('pulse-anim');
+        if (ui.inlineBtnPause) ui.inlineBtnPause.classList.remove('pulse-anim');
+    }
+}
 
 export function startDrillSequence(drillName) {
     const rawParams = currentDrills[drillName] ? currentDrills[drillName][selectedLevel] : null;
@@ -48,40 +96,57 @@ export function startDrillSequence(drillName) {
     
     activeDrillParams = executableSteps;
     activeDrillRandom = !!currentDrills[drillName].random;
+
+    // Resolve pretty display name
+    if (drillName.startsWith('cust_')) {
+        const found = Object.values(userCustomDrills).flat().find(d => d.key === drillName);
+        activeDrillName = found ? found.name : drillName;
+    } else {
+        activeDrillName = drillName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
     
     // --- NEW: SAVE LAST PLAYED STATE ---
     setLastPlayed(drillName);
     updateLastPlayedHighlight();
 
     // --- LOCK SCROLL ON START ---
-    toggleBodyScroll(true);
-    ui.overlay.classList.add('open');
+    if (!isInlineStop()) toggleBodyScroll(true);
+    openRunUI();
     
-    let count = 4;
-    ui.display.textContent = count;
-    ui.label.textContent = "GET READY";
-    ui.btnPause.style.display = 'none';
-    
+    const startSecs = Math.max(0, Math.min(10, parseInt(document.getElementById('input-start-pause')?.value) || 0));
+    let count = startSecs;
+
+    setLabel("GET READY");
+    showPauseBtn(false);
     ui.progress.style.transition = 'none';
     ui.progress.style.strokeDashoffset = '0';
-    void ui.progress.offsetWidth; 
-    
-    requestAnimationFrame(() => {
-        ui.progress.style.transition = 'stroke-dashoffset 4s linear';
-        ui.progress.style.strokeDashoffset = '565'; 
-    });
+    void ui.progress.offsetWidth;
 
-    countdownTimer = setInterval(() => {
-        count--;
-        if (count > 0) {
-            ui.display.textContent = count;
-        } else {
-            clearInterval(countdownTimer);
-            ui.display.textContent = "GO!";
-            // --- UPDATED: Store timeout to allow cancelling ---
-            startTimeout = setTimeout(beginDrillExecution, 800);
-        }
-    }, 1000);
+    if (count === 0) {
+        setDisplay("GO!");
+        if (document.body.classList.contains('sim-mode')) simLog('▶  Starting…');
+        startTimeout = setTimeout(beginDrillExecution, 800);
+    } else {
+        setDisplay(count);
+        if (document.body.classList.contains('sim-mode')) simLog(`⏳  Countdown ${count} s`);
+        requestAnimationFrame(() => {
+            ui.progress.style.transition = `stroke-dashoffset ${count}s linear`;
+            ui.progress.style.strokeDashoffset = '565';
+        });
+
+        countdownTimer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                setDisplay(count);
+            } else {
+                clearInterval(countdownTimer);
+                setDisplay("GO!");
+                if (document.body.classList.contains('sim-mode')) simLog('▶  Starting…');
+                // --- UPDATED: Store timeout to allow cancelling ---
+                startTimeout = setTimeout(beginDrillExecution, 800);
+            }
+        }, 1000);
+    }
 }
 
 export function beginDrillExecution() {
@@ -94,10 +159,9 @@ export function beginDrillExecution() {
     updateStatsUI();
     // ---------------------------------------------------------------
 
-    ui.btnPause.style.display = 'block';
-    ui.btnPause.textContent = "PAUSE";
-    ui.btnPause.classList.remove('pulse-anim');
-    ui.label.textContent = "REMAINING";
+    showPauseBtn(true);
+    updatePauseBtn("PAUSE", false);
+    setLabel("REMAINING");
 
     ui.progress.style.transition = 'none';
     ui.progress.style.strokeDashoffset = '0';
@@ -105,7 +169,7 @@ export function beginDrillExecution() {
     if (runMode === 'time') {
         const tVal = document.getElementById('input-time').value;
         remainingTime = parseInt(tVal);
-        ui.display.textContent = formatTime(remainingTime);
+        setDisplay(formatTime(remainingTime));
         
         requestAnimationFrame(() => {
              if(isRunning && !isPaused) {
@@ -117,14 +181,14 @@ export function beginDrillExecution() {
         runTimer = setInterval(() => {
             if (!isPaused) {
                 remainingTime--;
-                ui.display.textContent = formatTime(remainingTime);
+                setDisplay(formatTime(remainingTime));
                 if (remainingTime <= 0) stopRun();
             }
         }, 1000);
     } else {
         targetCount = parseInt(document.getElementById('input-reps').value) || 1;
         currentCount = 0;
-        ui.display.textContent = targetCount;
+        setDisplay(targetCount);
         ui.progress.style.transition = 'stroke-dashoffset 0.5s ease';
     }
     
@@ -135,12 +199,12 @@ async function runIteration() {
     if(!isRunning || isPaused) return;
 
     if (runMode === 'reps') {
+        currentCount++;
         const remaining = targetCount - currentCount;
-        ui.display.textContent = remaining;
+        setDisplay(Math.max(0, remaining));
         
         const fractionCompleted = currentCount / targetCount;
         ui.progress.style.strokeDashoffset = 565 * fractionCompleted;
-        currentCount++;
     }
 
     let sequence = activeDrillParams; 
@@ -185,14 +249,19 @@ async function runIteration() {
     // --------------------------------------
 
     const packet = buildPacket(balls);
+    setActiveDrillName(activeDrillName);
     await sendPacket(packet);
 }
 
 // Callback from bluetooth.js when robot finishes
 export function handleDone() {
     if(!isRunning) return;
+
+    const isSim = document.body.classList.contains('sim-mode');
+    if (isSim) simLog(`  ↩  handleDone: mode=${runMode}  rep=${currentCount}/${targetCount}`);
     
     if (runMode === 'reps' && currentCount >= targetCount) {
+        if (isSim) simLog(`  ✅  Count reached — stopping`);
         stopRun();
         return;
     }
@@ -201,17 +270,19 @@ export function handleDone() {
     const pauseMs = (isNaN(pauseInput) ? 1.0 : pauseInput) * 1000;
 
     if (!isPaused) {
-         pauseTimer = setTimeout(() => { 
-             if(isRunning && !isPaused) runIteration(); 
-         }, pauseMs);
+        if (pauseMs > 0 && isSim) {
+            simLog(`  ⏸  pause ${(pauseMs / 1000).toFixed(1)} s`);
+        }
+        pauseTimer = setTimeout(() => { 
+            if(isRunning && !isPaused) runIteration(); 
+        }, pauseMs);
     }
 }
 
 export function togglePause() {
     if (isPaused) {
         isPaused = false;
-        ui.btnPause.textContent = "PAUSE";
-        ui.btnPause.classList.remove('pulse-anim');
+        updatePauseBtn("PAUSE", false);
         
         if(runMode === 'time') {
              ui.progress.style.transition = `stroke-dashoffset ${remainingTime}s linear`;
@@ -220,8 +291,7 @@ export function togglePause() {
         runIteration(); 
     } else {
         isPaused = true;
-        ui.btnPause.textContent = "RESUME";
-        ui.btnPause.classList.add('pulse-anim');
+        updatePauseBtn("RESUME", true);
         clearTimeout(pauseTimer);
         
         const computedStyle = window.getComputedStyle(ui.progress);
@@ -243,7 +313,7 @@ export function stopRun() {
     
     // --- UNLOCK SCROLL ON STOP ---
     toggleBodyScroll(false);
-    ui.overlay.classList.remove('open');
+    closeRunUI();
     document.querySelectorAll('.btn-drill').forEach(b => b.classList.remove('running'));
     
     sendPacket([0x80,1,0,1]); // Stop command
@@ -252,16 +322,16 @@ export function stopRun() {
 
 // --- NEW FUNCTION: Skip Countdown ---
 export function skipCountdown() {
-    // Only execute if NOT running and overlay IS open (i.e., we are in countdown state)
+    // Only execute if NOT running and overlay/inline IS open (i.e., we are in countdown state)
     if (isRunning) return;
-    if (!ui.overlay.classList.contains('open')) return;
+    if (!ui.overlay.classList.contains('open') && !ui.inlineSection?.classList.contains('active')) return;
     
     // Cancel any pending start mechanisms
     clearInterval(countdownTimer);
     clearTimeout(startTimeout);
     
     // Visual feedback
-    ui.display.textContent = "GO!";
+    setDisplay("GO!");
     
     // Start immediately
     beginDrillExecution();

@@ -24,7 +24,8 @@ import {
 import { 
     openEditor, 
     closeEditor, 
-    saveDrillChanges 
+    saveDrillChanges,
+    toggleEditorMode
 } from './editor.js';
 
 import { 
@@ -47,6 +48,8 @@ import {
 } from './runner.js';
 
 import { downloadDrill } from './cloud.js';
+import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
+import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, drawStaticRobot, attachTableClickHint } from './robot.js';
 
 // --- Initialization ---
 
@@ -55,6 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDrillButtons();
     updateStatsUI();
     setupEventListeners();
+
+    // Restore simulator mode preference
+    const simEnabled = localStorage.getItem('nova_sim_mode') === '1';
+    if (simEnabled) {
+        document.body.classList.add('sim-mode');
+        simLog('Simulator mode enabled \u2014 click Connect to start');
+    }
+
+    // Restore inline stop preference
+    if (localStorage.getItem('nova_inline_stop') === '1') {
+        document.body.classList.add('inline-stop');
+    }
+
     console.log("Nova Drill Control: Modules Loaded");
 });
 
@@ -64,11 +80,24 @@ function setupEventListeners() {
     const btnConnect = document.getElementById('btn-connect');
     if (btnConnect) {
         btnConnect.onclick = () => {
+            const isSimMode = document.body.classList.contains('sim-mode');
             if (bleState.isConnected) {
-                disconnectDevice();
-                showSessionSummary(); 
+                if (isSimMode) disconnectSimulator();
+                else disconnectDevice();
+            } else {
+                if (isSimMode) connectSimulator();
+                else connectDevice();
             }
-            else connectDevice();
+        };
+    }
+
+    const inputStartPause = document.getElementById('input-start-pause');
+    if (inputStartPause) {
+        inputStartPause.onchange = (e) => {
+            let val = parseInt(e.target.value);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > 10) val = 10;
+            e.target.value = val;
         };
     }
 
@@ -116,6 +145,7 @@ function setupEventListeners() {
     });
     
     document.addEventListener('connection-changed', () => {
+        document.body.classList.toggle('connected', bleState.isConnected);
         updateDrillButtonStates();
         const editorModal = document.getElementById('editor-modal');
         if(editorModal && editorModal.classList.contains('open')) {
@@ -126,6 +156,30 @@ function setupEventListeners() {
 }
 
 // --- Window Binding for HTML Compatibility ---
+
+window.toggleInlineStop = () => {
+    const on = !document.body.classList.contains('inline-stop');
+    document.body.classList.toggle('inline-stop', on);
+    localStorage.setItem('nova_inline_stop', on ? '1' : '0');
+    showToast(on ? 'Inline Stop ON' : 'Inline Stop OFF');
+};
+
+window.toggleSimulatorMode = () => {
+    const checked = !document.body.classList.contains('sim-mode');
+    document.body.classList.toggle('sim-mode', checked);
+    localStorage.setItem('nova_sim_mode', checked ? '1' : '0');
+    if (checked) {
+        const startInput = document.getElementById('input-start-pause');
+        if (startInput) startInput.value = 0;
+        simLog('Simulator mode enabled \u2014 click Connect to start');
+        showToast('Simulator ON');
+    } else {
+        showToast('Simulator OFF');
+        if (bleState.isConnected) {
+            disconnectSimulator();
+        }
+    }
+};
 
 window.toggleMenu = toggleMenu;
 window.setTheme = setTheme;
@@ -179,6 +233,14 @@ window.closeEditor = closeEditor;
 window.saveDrillChanges = saveDrillChanges;
 window.togglePause = togglePause;
 window.stopRun = stopRun;
+window.openRobotPosModal  = openRobotPosModal;
+window.closeRobotPosModal = closeRobotPosModal;
+window.saveRobotPos       = saveRobotPos;
+window.cancelRobotPos     = cancelRobotPos;
+window.drawStaticRobot       = drawStaticRobot;
+window.attachTableClickHint  = attachTableClickHint;
+window.toggleEditorMode   = toggleEditorMode;
+window.simLog             = simLog;
 
 window.handleDrillClick = (key, btn) => {
     if (!bleState.isConnected) {

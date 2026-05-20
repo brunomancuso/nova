@@ -20,11 +20,11 @@
     <div id="theme-menu" class="theme-menu">
         <div class="menu-title">Drill</div>
         <div class="theme-item" onclick="window.handleDownloadDialog()">
-            <span class="color-preview" style="background:#0984e3"></span> Download Drill
+            <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg> Download Drill
         </div>
         
-        <div class="theme-item" onclick="exportCustomDrills()"><span class="color-preview" style="background:var(--text)"></span> Export Drills</div>
-        <div class="theme-item" onclick="document.getElementById('csv-input').click()"><span class="color-preview" style="background:var(--text)"></span> Import Drills</div>
+        <div class="theme-item" onclick="exportCustomDrills()"><svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Export Drills</div>
+        <div class="theme-item" onclick="document.getElementById('csv-input').click()"><svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Import Drills</div>
         
         <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
         <div class="menu-title">Theme</div>
@@ -35,11 +35,22 @@
         
         <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
         
+        <div class="theme-item inline-stop-menu-item" onclick="window.toggleInlineStop()">
+            Inline Stop
+            <div class="inline-stop-toggle" id="inline-stop-toggle"></div>
+        </div>
         <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
         <div class="theme-item reset-item" onclick="factoryReset()">Factory Reset</div>
 
         <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
         <div class="theme-item" onclick="window.openAboutModal()">About</div>
+
+        <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
+        <div class="menu-title">Dev</div>
+        <div class="theme-item sim-menu-item" onclick="window.toggleSimulatorMode()" title="Run without Bluetooth hardware">
+            Simulator
+            <div class="sim-menu-toggle" id="sim-menu-toggle"></div>
+        </div>
     </div>
     
     <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
@@ -65,6 +76,9 @@
         </div>
 
         <div class="controls-row">
+            <div class="control-pill" id="ui-start-pause">
+                    <label>Start (s)</label> <input type="number" id="input-start-pause" value="3" min="0" max="10" step="1">
+                </div>
             <div class="control-pill" id="ui-reps">
                 <label>Count</label>
                 <input type="number" id="input-reps" value="10">
@@ -76,6 +90,25 @@
                 <div class="control-pill">
                     <label>Pause (s)</label> <input type="number" id="input-pause" value="0.0" step="0.1">
                 </div>
+        </div>
+        <div class="stats-inline-row">
+            <button id="stats-inline-btn" class="stats-inline-btn" onclick="window.openSessionSummaryModal()">
+                <span id="stats-inline-text">Balls: 0 &nbsp;|&nbsp; Drills: 0</span>
+            </button>
+            <button class="stats-inline-btn" onclick="window.openRobotPosModal()" title="Set Robot Position">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.4-8 14-8 14S4 15.4 4 10a8 8 0 0 1 8-8z"/></svg>Position
+            </button>
+        </div>
+    </div>
+
+    <div id="inline-run-section" class="inline-run-section">
+        <div class="inline-run-info">
+            <div id="inline-run-label" class="inline-run-label">GET READY</div>
+            <div id="inline-run-display" class="inline-run-display">-</div>
+        </div>
+        <div class="inline-run-controls">
+            <button id="inline-btn-pause" class="btn-run-ctrl btn-pause" onclick="togglePause()">PAUSE</button>
+            <button class="btn-run-ctrl btn-stop-run" onclick="stopRun()">STOP</button>
         </div>
     </div>
 
@@ -142,6 +175,12 @@
             <div class="header-actions">
                 <button class="btn-header-share" onclick="window.handleShareDrill()" title="Share Drill">
                     <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                </button>
+                <button class="btn-header-share btn-edit-mode" type="button" title="Edit mode" onclick="window.toggleEditorMode()">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 16" width="26" height="17" fill="none" stroke="currentColor" stroke-linecap="round">
+                        <rect x="1" y="1" width="26" height="14" stroke-width="1.5"/>
+                        <line x1="14" y1="0.5" x2="14" y2="15.5" stroke-width="2.5"/>
+                    </svg>
                 </button>
                 <label class="random-toggle-container">
                     <span class="toggle-label">Random</span>
@@ -281,6 +320,33 @@
              <button class="btn-modal btn-save" onclick="window.closeSummaryModal()">Close</button>
         </div>
     </div>
+</div>
+
+<div id="robot-pos-modal" class="modal-overlay">
+    <div class="modal" style="height:auto; max-width:460px;">
+        <div class="modal-header">
+            <div class="modal-title" style="font-size:1.2rem; font-weight:700; color:var(--text);">Robot Position</div>
+            <div class="modal-close" onclick="window.cancelRobotPos()">×</div>
+        </div>
+        <div class="modal-body" style="padding:14px; display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <canvas id="robot-table-canvas" width="520" height="360" style="width:100%; height:auto; display:block; border-radius:10px; cursor:grab;"></canvas>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-save-as" onclick="window.cancelRobotPos()">Cancel</button>
+            <button class="btn-modal btn-save" onclick="window.saveRobotPos()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="sim-panel">
+    <div class="sim-header">
+        <span>&#9679; SIMULATOR</span>
+        <div class="sim-header-actions">
+            <button class="sim-clear-btn" onclick="document.getElementById('sim-log').innerHTML=''">Clear</button>
+            <button class="sim-clear-btn sim-collapse-btn" onclick="document.getElementById('sim-panel').classList.toggle('sim-collapsed')" title="Toggle console">▾</button>
+        </div>
+    </div>
+    <div id="sim-log"></div>
 </div>
 
 <script type="module" src="js/main.js"></script>

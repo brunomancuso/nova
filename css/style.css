@@ -182,6 +182,7 @@ h1 {
 }
 
 .color-preview { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+.menu-icon { width: 15px; height: 15px; flex-shrink: 0; }
 .reset-item { color: var(--danger); }
 .reset-item:hover { background: rgba(214, 48, 49, 0.1); color: var(--danger); }
 
@@ -456,6 +457,22 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     color: var(--primary);
 }
 
+.drill-edit-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 100%;
+    cursor: pointer;
+    color: var(--text-light);
+    opacity: 0.35;
+    font-size: 1.1rem;
+    margin-left: 4px;
+    flex-shrink: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+.drill-edit-btn:hover { opacity: 1; color: var(--primary); }
+
 .btn-drill.dragging {
     opacity: 0.5;
     background: var(--card-bg);
@@ -500,6 +517,26 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     font-weight: 600; 
     padding: 0 5px; 
 }
+
+/* Hide footer stats when disconnected */
+#stats-display { display: none; }
+body.connected #stats-display { display: block; }
+
+/* Small inline stats button below inputs */
+.stats-inline-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 22px; }
+body.connected .stats-inline-row { display: flex; }
+.stats-inline-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.stats-inline-btn:hover { background: var(--border); color: var(--text); }
 
 /* --- SWAP BUTTON (Between Balls) --- */
 .swap-zone {
@@ -677,7 +714,8 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 #editor-modal .header-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
     width: 100%;
 }
 
@@ -686,7 +724,63 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 .random-toggle-container { margin-right: 0; }
 
 .modal-close { font-size: 1.5rem; color: var(--text-light); cursor: pointer; line-height: 1; }
+
+/* Edit-mode canvas + BPM slider row */
+.edit-mode-canvas-row { display: flex; gap: 8px; align-items: flex-start; margin: 2px 0; }
+.edit-mode-canvas-col { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+
+.bpm-slider-col {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 4px 2px;
+    min-width: 36px; align-self: stretch;
+}
+.bpm-slider-limit { font-size: 0.58rem; color: var(--text-light); line-height: 1; }
+.bpm-slider-label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--text-light); margin-top: 2px; }
+.bpm-slider-val   { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+
+.bpm-slider-v {
+    writing-mode: vertical-lr;
+    direction: rtl;          /* top = max value */
+    flex: 1;
+    width: 6px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+.btn-edit-mode.active { color: var(--text); background: rgba(255,255,255,0.08); border-radius: 6px; }
+
+/* Speed horizontal slider row */
+.speed-slider-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 2px; width: 100%;
+}
+.speed-slider-h { flex: 1; cursor: pointer; accent-color: var(--primary); }
+
+/* Table-view compact row */
+.table-view-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 6px 0; }
+
+/* Reps stepper in table-view mode */
+.reps-stepper { display: flex; align-items: center; gap: 6px; }
+.reps-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-light); }
+.reps-btn {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--primary); font-size: 1rem; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.reps-btn:hover { background: var(--primary); color: #fff; }
+.reps-value { font-size: 1rem; font-weight: 700; color: var(--text); min-width: 22px; text-align: center; }
 .modal-body { overflow-y: auto; flex: 1; padding-right: 5px; }
+
+#editor-body::-webkit-scrollbar { width: 5px; }
+#editor-body::-webkit-scrollbar-track { background: transparent; }
+#editor-body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+#editor-body::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+#editor-body { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
 
 /* --- EDITOR SPECIFIC (Smart Grid Layout) --- */
 
@@ -857,6 +951,16 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     -moz-appearance: textfield; 
 }
 .editor-field input:focus { outline: none; color: var(--primary); }
+
+.preset-row { display: flex; gap: 2px; margin: 1px 0 3px; }
+.preset-btn {
+    flex: 1; padding: 1px 0; font-size: 0.52rem; font-weight: 700;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: transparent; color: var(--text-light);
+    cursor: pointer; transition: all 0.15s; line-height: 1.3;
+}
+.preset-btn:hover { border-color: var(--primary); color: var(--primary); }
+.preset-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
 /* Spin Toggle Row */
 .spin-row {
@@ -1073,3 +1177,247 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     transform: translateY(-50%);
     font-size: 0.8rem;
 }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* SIMULATOR MENU ITEM (inside hamburger menu)                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.sim-menu-item {
+    justify-content: space-between;  /* push toggle to the right */
+    cursor: pointer;
+}
+
+/* Pill toggle switch */
+.sim-menu-toggle {
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--border);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.25s;
+}
+
+.sim-menu-toggle::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Active state driven by body.sim-mode */
+body.sim-mode .sim-menu-toggle {
+    background: #00cec9;
+}
+body.sim-mode .sim-menu-toggle::after {
+    transform: translateX(16px);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* SIMULATOR PANEL (fixed right-side terminal)                                 */
+/* ─────────────────────────────────────────────────────────────────────────── */
+#sim-panel {
+    display: none;              /* hidden by default                           */
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 650px;
+    height: 100vh;
+    background: #0d1117;
+    border-left: 1px solid #30363d;
+    flex-direction: column;
+    z-index: 150;               /* above content, below modals (z-index 200)  */
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+body.sim-mode #sim-panel { display: flex; }
+
+/* ── Inline Stop toggle (reuses sim-menu-toggle pattern) ── */
+.inline-stop-menu-item {
+    justify-content: space-between;
+    cursor: pointer;
+}
+.inline-stop-toggle {
+    width: 34px;
+    height: 18px;
+    border-radius: 9px;
+    background: var(--border);
+    position: relative;
+    flex-shrink: 0;
+    transition: background 0.25s;
+}
+.inline-stop-toggle::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.25s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+body.inline-stop .inline-stop-toggle { background: #6c5ce7; }
+body.inline-stop .inline-stop-toggle::after { transform: translateX(16px); }
+
+/* ── Inline Stop run overlay: compact bottom bar ── */
+body.inline-stop #run-overlay {
+    align-items: flex-end;
+    background: transparent;
+    backdrop-filter: none;
+    pointer-events: none;
+}
+body.inline-stop #run-overlay.open {
+    pointer-events: none;
+    opacity: 1;
+}
+body.inline-stop #run-overlay.open > .modal {
+    pointer-events: all;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    padding: 14px 20px;
+    background: var(--surface);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+}
+body.inline-stop #run-overlay .countdown-circle { display: none; }
+body.inline-stop #run-overlay .run-controls { justify-content: center; margin-top: 0; }
+
+/* ── Inline Run Section ── */
+.inline-run-section {
+    display: none;
+}
+body.inline-stop .inline-run-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 7px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+body.inline-stop .inline-run-section.active {
+    border-color: var(--primary);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+}
+.inline-run-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.inline-run-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 0.08em;
+}
+.inline-run-display {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    min-width: 2.5ch;
+}
+.inline-run-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.inline-run-controls .btn-run-ctrl {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    width: auto;
+    margin-top: 0;
+}
+body.inline-stop .inline-run-section:not(.active) .btn-run-ctrl {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+.sim-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid #30363d;
+    background: #161b22;
+    flex-shrink: 0;
+}
+
+.sim-header span {
+    color: #00cec9;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.sim-clear-btn {
+    background: transparent;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 0.62rem;
+    padding: 3px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.5px;
+}
+.sim-clear-btn:hover { border-color: #00cec9; color: #00cec9; }
+
+.sim-header-actions { display: flex; gap: 6px; align-items: center; }
+.sim-collapse-btn { padding: 2px 7px; font-size: 0.8rem; transition: transform 0.2s; }
+#sim-panel.sim-collapsed .sim-collapse-btn { transform: rotate(180deg); }
+#sim-panel.sim-collapsed #sim-log { display: none; }
+
+@media (max-width: 900px) {
+    #sim-panel {
+        position: fixed;
+        right: 0; left: 0; bottom: 0; top: auto;
+        width: 100%;
+        height: auto;
+        max-height: 50vh;
+        border-left: none;
+        border-top: 1px solid #30363d;
+        box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    }
+    body.sim-mode #sim-panel { display: flex; }
+    #sim-log { max-height: calc(50vh - 44px); }
+}
+
+#sim-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#sim-log::-webkit-scrollbar { width: 4px; }
+#sim-log::-webkit-scrollbar-track { background: transparent; }
+#sim-log::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+.sim-line {
+    color: #8b949e;
+    font-size: 0.67rem;
+    line-height: 1.6;
+    white-space: pre;
+    word-break: break-all;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    padding: 1px 0;
+}
+
+/* Highlight the most-recently appended line */
+.sim-line:last-child { color: #e6edf3; }

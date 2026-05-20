@@ -190,10 +190,10 @@ export function importCustomDrills(csvText) {
             const height = parseInt(parts[6]);
             const drop = parseFloat(parts[7]);
             
-            const bpm = parseInt(parts[8]);
+            const bpm = Math.max(30, Math.min(90, parseInt(parts[8]) || 30));
             const freqPercent = (bpm - 30) / 0.6;
             
-            const reps = parseInt(parts[9]);
+            const reps = Math.max(1, parseInt(parts[9]) || 1);
 
             const motors = calculateRPMs(speed, spin, type);
             const params = [motors.top, motors.bot, height, drop, freqPercent, reps, 1, speed, spin, type];
