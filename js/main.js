@@ -51,7 +51,8 @@ import {
 import { downloadDrill } from './cloud.js';
 import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
 import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, applyRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, drawBall, getRobotXcm, getLastBallCanvas } from './robot.js';
-import { calibrateKvKd, calibrateKms, predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS } from './prediction.js';
+import { calibrateKvKd, calibrateKms, predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS, DEFAULT_KLR } from './prediction.js';
+import './adjust.js';
 
 // --- Initialization ---
 
@@ -443,9 +444,10 @@ window.drawEditorBall = (canvas, speed, spin, angle, drop = 0) => {
     const kv  = stored?.kv  ?? DEFAULT_KV;
     const kd  = stored?.kd  ?? DEFAULT_KD;
     const kMS = stored?.kms ?? DEFAULT_KMS;
+    const klr = stored?.klr ?? DEFAULT_KLR;
     const xFlight = predictX(angle, spin, speed, { kv, kd, kMS });
     const cannonM = getRobotXcm() + 40;   // cm: robot position + robot depth
-    const yCm = predictY(drop, xFlight);
+    const yCm = predictY(drop, xFlight, klr);
     drawBall(canvas, xFlight + cannonM, yCm);
 };
 

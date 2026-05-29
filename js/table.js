@@ -152,10 +152,11 @@ export function drawSideView(canvas, xFlight = 0, thetaRad = 0) {
     }
 }
 
-export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spinColor, heightColor, lockHtml) {
+export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spinColor, heightColor) {
     const canvasId   = `editor-robot-canvas-${si}-${oi}`;
     const sideId     = `side-view-canvas-${si}-${oi}`;
     const drop = ballParams[3] ?? 0;
+    const lockHtml = window.getLockIconHtml?.() ?? '';
     return `
     <div class="edit-mode-canvas-row">
         <div class="edit-mode-canvas-col">
@@ -172,18 +173,18 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <div style="height:19px; margin-bottom:2px;"></div>
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',1)">▲</button>
             <input type="range" id="rng-speed-${si}-${oi}" class="bpm-slider-v"
-                   min="0" max="10" step="0.1" value="${ballParams[7]}"
-                   oninput="window.handleEditModeSpeed(${si}, ${oi}, this.value)">
+                   min="0" max="10" step="0.01" value="${ballParams[7]}"
+                   oninput="window.handleEditModeSpeed('${si}', ${oi}, this.value)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Speed</span>
-            <span class="bpm-slider-val" id="speed-val-${si}-${oi}">${ballParams[7]}</span>
+            <span class="bpm-slider-val" id="speed-val-${si}-${oi}">${(+ballParams[7]).toFixed(2)}</span>
         </div>
         <div class="bpm-slider-col">
             <div style="height:19px; margin-bottom:2px;"></div>
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${si}-${oi}',1)">▲</button>
             <input type="range" id="rng-bpm-${si}-${oi}" class="bpm-slider-v"
                    min="30" max="90" value="${bpmValue}"
-                   oninput="window.handleEditModeBpm(${si}, ${oi}, this.value)">
+                   oninput="window.handleEditModeBpm('${si}', ${oi}, this.value)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">BPM</span>
             <span class="bpm-slider-val" id="bpm-val-${si}-${oi}">${bpmValue}</span>
@@ -194,7 +195,7 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <input type="range" id="rng-spin-${si}-${oi}" class="bpm-slider-v"
                    min="-10" max="10" step="0.1" value="${spinSliderVal}"
                    style="accent-color:${spinColor}"
-                   oninput="window.handleEditModeSpin(${si}, ${oi}, this.value, this)">
+                   oninput="window.handleEditModeSpin('${si}', ${oi}, this.value, this)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-spin-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Spin</span>
             <span class="bpm-slider-val" id="spin-val-${si}-${oi}" style="color:${spinColor}">${spinSliderVal > 0 ? '+' : ''}${spinSliderVal}</span>
@@ -205,7 +206,7 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <input type="range" id="rng-height-${si}-${oi}" class="bpm-slider-v"
                    min="-50" max="100" step="1" value="${ballParams[2]}"
                    style="accent-color:${heightColor}"
-                   oninput="window.handleEditModeHeight(${si}, ${oi}, this.value, this)">
+                   oninput="window.handleEditModeHeight('${si}', ${oi}, this.value, this)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Height</span>
             <span class="bpm-slider-val" id="height-val-${si}-${oi}" style="color:${heightColor}">${ballParams[2]}</span>

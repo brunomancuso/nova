@@ -98,6 +98,9 @@
             <button class="stats-inline-btn" onclick="window.openRobotPosModal()" title="Set Robot Position">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.4-8 14-8 14S4 15.4 4 10a8 8 0 0 1 8-8z"/></svg>Position
             </button>
+            <button class="stats-inline-btn" onclick="window.openAdjustModal()" title="Adjust Physics">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="18" r="2" fill="currentColor"/></svg>Adjust
+            </button>
             <button class="stats-inline-btn" onclick="window.openCalibrationModal()" title="Calibration">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>Calibration
             </button>
@@ -321,6 +324,62 @@
         </div>
         <div class="modal-footer">
              <button class="btn-modal btn-save" onclick="window.closeSummaryModal()">Close</button>
+        </div>
+    </div>
+</div>
+
+<div id="adjust-modal" class="modal-overlay">
+    <div class="modal" style="height:auto;">
+        <div class="modal-header">
+            <div class="modal-title" style="font-size:1.1rem; font-weight:700; color:var(--text);">Adjust Physics</div>
+            <div class="modal-close" onclick="window.closeAdjustModal()">&#xD7;</div>
+        </div>
+        <div class="modal-body" style="padding:18px 16px; display:flex; flex-direction:column; gap:14px;">
+            <div id="adj-table-container"></div>
+            <hr style="border:none; border-top:1px solid var(--border); margin:2px 0;">
+            <!-- Physics params -->
+            <div class="adj-row">
+                <span class="adj-label">kv</span>
+                <input type="range" class="adj-slider" id="adj-kv"
+                       min="0.001" max="0.017" step="0.0001" value="0.008978"
+                       oninput="window.adjChanged('kv', this.value)">
+                <span class="adj-val" id="adj-kv-val">0.008978</span>
+                <button class="adj-btn" onclick="window.adjStep('kv',-1)">&#x2212;</button>
+                <button class="adj-btn" onclick="window.adjStep('kv', 1)">+</button>
+            </div>
+            <div class="adj-row">
+                <span class="adj-label">kd</span>
+                <input type="range" class="adj-slider" id="adj-kd"
+                       min="0.002" max="0.023" step="0.001" value="0.01254"
+                       oninput="window.adjChanged('kd', this.value)">
+                <span class="adj-val" id="adj-kd-val">0.01254</span>
+                <button class="adj-btn" onclick="window.adjStep('kd',-1)">&#x2212;</button>
+                <button class="adj-btn" onclick="window.adjStep('kd', 1)">+</button>
+            </div>
+            <div class="adj-row">
+                <span class="adj-label">kMS</span>
+                <input type="range" class="adj-slider" id="adj-kms"
+                       min="0.05" max="0.24" step="0.001" value="0.14357"
+                       oninput="window.adjChanged('kms', this.value)">
+                <span class="adj-val" id="adj-kms-val">0.14357</span>
+                <button class="adj-btn" onclick="window.adjStep('kms',-1)">&#x2212;</button>
+                <button class="adj-btn" onclick="window.adjStep('kms', 1)">+</button>
+            </div>
+            <div class="adj-row">
+                <span class="adj-label">kLR</span>
+                <input type="range" class="adj-slider" id="adj-klr"
+                       min="0.01" max="0.07" step="0.0001" value="0.036677"
+                       oninput="window.adjChanged('klr', this.value)">
+                <span class="adj-val" id="adj-klr-val">0.036677</span>
+                <button class="adj-btn" onclick="window.adjStep('klr',-1)">&#x2212;</button>
+                <button class="adj-btn" onclick="window.adjStep('klr', 1)">+</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-delete" onclick="window.resetAdjust()">Reset</button>
+            <button class="btn-modal btn-save-as" onclick="window.closeAdjustModal()">Close</button>
+            <button class="btn-modal" onclick="window.testAdjust()">Test</button>
+            <button class="btn-modal btn-save" onclick="window.saveAdjust()">Save</button>
         </div>
     </div>
 </div>

@@ -1,5 +1,33 @@
 import { currentDrills, userCustomDrills, selectedLevel, saveDrillsToStorage } from './state.js';
 import { renderBallTable, drawSideView } from './table.js';
+
+// Expose drawSideView for the Adjust Physics modal preview
+window.drawSideViewPreview = (canvas, xFlight, thetaRad) => drawSideView(canvas, xFlight, thetaRad);
+
+// Inject the exact same renderBallTable component into the Adjust modal
+window.renderAdjTable = () => {
+    const ball = window._adjBallData;
+    const container = document.getElementById('adj-table-container');
+    if (!ball || !container) return;
+    const bpmValue      = Math.round(30 + ((ball[4] ?? 0) * 0.6));
+    const type          = ball[9] ?? 'top';
+    const spinSliderVal = type === 'back' ? -Math.min(ball[8] ?? 0, 10) : Math.min(ball[8] ?? 0, 10);
+    const spinColor     = spinSliderVal < 0 ? '#e53935' : '#43a047';
+    const heightColor   = (ball[2] ?? 50) < 0 ? '#9e9e9e' : '#0984e3';
+    container.innerHTML = renderBallTable('adj', 0, ball, bpmValue, spinSliderVal, spinColor, heightColor);
+    requestAnimationFrame(() => {
+        _redrawEditorCanvas('adj', 0);
+        const c = document.getElementById('editor-robot-canvas-adj-0');
+        if (c) _attachBallDrag(c, 'adj', 0);
+        _redrawSideView('adj', 0);
+    });
+};
+
+// Trigger redraws of both adj canvases (called by main.js when kv/kd/kms change)
+window._redrawAdjPreviews = () => {
+    _redrawEditorCanvas('adj', 0);
+    _redrawSideView('adj', 0);
+};
 import { SPIN_LIMITS, RPM_MIN, RPM_MAX } from './constants.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { showToast, clamp, toggleBodyScroll } from './utils.js';
@@ -11,7 +39,6 @@ let editingDrillKey = null;
 let selectedSaveCat = 'custom-a';
 let _tableViewMode = localStorage.getItem('nova_editor_table_mode') === '1';
 let _spinSpeedLocked = localStorage.getItem('nova_spin_speed_lock') !== '0'; // default: locked
-const _spinSpeedAccum = new Map(); // spin→speed credit per ball key (0.5 spin = 0.1 speed)
 
 window.toggleSpinSpeedLock = () => {
     _spinSpeedLocked = !_spinSpeedLocked;
@@ -28,6 +55,9 @@ function _lockIcon(locked) {
         : `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
 }
 
+window.getLockIconHtml = () =>
+    `<button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin\u2192Speed locked' : 'Spin\u2192Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>`;
+
 // --- Public Module Functions ---
 
 export function openEditor(key) {
@@ -40,8 +70,8 @@ export function openEditor(key) {
     if (currentDrills[key] && currentDrills[key][selectedLevel]?.length) {
         tempDrillData = JSON.parse(JSON.stringify(currentDrills[key][selectedLevel]));
     } else {
-        const def = calculateRPMs(5, 2, 'top');
-        tempDrillData = [[[def.top, def.bot, 50, 0, 50, 1, 1, 5, 2, 'top']]];
+        const def = calculateRPMs(2, 2, 'top');
+        tempDrillData = [[[def.top, def.bot, 50, 0, 50, 1, 1, 2, 2, 'top']]];
     }
 
     renderEditor();
@@ -332,8 +362,6 @@ function renderEditor() {
                 const spinColor    = spinSliderVal < 0 ? '#e53935' : '#43a047';
                 const heightColor  = ballParams[2] < 0 ? '#9e9e9e' : '#0984e3';
                 const canvasId     = `editor-robot-canvas-${stepIndex}-${optIndex}`;
-                const lockHtml = `<button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>`;
-                // Reps row only for multi-variant (single-variant shows reps in group header)
                 const multiRepsHtml = !isSingle ? `
                     <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
                         <span class="reps-label">Reps</span>
@@ -341,7 +369,7 @@ function renderEditor() {
                         <span class="reps-value">${ballParams[5]}</span>
                         <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
                     </div>` : '';
-                const tableHtml = renderBallTable(stepIndex, optIndex, ballParams, bpmValue, spinSliderVal, spinColor, heightColor, lockHtml);
+                const tableHtml = renderBallTable(stepIndex, optIndex, ballParams, bpmValue, spinSliderVal, spinColor, heightColor);
                 optDiv.innerHTML = label + multiRepsHtml + tableHtml + actionsHtml;
                 requestAnimationFrame(() => {
                     _redrawEditorCanvas(stepIndex, optIndex);
@@ -495,9 +523,10 @@ window.handleRepsStep = (stepIdx, optIdx, delta) => {
 };
 
 window.handleEditModeBpm = (stepIdx, optIdx, value) => {
-    if (!tempDrillData) return;
+    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
     const bpm = clamp(parseFloat(value), 30, 90);
-    tempDrillData[stepIdx][optIdx][4] = (bpm - 30) / 0.6;
+    ball[4] = (bpm - 30) / 0.6;
     const el = document.getElementById(`bpm-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = Math.round(bpm);
 };
@@ -541,8 +570,8 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         if (!_hitBall(e)) return;
         startY     = e.clientY;
         startX     = e.clientX;
-        startDrop  = tempDrillData?.[stepIdx]?.[optIdx]?.[3] ?? 0;
-        startSpeed = tempDrillData?.[stepIdx]?.[optIdx]?.[7] ?? 0;
+        startDrop  = (stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx])?.[3] ?? 0;
+        startSpeed = (stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx])?.[7] ?? 0;
         canvas.setPointerCapture(e.pointerId);
         canvas.style.cursor = 'grabbing';
         e.preventDefault();
@@ -551,7 +580,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
     const onMove = (e) => {
         if (startY === null) return;
         e.preventDefault();
-        const ball = tempDrillData?.[stepIdx]?.[optIdx];
+        const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
         if (!ball) return;
 
         // Vertical → drop (up = positive)
@@ -568,8 +597,10 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
         if (speedEl) speedEl.textContent = newSpeed;
         // keep RPMs in sync
-        const res = calculateRPMs(newSpeed, ball[8] ?? 0, ball[9] ?? 'top');
-        ball[0] = res.top; ball[1] = res.bot;
+        if (stepIdx !== 'adj') {
+            const res = calculateRPMs(newSpeed, ball[8] ?? 0, ball[9] ?? 'top');
+            ball[0] = res.top; ball[1] = res.bot;
+        }
 
         _redrawEditorCanvas(stepIdx, optIdx);
         _redrawSideView(stepIdx, optIdx);
@@ -580,11 +611,13 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         startY = null;
         startX = null;
         canvas.style.cursor = 'default';
-        // Clamp scatter so abs(drop) + scatter <= 10
-        const ball = tempDrillData?.[stepIdx]?.[optIdx];
-        if (ball) {
-            const drop = ball[3] ?? 0;
-            if (Math.abs(drop) + (ball[10] ?? 0) > 10) ball[10] = 10 - Math.abs(drop);
+        // Clamp scatter so abs(drop) + scatter <= 10 (not needed for adj preview)
+        if (stepIdx !== 'adj') {
+            const ball = tempDrillData?.[stepIdx]?.[optIdx];
+            if (ball) {
+                const drop = ball[3] ?? 0;
+                if (Math.abs(drop) + (ball[10] ?? 0) > 10) ball[10] = 10 - Math.abs(drop);
+            }
         }
     };
 
@@ -603,14 +636,16 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
 // Redraw the prediction ball on an editor canvas using current ball params.
 function _redrawEditorCanvas(stepIdx, optIdx) {
     const c = document.getElementById(`editor-robot-canvas-${stepIdx}-${optIdx}`);
-    if (!c || !tempDrillData?.[stepIdx]?.[optIdx]) return;
-    const ball   = tempDrillData[stepIdx][optIdx];
+    if (!c) return;
+    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
     const speed  = ball[7] ?? 0;
     const spin   = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
     const angle  = ball[2] ?? 50;
     const drop   = ball[3] ?? 0;
-    if (window.drawEditorBall) {
-        window.drawEditorBall(c, speed, spin, angle, drop);
+    const drawFn = stepIdx === 'adj' ? window.drawAdjBall : window.drawEditorBall;
+    if (drawFn) {
+        drawFn(c, speed, spin, angle, drop);
     } else if (window.drawStaticRobot) {
         window.drawStaticRobot(c, true);
     }
@@ -618,20 +653,24 @@ function _redrawEditorCanvas(stepIdx, optIdx) {
 
 function _redrawSideView(stepIdx, optIdx) {
     const sc = document.getElementById(`side-view-canvas-${stepIdx}-${optIdx}`);
-    if (!sc || !tempDrillData?.[stepIdx]?.[optIdx]) return;
-    const ball      = tempDrillData[stepIdx][optIdx];
-    const speed     = ball[7] ?? 0;
-    const spin      = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
-    const angle     = ball[2] ?? 50;
-    const xFlight   = window.getEditorXFlight?.(speed, spin, angle) ?? 0;
-    const thetaRad  = (angle - 20) * (2 / 7) * Math.PI / 180;
+    if (!sc) return;
+    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
+    const speed    = ball[7] ?? 0;
+    const spin     = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
+    const angle    = ball[2] ?? 50;
+    const getXFn   = stepIdx === 'adj' ? window.getAdjXFlight : window.getEditorXFlight;
+    const xFlight  = getXFn?.(speed, spin, angle) ?? 0;
+    const thetaRad = (angle - 20) * (2 / 7) * Math.PI / 180;
     drawSideView(sc, xFlight, thetaRad);
 }
 
 window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
-    if (!tempDrillData) return;
+    const isAdj = stepIdx === 'adj';
+    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
     const h = clamp(parseFloat(value), -50, 100);
-    tempDrillData[stepIdx][optIdx][2] = h;
+    ball[2] = h;
     const color = h < 0 ? '#9e9e9e' : '#0984e3';
     if (sliderEl) sliderEl.style.accentColor = color;
     const el = document.getElementById(`height-val-${stepIdx}-${optIdx}`);
@@ -641,46 +680,50 @@ window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
 };
 
 window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
-    if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const isAdj = stepIdx === 'adj';
+    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
     const v = clamp(parseFloat(value), 0, 10);
     ball[7] = v;
     const maxSpin = SPIN_LIMITS[v.toString()] ?? 10;
     if (ball[8] > maxSpin) ball[8] = maxSpin;
-    const res = calculateRPMs(ball[7], ball[8], ball[9]);
-    ball[0] = res.top; ball[1] = res.bot;
+    if (!isAdj) { const res = calculateRPMs(ball[7], ball[8], ball[9]); ball[0] = res.top; ball[1] = res.bot; }
     const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
-    if (el) el.textContent = v;
+    if (el) el.textContent = v.toFixed(2);
     _redrawEditorCanvas(stepIdx, optIdx);
     _redrawSideView(stepIdx, optIdx);
 };
 
 window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
-    if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const isAdj = stepIdx === 'adj';
+    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    if (!ball) return;
     const v = parseFloat(value);
 
-    // Couple speed to spin: 0.25 spin units → 0.1 speed change
-    const oldSpin = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
-    const spinDelta = v - oldSpin;
-    const key = `${stepIdx}-${optIdx}`;
-    if (_spinSpeedLocked && spinDelta !== 0) {
-        const accum = (_spinSpeedAccum.get(key) ?? 0) + spinDelta * 0.2;
-        const steps = Math.trunc(accum / 0.1);
-        _spinSpeedAccum.set(key, accum - steps * 0.1);
-        if (steps !== 0) {
-            ball[7] = Math.round(Math.max(0, Math.min(10, (ball[7] ?? 0) + steps * 0.1)) * 10) / 10;
+    // Lock: preserve xFlight by finding the closest speed (step 0.01) for the new spin
+    if (_spinSpeedLocked) {
+        const getXFlight = isAdj ? window.getAdjXFlight : window.getEditorXFlight;
+        if (getXFlight) {
+            const oldSpin = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
+            const targetX = getXFlight(ball[7] ?? 0, oldSpin, ball[2] ?? 50);
+            let bestSpeed = ball[7] ?? 0;
+            let bestDiff  = Infinity;
+            for (let s = 0; s <= 1000; s++) {
+                const candidate = Math.round(s) / 100;
+                const diff = Math.abs(getXFlight(candidate, v, ball[2] ?? 50) - targetX);
+                if (diff < bestDiff) { bestDiff = diff; bestSpeed = candidate; }
+            }
+            ball[7] = bestSpeed;
             const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
-            if (speedEl) speedEl.textContent = ball[7];
+            if (speedEl) speedEl.textContent = bestSpeed.toFixed(2);
             const speedSlider = document.getElementById(`rng-speed-${stepIdx}-${optIdx}`);
-            if (speedSlider) speedSlider.value = ball[7];
+            if (speedSlider) speedSlider.value = bestSpeed;
         }
     }
 
     ball[8] = Math.abs(v);
     ball[9] = v < 0 ? 'back' : 'top';
-    const res = calculateRPMs(ball[7], ball[8], ball[9]);
-    ball[0] = res.top; ball[1] = res.bot;
+    if (!isAdj) { const res = calculateRPMs(ball[7], ball[8], ball[9]); ball[0] = res.top; ball[1] = res.bot; }
     const color = v < 0 ? '#e53935' : '#43a047';
     if (sliderEl) sliderEl.style.accentColor = color;
     const el = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
