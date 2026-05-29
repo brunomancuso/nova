@@ -164,10 +164,6 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <div style="position:relative;">
                 <canvas id="${canvasId}" width="340" height="218" style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
             </div>
-            <div style="text-align:center; margin-top:0; line-height:1.2;">
-                <span class="bpm-slider-label">Drop</span>
-                <span class="bpm-slider-val" id="drop-val-${si}-${oi}" style="display:inline; margin-left:3px;">${drop}</span>
-            </div>
         </div>
         <div class="bpm-slider-col">
             <div style="height:19px; margin-bottom:2px;"></div>

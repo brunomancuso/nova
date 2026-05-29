@@ -144,7 +144,6 @@ export function saveDrillChanges() {
     currentDrills[editingDrillKey][selectedLevel] = tempDrillData;
     saveDrillsToStorage();
 
-    closeEditor();
     showToast("Configuration saved");
     document.dispatchEvent(new CustomEvent('drills-updated'));
 }
@@ -338,6 +337,15 @@ function renderEditor() {
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-reps-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
                     </div>` : ''}
+                    <div class="editor-field">
+                        <div class="field-header"><label>Delay (ms)</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -100)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-delay-${stepIndex}-${optIndex}" value="${ballParams[11] ?? 0}" step="10" min="0" max="10000"
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 11, this.value)">
+                            <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 100)">+</button>
+                        </div>
+                    </div>
                 </div>`;
 
             const isLastBall = tempDrillData.length === 1 && stepOptions.length === 1;
@@ -364,11 +372,25 @@ function renderEditor() {
                 const canvasId     = `editor-robot-canvas-${stepIndex}-${optIndex}`;
                 const multiRepsHtml = !isSingle ? `
                     <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
-                        <span class="reps-label">Reps</span>
+                        <span class="reps-label">Delay</span>
+                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -10)">−</button>
+                        <span class="reps-value">${ballParams[11] ?? 0}ms</span>
+                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
+                        <span class="reps-label" style="margin-left:10px;">Drop</span>
+                        <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3] ?? 0}</span>
+                        <span class="reps-label" style="margin-left:10px;">Reps</span>
                         <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
                         <span class="reps-value">${ballParams[5]}</span>
                         <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
-                    </div>` : '';
+                    </div>` : `
+                    <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
+                        <span class="reps-label">Delay</span>
+                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -10)">−</button>
+                        <span class="reps-value">${ballParams[11] ?? 0}ms</span>
+                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
+                        <span class="reps-label" style="margin-left:10px;">Drop</span>
+                        <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3] ?? 0}</span>
+                    </div>`;
                 const tableHtml = renderBallTable(stepIndex, optIndex, ballParams, bpmValue, spinSliderVal, spinColor, heightColor);
                 optDiv.innerHTML = label + multiRepsHtml + tableHtml + actionsHtml;
                 requestAnimationFrame(() => {
@@ -519,6 +541,13 @@ window.handleRepsStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
     const ball = tempDrillData[stepIdx][optIdx];
     ball[5] = Math.max(1, Math.min(200, (ball[5] || 1) + delta));
+    renderEditor();
+};
+
+window.handleDelayStep = (stepIdx, optIdx, delta) => {
+    if (!tempDrillData) return;
+    const ball = tempDrillData[stepIdx][optIdx];
+    ball[11] = Math.max(0, Math.min(10000, (ball[11] ?? 0) + delta));
     renderEditor();
 };
 

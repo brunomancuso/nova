@@ -15,6 +15,7 @@ let pauseTimer = null;
 let countdownTimer = null;
 let runTimer = null;
 let startTimeout = null; // --- ADDED: Track the start delay
+let _perBallDoneResolve = null; // resolves when DONE received between per-ball sends
 
 let activeDrillParams = null;
 let activeDrillRandom = false;
@@ -239,7 +240,7 @@ async function runIteration() {
         }
 
         log(`TX Ball ${i+1}: ${tempBall.join(' ')}`);
-        balls.push(packBall(...tempBall));
+        balls.push(tempBall);
     });
 
     // --- FIX: Only increment BALLS here ---
@@ -248,14 +249,43 @@ async function runIteration() {
     updateStatsUI();
     // --------------------------------------
 
-    const packet = buildPacket(balls);
     setActiveDrillName(activeDrillName);
-    await sendPacket(packet);
+
+    const hasDelays = balls.some(b => (b[11] ?? 0) > 0);
+    if (!hasDelays) {
+        // All balls in one packet (original behaviour)
+        await sendPacket(buildPacket(balls.map(b => packBall(...b))));
+    } else {
+        // Send each ball individually; wait for robot DONE before sending next
+        for (let i = 0; i < balls.length; i++) {
+            if (!isRunning) break;
+            const delay = balls[i][11] ?? 0;
+            if (delay > 0) await new Promise(r => setTimeout(r, delay));
+            if (!isRunning) break;
+            if (i < balls.length - 1) {
+                // Intermediate ball: send then wait for DONE before continuing
+                const donePromise = new Promise(r => { _perBallDoneResolve = r; });
+                await sendPacket(buildPacket([packBall(...balls[i])]));
+                await donePromise;
+            } else {
+                // Last ball: send and let the normal handleDone drive next iteration
+                await sendPacket(buildPacket([packBall(...balls[i])]));
+            }
+        }
+    }
 }
 
 // Callback from bluetooth.js when robot finishes
 export function handleDone() {
     if(!isRunning) return;
+
+    // If we're mid-sequence waiting for DONE before the next ball, resolve and return
+    if (_perBallDoneResolve) {
+        const res = _perBallDoneResolve;
+        _perBallDoneResolve = null;
+        res();
+        return;
+    }
 
     const isSim = document.body.classList.contains('sim-mode');
     if (isSim) simLog(`  ↩  handleDone: mode=${runMode}  rep=${currentCount}/${targetCount}`);
@@ -306,6 +336,7 @@ export function togglePause() {
 export function stopRun() {
     isRunning = false;
     isPaused = false;
+    _perBallDoneResolve = null;
     clearInterval(countdownTimer);
     clearInterval(runTimer);
     clearTimeout(pauseTimer);
