@@ -56,8 +56,8 @@ import './adjust.js';
 
 // --- Initialization ---
 
-document.addEventListener('DOMContentLoaded', () => {
-    initData();
+document.addEventListener('DOMContentLoaded', async () => {
+    await initData();
     renderDrillButtons();
     updateStatsUI();
     setupEventListeners();

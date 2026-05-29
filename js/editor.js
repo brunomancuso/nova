@@ -839,7 +839,6 @@ window.performSaveAs = () => {
 
     currentDrills[newKey] = newDrillData;
     saveDrillsToStorage(); 
-    localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
 
     window.closeSaveAsModal();
     closeEditor();
@@ -863,7 +862,6 @@ window.handleDeleteDrill = () => {
 
     delete currentDrills[editingDrillKey];
     saveDrillsToStorage();
-    localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
 
     closeEditor();
     showToast("Drill Deleted");
@@ -895,7 +893,6 @@ window.handleRenameDrill = () => {
         delete currentDrills[editingDrillKey];
 
         editingDrillKey = newKey;
-        localStorage.setItem('custom_data', JSON.stringify(userCustomDrills)); 
         saveDrillsToStorage(); 
         updateTitleDisplay(newKey);
         showToast("Renamed");

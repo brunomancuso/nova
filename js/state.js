@@ -1,6 +1,9 @@
 import { DEFAULT_DRILLS, RPM_MIN, RPM_MAX, SPIN_LIMITS, CATEGORIES } from './constants.js';
 import { showToast } from './utils.js';
 
+const API_DRILLS = '/api/drills';
+let _userDefaults = null;
+
 export let currentDrills = {};
 export let userCustomDrills = { "custom-a": [], "custom-b": [], "custom-c": [] };
 export let drillOrder = JSON.parse(JSON.stringify(CATEGORIES)); 
@@ -38,29 +41,37 @@ export function setLastPlayed(key) {
 }
 // ------------------------------
 
-export function initData() {
+export async function initData() {
     const savedTheme = localStorage.getItem('nova_theme_pref');
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
     const savedStats = localStorage.getItem('nova_stats');
     if (savedStats) { try { appStats = JSON.parse(savedStats); } catch(e){} }
 
-    const savedDrills = localStorage.getItem('custom_drills');
-    const userDefaults = localStorage.getItem('user_defaults');
-    const customData = localStorage.getItem('custom_data');
-    
-    const savedOrder = localStorage.getItem('drill_order');
-    if (savedOrder) {
-        try {
-            const parsedOrder = JSON.parse(savedOrder);
-            ['basic', 'combined', 'complex'].forEach(cat => {
-                if(parsedOrder[cat]) drillOrder[cat] = parsedOrder[cat];
-            });
-        } catch(e) { console.error("Error loading drill order", e); }
+    try {
+        const res = await fetch(API_DRILLS);
+        if (res.ok) {
+            const data = await res.json();
+            if (data.userDefaults) _userDefaults = data.userDefaults;
+            if (data.drills && Object.keys(data.drills).length > 0) {
+                currentDrills = data.drills;
+            } else {
+                currentDrills = _userDefaults
+                    ? JSON.parse(JSON.stringify(_userDefaults))
+                    : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
+            }
+            if (data.customData) userCustomDrills = data.customData;
+            if (data.drillOrder) {
+                ['basic', 'combined', 'complex'].forEach(cat => {
+                    if (data.drillOrder[cat]) drillOrder[cat] = data.drillOrder[cat];
+                });
+            }
+        } else {
+            currentDrills = JSON.parse(JSON.stringify(DEFAULT_DRILLS));
+        }
+    } catch(e) {
+        console.warn('Server unavailable, using defaults:', e);
+        currentDrills = JSON.parse(JSON.stringify(DEFAULT_DRILLS));
     }
-
-    currentDrills = savedDrills ? JSON.parse(savedDrills) : 
-                   (userDefaults ? JSON.parse(userDefaults) : JSON.parse(JSON.stringify(DEFAULT_DRILLS)));
-    if (customData) userCustomDrills = JSON.parse(customData);
     normalizeDrills();
 }
 
@@ -81,32 +92,51 @@ function normalizeDrills() {
 
 export function setLevel(lvl) { selectedLevel = lvl; }
 export function setMode(mode) { runMode = mode; }
-export function saveDrillsToStorage() { localStorage.setItem('custom_drills', JSON.stringify(currentDrills)); }
+export async function saveDrillsToStorage() {
+    try {
+        await fetch(API_DRILLS, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                drills: currentDrills,
+                customData: userCustomDrills,
+                drillOrder: drillOrder,
+                userDefaults: _userDefaults
+            })
+        });
+    } catch(e) {
+        console.error('Failed to save drills to server:', e);
+    }
+}
 
 export function saveDrillOrder() {
-    localStorage.setItem('drill_order', JSON.stringify(drillOrder));
+    saveDrillsToStorage();
 }
 
 export function saveAsDefault() {
-    if(confirm("Save current settings as your new personal default?")) {
-        localStorage.setItem('user_defaults', JSON.stringify(currentDrills));
+    if (confirm("Save current settings as your new personal default?")) {
+        _userDefaults = JSON.parse(JSON.stringify(currentDrills));
+        saveDrillsToStorage();
         showToast("Saved as Default");
     }
 }
 export function resetToDefault() {
-    const hasUserDefault = localStorage.getItem('user_defaults');
-    if(confirm(hasUserDefault ? "Restore saved defaults?" : "Restore factory settings?")) {
-        currentDrills = hasUserDefault ? JSON.parse(hasUserDefault) : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
+    const hasUserDefault = !!_userDefaults;
+    if (confirm(hasUserDefault ? "Restore saved defaults?" : "Restore factory settings?")) {
+        currentDrills = hasUserDefault
+            ? JSON.parse(JSON.stringify(_userDefaults))
+            : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
         drillOrder = JSON.parse(JSON.stringify(CATEGORIES));
-        localStorage.removeItem('drill_order');
         normalizeDrills();
-        localStorage.setItem('custom_drills', JSON.stringify(currentDrills));
+        saveDrillsToStorage();
         showToast("Restored");
         document.dispatchEvent(new CustomEvent('drills-updated'));
     }
 }
 export function factoryReset() {
-    if(confirm("WARNING: Delete ALL saved data and return to original factory state?")) {
+    if (confirm("WARNING: Delete ALL saved data and return to original factory state?")) {
+        _userDefaults = null;
+        fetch(API_DRILLS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         localStorage.clear();
         location.reload();
     }
@@ -254,7 +284,6 @@ export function importCustomDrills(csvText) {
             }
         }
 
-        localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
         saveDrillsToStorage();
         showToast("Imported Successfully");
         

@@ -5,7 +5,7 @@ Run:  python serve_https.py
 Then open https://<your-pc-ip>:8443 in Chrome on Android.
 """
 
-import os, ssl, socket, http.server
+import os, ssl, socket, http.server, json
 
 HOST  = "0.0.0.0"
 PORT  = 8443
@@ -65,11 +65,54 @@ if not os.path.exists(CERT) or not os.path.exists(KEY):
 
 # ── Start HTTPS server ────────────────────────────────────────────────────────
 os.chdir(ROOT)
+DATA_FILE = os.path.join(ROOT, 'drills_data.json')
+
+class NovaHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/api/drills':
+            if os.path.exists(DATA_FILE):
+                with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                    body = f.read().encode('utf-8')
+            else:
+                body = b'{}'
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', len(body))
+            self.end_headers()
+            self.wfile.write(body)
+        else:
+            super().do_GET()
+
+    def do_POST(self):
+        if self.path == '/api/drills':
+            length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+                with open(DATA_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2)
+                resp = b'{"ok":true}'
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', len(resp))
+                self.end_headers()
+                self.wfile.write(resp)
+            except Exception as e:
+                msg = str(e).encode()
+                self.send_response(500)
+                self.send_header('Content-Length', len(msg))
+                self.end_headers()
+                self.wfile.write(msg)
+        else:
+            self.send_error(404)
+
+    def log_message(self, format, *args):
+        pass  # suppress per-request access logs
 
 ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 ctx.load_cert_chain(CERT, KEY)
 
-server = http.server.HTTPServer((HOST, PORT), http.server.SimpleHTTPRequestHandler)
+server = http.server.HTTPServer((HOST, PORT), NovaHandler)
 server.socket = ctx.wrap_socket(server.socket, server_side=True)
 
 # Print all LAN IPs
