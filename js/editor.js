@@ -587,7 +587,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         const sy = canvas.height / rect.height;
         const cx = (e.clientX - rect.left) * sx;
         const cy = (e.clientY - rect.top)  * sy;
-        const hit = info.r + 8;   // generous hit radius
+        const hit = info.r + 24;  // generous touch target
         return Math.hypot(cx - info.x, cy - info.y) <= hit;
     }
 
@@ -650,12 +650,12 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
     canvas._ballDragMove = onMove;
     canvas._ballDragUp   = onUp;
     canvas._ballDragHover = onHover;
-    canvas.addEventListener('pointerdown',   onDown);
-    canvas.addEventListener('pointermove',   onMove);
+    canvas.addEventListener('pointerdown',   onDown, { passive: false });
+    canvas.addEventListener('pointermove',   onMove, { passive: false });
     canvas.addEventListener('pointermove',   onHover);
     canvas.addEventListener('pointerup',     onUp);
     canvas.addEventListener('pointercancel', onUp);
-    canvas.style.cursor = 'default';
+    canvas.style.cssText += '; touch-action: none; cursor: default;';
 }
 
 // Redraw the prediction ball on an editor canvas using current ball params.
