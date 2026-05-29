@@ -473,6 +473,22 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 }
 .drill-edit-btn:hover { opacity: 1; color: var(--primary); }
 
+.drill-run-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 100%;
+    cursor: pointer;
+    color: var(--text-light);
+    opacity: 0.35;
+    font-size: 0.9rem;
+    margin-left: 2px;
+    flex-shrink: 0;
+    transition: opacity 0.2s, color 0.2s;
+}
+.drill-run-btn:hover { opacity: 1; color: var(--success, #4caf50); }
+
 .btn-drill.dragging {
     opacity: 0.5;
     background: var(--card-bg);
@@ -1106,6 +1122,7 @@ body.connected .stats-inline-row { display: flex; }
 .btn-modal:active { transform: scale(0.96); }
 
 #calibration-modal .modal-footer .btn-modal { flex: 1; }
+#robot-pos-modal .modal-footer .btn-modal { flex: 1; }
 
 .btn-delete-drill { 
     background: var(--danger); 

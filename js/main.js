@@ -50,7 +50,7 @@ import {
 
 import { downloadDrill } from './cloud.js';
 import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
-import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, drawBall, getRobotXcm, getLastBallCanvas } from './robot.js';
+import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, applyRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, drawBall, getRobotXcm, getLastBallCanvas } from './robot.js';
 import { calibrateKvKd, calibrateKms, predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS } from './prediction.js';
 
 // --- Initialization ---
@@ -262,6 +262,7 @@ window.closeRobotPosModal = closeRobotPosModal;
 window.saveRobotPos       = saveRobotPos;
 window.cancelRobotPos     = cancelRobotPos;
 window.resetRobotPos      = resetRobotPos;
+window.applyRobotPos      = applyRobotPos;
 window.drawStaticRobot       = drawStaticRobot;
 window.getLastBallCanvas = getLastBallCanvas;
 

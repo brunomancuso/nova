@@ -10,10 +10,10 @@ const STORAGE_KEY = 'nova_robot_pos';
 let _savedPos  = _loadPos();   // last committed (localStorage) state
 let robotPos   = { ..._savedPos }; // working copy while modal is open
 
-// Last ball position in canvas coords — set by drawBall(), read by editor drag hit-test
-let _lastBallCanvas = null;  // { canvasEl, x, y, r }
+// Ball position per canvas — set by drawBall(), read by editor drag hit-test
+const _ballCanvasMap = new WeakMap();  // canvas → { x, y, r }
 
-export function getLastBallCanvas() { return _lastBallCanvas; }
+export function getLastBallCanvas(canvas) { return canvas ? _ballCanvasMap.get(canvas) : null; }
 
 let _isDragging = false;
 let _layout = { tX: 0, tY: 0, tW: 1, tH: 1 };
@@ -39,10 +39,21 @@ export function saveRobotPos() {
     _savePos();
     if (window.simLog) {
         const x = (robotPos.x * 274).toFixed(1);
-        const y = (robotPos.y * 152.5).toFixed(1);   // offset from centre in cm
+        const y = (robotPos.y * 152.5).toFixed(1);
         window.simLog(`[Robot] New Position: (${x}, ${y})`);
     }
     closeRobotPosModal();
+}
+
+// Apply current working position without closing the modal
+export function applyRobotPos() {
+    _savePos();
+    if (window.simLog) {
+        const x = (robotPos.x * 274).toFixed(1);
+        const y = (robotPos.y * 152.5).toFixed(1);
+        window.simLog(`[Robot] Test Position: (${x}, ${y})`);
+    }
+    if (window.showToast) window.showToast('Position applied');
 }
 
 export function cancelRobotPos() {
@@ -97,7 +108,7 @@ export function drawBall(canvas, xCm, yCm = 0) {
     const cannonY = tY + (0.5 + _savedPos.y) * tH;              // vertical centre
     const ballY   = cannonY - (yCm / 152.5) * tH;               // lateral offset (up = positive)
     const ballR = Math.max(3.5, (3 / 274) * tW);   // ~3 cm radius
-    _lastBallCanvas = { canvasEl: canvas, x: ballX, y: ballY, r: ballR };
+    _ballCanvasMap.set(canvas, { x: ballX, y: ballY, r: ballR });
 
     ctx.save();
     // Dashed trajectory line

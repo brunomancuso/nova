@@ -253,10 +253,18 @@ function createButton(container, key, label, allowSort, category) {
     editBtn.onclick = (e) => { e.stopPropagation(); openEditor(key); };
     btn.appendChild(editBtn);
 
-    btn.onclick = (e) => {
-        if(btn.classList.contains('dragging')) return;
-        window.handleDrillClick(key, btn);
+    // Run button (play icon)
+    const runBtn = document.createElement('div');
+    runBtn.className = 'drill-run-btn';
+    runBtn.innerHTML = '&#9654;';
+    runBtn.title = 'Run drill';
+    runBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    runBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+    runBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (!btn.classList.contains('dragging')) window.handleDrillClick(key, btn);
     };
+    btn.appendChild(runBtn);
 
     container.appendChild(btn);
 }

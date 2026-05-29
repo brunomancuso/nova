@@ -580,8 +580,8 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
     let startSpeed = null;
 
     function _hitBall(e) {
-        const info = window.getLastBallCanvas?.();
-        if (!info || info.canvasEl !== canvas) return false;
+        const info = window.getLastBallCanvas?.(canvas);
+        if (!info) return false;
         const rect = canvas.getBoundingClientRect();
         const sx = canvas.width / rect.width;
         const sy = canvas.height / rect.height;
