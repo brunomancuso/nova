@@ -263,8 +263,9 @@ window.saveRobotPos       = saveRobotPos;
 window.cancelRobotPos     = cancelRobotPos;
 window.resetRobotPos      = resetRobotPos;
 window.applyRobotPos      = applyRobotPos;
-window.drawStaticRobot       = drawStaticRobot;
-window.getLastBallCanvas = getLastBallCanvas;
+window.drawStaticRobot    = drawStaticRobot;
+window.getLastBallCanvas  = getLastBallCanvas;
+window.getRobotXcm        = getRobotXcm;
 
 // ── Calibration modal ────────────────────────────────────────────────────────
 // Target landing positions (cm from near end): 6/8, 7/8, far end of table
@@ -446,6 +447,14 @@ window.drawEditorBall = (canvas, speed, spin, angle, drop = 0) => {
     const cannonM = getRobotXcm() + 40;   // cm: robot position + robot depth
     const yCm = predictY(drop, xFlight);
     drawBall(canvas, xFlight + cannonM, yCm);
+};
+
+window.getEditorXFlight = (speed, spin, angle) => {
+    const stored = _loadCalibration();
+    const kv  = stored?.kv  ?? DEFAULT_KV;
+    const kd  = stored?.kd  ?? DEFAULT_KD;
+    const kMS = stored?.kms ?? DEFAULT_KMS;
+    return predictX(angle, spin, speed, { kv, kd, kMS });
 };
 window.toggleEditorMode   = toggleEditorMode;
 window.simLog             = simLog;

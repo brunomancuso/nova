@@ -1,4 +1,5 @@
 import { currentDrills, userCustomDrills, selectedLevel, saveDrillsToStorage } from './state.js';
+import { renderBallTable, drawSideView } from './table.js';
 import { SPIN_LIMITS, RPM_MIN, RPM_MAX } from './constants.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { showToast, clamp, toggleBodyScroll } from './utils.js';
@@ -173,7 +174,12 @@ function renderEditor() {
         const maxScatter = 10 - Math.abs(currentDrop); 
 
         const scatterHtml = isSingle ? `
-            <div style="display:flex; align-items:center; gap:5px; margin-left:auto; margin-right:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:6px;">
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, 0, -1)">−</button>
+                    <span style="font-size:0.9rem; font-weight:700; min-width:22px; text-align:center; color:#fff;">${stepOptions[0][5]}</span>
+                    <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, 0, 1)">+</button>
+                </div>
                 <div class="editor-field" style="flex-direction:row; align-items:center; gap:6px; padding:2px 6px; background:var(--bg); border:1px solid var(--border);">
                     <label style="font-size:0.6rem; color:var(--text-light); font-weight:800; text-transform:uppercase;">Scatter</label>
                     <input type="number" inputmode="decimal" 
@@ -248,11 +254,6 @@ function renderEditor() {
                 <div class="editor-grid">
                     <div class="editor-field">
                         <div class="field-header"><label>Speed</label></div>
-                        <div class="preset-row">
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,3,this)">−</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,5,this)">MED</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,8,this)">+</button>
-                        </div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-speed-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-speed-${stepIndex}-${optIndex}" value="${speed}" step="0.5" min="0" max="10"
@@ -262,11 +263,6 @@ function renderEditor() {
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Spin</label></div>
-                        <div class="preset-row">
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,2,this)">−</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,5,this)">MED</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,8,this)">+</button>
-                        </div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-spin-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-spin-${stepIndex}-${optIndex}" value="${spin}" step="0.5" min="0" max="${currentMaxSpin}"
@@ -277,11 +273,6 @@ function renderEditor() {
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Height</label></div>
-                        <div class="preset-row">
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,10,this)">−</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,50,this)">MED</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,90,this)">+</button>
-                        </div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-height-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-height-${stepIndex}-${optIndex}" value="${ballParams[2]}" step="1" min="-50" max="100"
@@ -291,11 +282,6 @@ function renderEditor() {
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>Drop</label></div>
-                        <div class="preset-row">
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,-5,this)">−</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,0,this)">MED</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,5,this)">+</button>
-                        </div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-drop-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-drop-${stepIndex}-${optIndex}" value="${ballParams[3]}" step="0.5" min="-10" max="10"
@@ -305,11 +291,6 @@ function renderEditor() {
                     </div>
                     <div class="editor-field">
                         <div class="field-header"><label>BPM</label></div>
-                        <div class="preset-row">
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,40,this)">−</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,60,this)">MED</button>
-                            <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,80,this)">+</button>
-                        </div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="90"
@@ -317,6 +298,7 @@ function renderEditor() {
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
                     </div>
+                    ${!isSingle ? `
                     <div class="editor-field">
                         <div class="field-header"><label>Reps</label></div>
                         <div class="field-stepper-row">
@@ -325,7 +307,7 @@ function renderEditor() {
                                 oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 5, this.value)">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-reps-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
-                    </div>
+                    </div>` : ''}
                 </div>`;
 
             const isLastBall = tempDrillData.length === 1 && stepOptions.length === 1;
@@ -346,75 +328,34 @@ function renderEditor() {
             const label = stepOptions.length > 1 ? `<span class="option-label">Variant ${optIndex + 1}</span>` : '';
 
             if (_tableViewMode) {
-                // Compact view: reps stepper overlaid on canvas top-left
                 const spinSliderVal = type === 'back' ? -Math.min(spin, 10) : Math.min(spin, 10);
                 const spinColor    = spinSliderVal < 0 ? '#e53935' : '#43a047';
                 const heightColor  = ballParams[2] < 0 ? '#9e9e9e' : '#0984e3';
-                const canvasId = `editor-robot-canvas-${stepIndex}-${optIndex}`;
-                const compactToggleHtml = '';
-                const canvasHtml = `
-                    <div class="edit-mode-canvas-row">
-                        <div class="edit-mode-canvas-col">
-                            <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
-                                <span class="reps-label">Reps</span>
-                                <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
-                                <span class="reps-value">${ballParams[5]}</span>
-                                <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
-                                <span class="bpm-slider-label" style="margin-left:10px;">Drop</span>
-                                <span class="bpm-slider-val" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3]}</span>
-                            </div>
-                            <div style="position:relative;">
-                                <canvas id="${canvasId}" width="340" height="218" style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
-                            </div>
-                            <div class="speed-slider-row">
-                                <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${stepIndex}-${optIndex}',-1)">−</button>
-                                <input type="range" id="rng-speed-${stepIndex}-${optIndex}" class="speed-slider-h"
-                                       min="0" max="10" step="0.1" value="${speed}"
-                                       oninput="window.handleEditModeSpeed(${stepIndex}, ${optIndex}, this.value)">
-                                <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${stepIndex}-${optIndex}',1)">+</button>
-                            </div>
-                            <span class="bpm-slider-label" style="text-align:center; width:100%; display:block; margin-top:1px;">Speed</span>
-                            <span class="bpm-slider-val" id="speed-val-${stepIndex}-${optIndex}" style="display:block; text-align:center; width:100%;">${speed}</span>
-                        </div>
-                        <div class="bpm-slider-col">
-                            <div style="height:19px; margin-bottom:2px;"></div>
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${stepIndex}-${optIndex}',1)">▲</button>
-                            <input type="range" id="rng-bpm-${stepIndex}-${optIndex}" class="bpm-slider-v"
-                                   min="30" max="90" value="${bpmValue}"
-                                   oninput="window.handleEditModeBpm(${stepIndex}, ${optIndex}, this.value)">
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${stepIndex}-${optIndex}',-1)">▼</button>
-                            <span class="bpm-slider-label">BPM</span>
-                            <span class="bpm-slider-val" id="bpm-val-${stepIndex}-${optIndex}">${bpmValue}</span>
-                        </div>
-                        <div class="bpm-slider-col">
-                            <button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-spin-${stepIndex}-${optIndex}',1)">▲</button>
-                            <input type="range" id="rng-spin-${stepIndex}-${optIndex}" class="bpm-slider-v"
-                                   min="-10" max="10" step="0.1" value="${spinSliderVal}"
-                                   style="accent-color:${spinColor}"
-                                   oninput="window.handleEditModeSpin(${stepIndex}, ${optIndex}, this.value, this)">
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-spin-${stepIndex}-${optIndex}',-1)">▼</button>
-                            <span class="bpm-slider-label">Spin</span>
-                            <span class="bpm-slider-val" id="spin-val-${stepIndex}-${optIndex}" style="color:${spinColor}">${spinSliderVal > 0 ? '+' : ''}${spinSliderVal}</span>
-                        </div>
-                        <div class="bpm-slider-col">
-                            <div style="height:19px; margin-bottom:2px;"></div>
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${stepIndex}-${optIndex}',1)">▲</button>
-                            <input type="range" id="rng-height-${stepIndex}-${optIndex}" class="bpm-slider-v"
-                                   min="-50" max="100" step="1" value="${ballParams[2]}"
-                                   style="accent-color:${heightColor}"
-                                   oninput="window.handleEditModeHeight(${stepIndex}, ${optIndex}, this.value, this)">
-                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${stepIndex}-${optIndex}',-1)">▼</button>
-                            <span class="bpm-slider-label">Height</span>
-                            <span class="bpm-slider-val" id="height-val-${stepIndex}-${optIndex}" style="color:${heightColor}">${ballParams[2]}</span>
-                        </div>
-                    </div>`;
-                optDiv.innerHTML = label + compactToggleHtml + canvasHtml + actionsHtml;
+                const canvasId     = `editor-robot-canvas-${stepIndex}-${optIndex}`;
+                const lockHtml = `<button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>`;
+                // Reps row only for multi-variant (single-variant shows reps in group header)
+                const multiRepsHtml = !isSingle ? `
+                    <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
+                        <span class="reps-label">Reps</span>
+                        <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
+                        <span class="reps-value">${ballParams[5]}</span>
+                        <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
+                    </div>` : '';
+                const tableHtml = renderBallTable(stepIndex, optIndex, ballParams, bpmValue, spinSliderVal, spinColor, heightColor, lockHtml);
+                optDiv.innerHTML = label + multiRepsHtml + tableHtml + actionsHtml;
                 requestAnimationFrame(() => {
                     _redrawEditorCanvas(stepIndex, optIndex);
                     const c = document.getElementById(canvasId);
                     if (c && window.attachTableClickHint) window.attachTableClickHint(c);
                     if (c) _attachBallDrag(c, stepIndex, optIndex);
+                    const sc = document.getElementById(`side-view-canvas-${stepIndex}-${optIndex}`);
+                    if (sc) {
+                        const sAngle    = ballParams[2] ?? 50;
+                        const sSpin     = type === 'back' ? -(spin ?? 0) : (spin ?? 0);
+                        const xFlight   = window.getEditorXFlight?.(speed, sSpin, sAngle) ?? 0;
+                        const thetaRad  = (sAngle - 20) * (2 / 7) * Math.PI / 180;
+                        drawSideView(sc, xFlight, thetaRad);
+                    }
                 });
             } else {
                 optDiv.innerHTML = label + toggleHtml + inputsHtml + actionsHtml;
@@ -631,6 +572,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         ball[0] = res.top; ball[1] = res.bot;
 
         _redrawEditorCanvas(stepIdx, optIdx);
+        _redrawSideView(stepIdx, optIdx);
     };
 
     const onUp = () => {
@@ -674,6 +616,18 @@ function _redrawEditorCanvas(stepIdx, optIdx) {
     }
 }
 
+function _redrawSideView(stepIdx, optIdx) {
+    const sc = document.getElementById(`side-view-canvas-${stepIdx}-${optIdx}`);
+    if (!sc || !tempDrillData?.[stepIdx]?.[optIdx]) return;
+    const ball      = tempDrillData[stepIdx][optIdx];
+    const speed     = ball[7] ?? 0;
+    const spin      = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
+    const angle     = ball[2] ?? 50;
+    const xFlight   = window.getEditorXFlight?.(speed, spin, angle) ?? 0;
+    const thetaRad  = (angle - 20) * (2 / 7) * Math.PI / 180;
+    drawSideView(sc, xFlight, thetaRad);
+}
+
 window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
     if (!tempDrillData) return;
     const h = clamp(parseFloat(value), -50, 100);
@@ -683,6 +637,7 @@ window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
     const el = document.getElementById(`height-val-${stepIdx}-${optIdx}`);
     if (el) { el.textContent = h; el.style.color = color; }
     _redrawEditorCanvas(stepIdx, optIdx);
+    _redrawSideView(stepIdx, optIdx);
 };
 
 window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
@@ -697,6 +652,7 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
     const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = v;
     _redrawEditorCanvas(stepIdx, optIdx);
+    _redrawSideView(stepIdx, optIdx);
 };
 
 window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
@@ -730,6 +686,7 @@ window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
     const el = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
     if (el) { el.textContent = (v > 0 ? '+' : '') + v; el.style.color = color; }
     _redrawEditorCanvas(stepIdx, optIdx);
+    _redrawSideView(stepIdx, optIdx);
 };
 
 window.handleToggleBallActive = (stepIdx) => {
