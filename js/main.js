@@ -44,12 +44,14 @@ import {
     startDrillSequence, 
     stopRun, 
     togglePause,
-    skipCountdown // <--- ADDED IMPORT
+    skipCountdown, // <--- ADDED IMPORT
+    sendSingleBall
 } from './runner.js';
 
 import { downloadDrill } from './cloud.js';
 import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
-import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, drawStaticRobot, attachTableClickHint } from './robot.js';
+import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, drawBall, getRobotXcm, getLastBallCanvas } from './robot.js';
+import { calibrateKvKd, calibrateKms, predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS } from './prediction.js';
 
 // --- Initialization ---
 
@@ -58,6 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
     renderDrillButtons();
     updateStatsUI();
     setupEventListeners();
+
+    // Seed default calibration values if none stored, or migrate any known stale defaults
+    const _storedCal = localStorage.getItem(CAL_STORAGE_KEY);
+    const _STALE = [
+        { kv: 0.00691, kd: 0.19  },   // original over-damped default
+        { kv: 0.00245, kd: 0.08  },   // incorrect recalibration
+        { kv: 0.00245, kd: 0.125 },   // partial fix attempt
+        { kv: 0.00691, kd: 0.125 },   // pre-angle-fix constants
+    ];
+    const _isStale = !_storedCal || (() => {
+        try {
+            const s = JSON.parse(_storedCal);
+            return _STALE.some(o => s.kv === o.kv && s.kd === o.kd);
+        } catch { return false; }
+    })();
+    if (_isStale) {
+        localStorage.setItem(CAL_STORAGE_KEY, JSON.stringify({
+            kv:  DEFAULT_KV,
+            kd:  DEFAULT_KD,
+            kms: DEFAULT_KMS,
+        }));
+    }
 
     // Restore simulator mode preference
     const simEnabled = localStorage.getItem('nova_sim_mode') === '1';
@@ -237,8 +261,191 @@ window.openRobotPosModal  = openRobotPosModal;
 window.closeRobotPosModal = closeRobotPosModal;
 window.saveRobotPos       = saveRobotPos;
 window.cancelRobotPos     = cancelRobotPos;
+window.resetRobotPos      = resetRobotPos;
 window.drawStaticRobot       = drawStaticRobot;
-window.attachTableClickHint  = attachTableClickHint;
+window.getLastBallCanvas = getLastBallCanvas;
+
+// ── Calibration modal ────────────────────────────────────────────────────────
+// Target landing positions (cm from near end): 6/8, 7/8, far end of table
+const CAL_BALL_X      = [274 * 6 / 8 - 2, 274 * 7 / 8 - 2, 274 - 2];
+const CAL_BH          = 50;
+const CAL_DP          = 0;
+const CAL_FREQ        = 0;
+const CAL_REPS        = 1;
+const CAL_STORAGE_KEY = 'nova_calibration';
+
+// Phase 1 → spin=0, 3 balls → calibrate kv+kd
+// Phase 2 → spin=5, 3 balls → calibrate kMS
+// done   → show Save button
+let _calPhase        = 1;
+let _calBalls        = [{ speed: 2 }, { speed: 5 }, { speed: 8 }];
+let _calSelectedBall = 0;
+let _calPhase1Shots  = [];   // recorded {speed,spin,angle,x} for phase 1
+let _calPhase2Shots  = [];   // recorded {speed,spin,angle,x} for phase 2
+let _calResult       = { kv: null, kd: null, kms: null };
+
+function _loadCalibration() {
+    try {
+        const s = JSON.parse(localStorage.getItem(CAL_STORAGE_KEY));
+        if (s && typeof s.kv === 'number') return s;
+    } catch (_) {}
+    return null;
+}
+
+function _drawCalCanvas() {
+    const canvas = document.getElementById('calibration-table-canvas');
+    if (!canvas) return;
+    drawBall(canvas, CAL_BALL_X[_calSelectedBall]);
+}
+
+function _refreshResultsPanel() {
+    const panel   = document.getElementById('cal-results-panel');
+    const saveBtn = document.getElementById('cal-save-btn');
+    if (!panel) return;
+
+    const stored  = _loadCalibration();
+    const hasCur  = _calResult.kv !== null;
+    let html = '';
+
+    if (hasCur) {
+        html += `<div class="cal-result-section">Result</div>`;
+        html += `<div class="cal-result-row"><span class="cal-result-lbl">kv</span><span class="cal-result-val">${_calResult.kv.toFixed(5)}</span></div>`;
+        html += `<div class="cal-result-row"><span class="cal-result-lbl">kd</span><span class="cal-result-val">${_calResult.kd.toFixed(4)}</span></div>`;
+        if (_calResult.kms !== null) {
+            html += `<div class="cal-result-row"><span class="cal-result-lbl">kMS</span><span class="cal-result-val">${_calResult.kms.toFixed(4)}</span></div>`;
+        }
+    }
+
+    if (!hasCur && stored) {
+        html += `<div class="cal-result-section">Stored</div>`;
+        html += `<div class="cal-result-row"><span class="cal-result-lbl">kv</span><span class="cal-result-val">${stored.kv.toFixed(5)}</span></div>`;
+        html += `<div class="cal-result-row"><span class="cal-result-lbl">kd</span><span class="cal-result-val">${stored.kd.toFixed(4)}</span></div>`;
+        if (stored.kms != null) {
+            html += `<div class="cal-result-row"><span class="cal-result-lbl">kMS</span><span class="cal-result-val">${stored.kms.toFixed(4)}</span></div>`;
+        }
+    }
+
+    panel.innerHTML = html;
+    if (saveBtn) saveBtn.style.display = (_calResult.kms !== null) ? '' : 'none';
+}
+
+function _refreshCalUI() {
+    const slider     = document.getElementById('cal-speed-slider');
+    const valEl      = document.getElementById('cal-speed-val');
+    const phaseLabel = document.getElementById('cal-phase-label');
+    const speed      = _calBalls[_calSelectedBall].speed;
+
+    if (slider)     slider.value        = speed;
+    if (valEl)      valEl.textContent   = speed;
+    if (phaseLabel) phaseLabel.textContent =
+        _calPhase === 1 ? 'Phase 1 · Spin 0' : 'Phase 2 · Spin 5';
+
+    for (let i = 0; i < 3; i++) {
+        document.getElementById(`cal-ball-${i}`)?.classList.toggle('selected', i === _calSelectedBall);
+    }
+    _drawCalCanvas();
+    _refreshResultsPanel();
+}
+
+window.openCalibrationModal = () => {
+    _calPhase        = 1;
+    _calBalls        = [{ speed: 2 }, { speed: 5 }, { speed: 8 }];
+    _calSelectedBall = 0;
+    _calPhase1Shots  = [];
+    _calPhase2Shots  = [];
+    _calResult       = { kv: null, kd: null, kms: null };
+    document.getElementById('calibration-modal')?.classList.add('open');
+    requestAnimationFrame(_refreshCalUI);
+};
+
+window.closeCalibrationModal = () => {
+    document.getElementById('calibration-modal')?.classList.remove('open');
+};
+
+window.calSelectBall = (i) => {
+    _calSelectedBall = i;
+    _refreshCalUI();
+};
+
+window.calSpeedChanged = (val) => {
+    _calBalls[_calSelectedBall].speed = parseFloat(val);
+    document.getElementById('cal-speed-val').textContent = val;
+    _drawCalCanvas();
+};
+
+window.nextCalibrationBall = () => {
+    // Record the current ball
+    const shot = {
+        speed:  _calBalls[_calSelectedBall].speed,
+        spin:   _calPhase === 1 ? 0 : 5,
+        angle: CAL_BH,
+        x:      CAL_BALL_X[_calSelectedBall],
+    };
+    if (_calPhase === 1) _calPhase1Shots[_calSelectedBall] = shot;
+    else                 _calPhase2Shots[_calSelectedBall] = shot;
+
+    if (_calSelectedBall < 2) {
+        // More balls in this phase
+        _calSelectedBall++;
+        _refreshCalUI();
+        return;
+    }
+
+    // Last ball of the phase
+    if (_calPhase === 1) {
+        const { kv, kd } = calibrateKvKd(_calPhase1Shots, getRobotXcm());
+        _calResult = { kv, kd, kms: null };
+        // Begin phase 2
+        _calPhase        = 2;
+        _calBalls        = [{ speed: 2 }, { speed: 5 }, { speed: 8 }];
+        _calSelectedBall = 0;
+        _calPhase2Shots  = [];
+    } else {
+        const kms = calibrateKms(_calPhase2Shots, _calResult.kv, _calResult.kd, getRobotXcm());
+        _calResult.kms   = kms;
+        _calSelectedBall = 0;   // reset stepper; Save button now visible
+    }
+    _refreshCalUI();
+};
+
+window.sendCalibrationBall = async () => {
+    if (!bleState.isConnected) { showToast('Device not connected'); return; }
+    const spd       = _calBalls[_calSelectedBall].speed;
+    const baseRpm   = Math.round(970 + 630.5 * spd);
+    const spinDelta = _calPhase === 2 ? Math.round(342 * 5) : 0;
+    const ok = await sendSingleBall(baseRpm + spinDelta, baseRpm - spinDelta, CAL_BH, CAL_DP, CAL_FREQ, CAL_REPS);
+    if (ok) showToast('Calibration ball sent');
+};
+
+window.saveCalibrationResult = () => {
+    localStorage.setItem(CAL_STORAGE_KEY, JSON.stringify(_calResult));
+    showToast('Calibration saved');
+    window.closeCalibrationModal();
+};
+
+window.resetCalibration = () => {
+    localStorage.setItem(CAL_STORAGE_KEY, JSON.stringify({
+        kv:  DEFAULT_KV,
+        kd:  DEFAULT_KD,
+        kms: DEFAULT_KMS,
+    }));
+    _calResult = { kv: null, kd: null, kms: null };
+    showToast('Calibration reset to defaults');
+    window.closeCalibrationModal();
+};
+
+// Draw a predicted ball landing on an editor canvas using stored calibration.
+// Falls back to default physics constants if no calibration has been saved.
+window.drawEditorBall = (canvas, speed, spin, angle, drop = 0) => {
+    const stored = _loadCalibration();
+    const kv  = stored?.kv  ?? DEFAULT_KV;
+    const kd  = stored?.kd  ?? DEFAULT_KD;
+    const kMS = stored?.kms ?? DEFAULT_KMS;
+    const xFlight = predictX(angle, spin, speed, { kv, kd, kMS });
+    const cannonM = getRobotXcm() + 40;   // cm: robot position + robot depth
+    const yCm = predictY(drop, xFlight);
+    drawBall(canvas, xFlight + cannonM, yCm);
+};
 window.toggleEditorMode   = toggleEditorMode;
 window.simLog             = simLog;
 

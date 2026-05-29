@@ -341,6 +341,14 @@ function formatTime(s) {
     return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
 }
 
+// Send a single ball immediately (for calibration / test shots)
+export async function sendSingleBall(us, ls, bh, dp, freq, reps) {
+    if (!bleState.isConnected) return false;
+    const packet = buildPacket([packBall(us, ls, bh, dp, freq, reps)]);
+    await sendPacket(packet);
+    return true;
+}
+
 function buildPacket(balls) {
     const b = new ArrayBuffer(7 + balls.length*24);
     const v = new DataView(b);

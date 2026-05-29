@@ -10,19 +10,24 @@ const STORAGE_KEY = 'nova_robot_pos';
 let _savedPos  = _loadPos();   // last committed (localStorage) state
 let robotPos   = { ..._savedPos }; // working copy while modal is open
 
+// Last ball position in canvas coords — set by drawBall(), read by editor drag hit-test
+let _lastBallCanvas = null;  // { canvasEl, x, y, r }
+
+export function getLastBallCanvas() { return _lastBallCanvas; }
+
 let _isDragging = false;
 let _layout = { tX: 0, tY: 0, tW: 1, tH: 1 };
 
-// Robot size as fraction of table dimensions (length × width)
-const ROB_W = 0.10;
-const ROB_H = 0.18;
+// Robot size as fraction of table dimensions (depth along length × width across width)
+const ROB_W = 40 / 274;    // ≈ 0.146  — 40 cm robot depth  / 274 cm table length
+const ROB_H = 16 / 152.5;  // ≈ 0.105  — 16 cm robot width  / 152.5 cm table width
 
 function _loadPos() {
     try {
         const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (s && typeof s.x === 'number' && typeof s.y === 'number') return s;
     } catch (_) {}
-    return { x: 0.08, y: 0.5 };
+    return { x: 0, y: 0 }; // left edge at near end, centred laterally
 }
 
 function _savePos() {
@@ -33,8 +38,8 @@ function _savePos() {
 export function saveRobotPos() {
     _savePos();
     if (window.simLog) {
-        const x = ((robotPos.x - ROB_W / 2) * 274).toFixed(1);
-        const y = ((0.5 - robotPos.y) * 152.5).toFixed(1);
+        const x = (robotPos.x * 274).toFixed(1);
+        const y = (robotPos.y * 152.5).toFixed(1);   // offset from centre in cm
         window.simLog(`[Robot] New Position: (${x}, ${y})`);
     }
     closeRobotPosModal();
@@ -49,11 +54,71 @@ export function getRobotPosition() {
     return { ...robotPos };
 }
 
+// Returns the robot's X position in cm (0 = near end, 274 = far end).
+export function getRobotXcm() {
+    return _savedPos.x * 274;
+}
+
+// Reset the working position to (0, 0) and redraw — for use while modal is open.
+export function resetRobotPos() {
+    robotPos = { x: 0, y: 0 };
+    const canvas = document.getElementById('robot-table-canvas');
+    if (canvas) _draw(canvas, false);
+}
+
 // Draw the table+robot onto any canvas element without attaching drag events
 // compact=true skips the outside-zone boxes
 export function drawStaticRobot(canvas, compact = false) {
     if (!canvas) return;
     _draw(canvas, compact);
+}
+
+// Draw robot at a fixed cm position (does not affect saved robotPos)
+// xCm = left-edge position in cm from near end; yCm = offset from table centre in cm (negative = top)
+export function drawAtCm(canvas, xCm, yCm, compact = false) {
+    if (!canvas) return;
+    const saved = { ...robotPos };
+    robotPos = { x: xCm / 274, y: yCm / 152.5 };
+    _draw(canvas, compact);
+    robotPos = saved;
+}
+
+// Draw table (compact) + a ball at xCm from near end, with a dashed
+// trajectory line from the cannon tip to the ball.
+export function drawBall(canvas, xCm, yCm = 0) {
+    if (!canvas) return;
+    _draw(canvas, true);
+    const ctx = canvas.getContext('2d');
+    const { tX, tY, tW, tH } = _layout;
+
+    // Ball canvas position
+    const ballX = tX + (xCm / 274) * tW;
+    const cannonX = tX + (_savedPos.x + ROB_W) * tW + 9;       // right edge of robot body
+    const cannonY = tY + (0.5 + _savedPos.y) * tH;              // vertical centre
+    const ballY   = cannonY - (yCm / 152.5) * tH;               // lateral offset (up = positive)
+    const ballR = Math.max(3.5, (3 / 274) * tW);   // ~3 cm radius
+    _lastBallCanvas = { canvasEl: canvas, x: ballX, y: ballY, r: ballR };
+
+    ctx.save();
+    // Dashed trajectory line
+    ctx.beginPath();
+    ctx.setLineDash([5, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+    ctx.lineWidth = 1.5;
+    ctx.moveTo(cannonX, cannonY);
+    ctx.lineTo(ballX, ballY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Ball circle
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.restore();
 }
 
 export function openRobotPosModal() {
@@ -171,14 +236,14 @@ function _draw(canvas, compact = false) {
     // ── Robot ──
     const rW = tW * ROB_W;
     const rH = tH * ROB_H;
-    const rcx = tX + robotPos.x * tW;
-    const rcy = tY + robotPos.y * tH;
+    const rcx = tX + (robotPos.x + ROB_W / 2) * tW;   // centre = left-edge + half-width
+    const rcy = tY + (0.5 + robotPos.y) * tH;          // centre = table-mid + y-offset
     _drawRobot(ctx, rcx, rcy, rW, rH);
 
     // ── Saved-coords label (upper-right, non-compact only) ──
     if (!compact) {
-        const xCm = ((robotPos.x - ROB_W / 2) * 274).toFixed(1);
-        const yCm = ((0.5 - robotPos.y) * 152.5).toFixed(1);
+        const xCm = (robotPos.x * 274).toFixed(1);        // left-edge in cm from near end
+        const yCm = (robotPos.y * 152.5).toFixed(1);       // offset from table centre in cm
         const label = `(${xCm}, ${yCm})`;
         ctx.font = 'bold 12px monospace';
         const tw = ctx.measureText(label).width;
@@ -323,8 +388,8 @@ function _hitTest(x, y) {
     const { tX, tY, tW, tH } = _layout;
     const rW = tW * ROB_W;
     const rH = tH * ROB_H;
-    const rcx = tX + robotPos.x * tW;
-    const rcy = tY + robotPos.y * tH;
+    const rcx = tX + (robotPos.x + ROB_W / 2) * tW;
+    const rcy = tY + (0.5 + robotPos.y) * tH;
     const pad = 10;
     return x >= rcx - rW / 2 - pad && x <= rcx + rW / 2 + pad &&
            y >= rcy - rH / 2 - pad && y <= rcy + rH / 2 + pad;
@@ -334,14 +399,14 @@ function _updatePos(x, y) {
     const { tX, tY, tW, tH } = _layout;
     const H = tY * 2 + tH; // canvas height
 
-    // Clamp robot centre so its body stays within the visual outside-zone edges (x=6, y=6, y=H-6)
-    const MIN_X = (6 - tX) / tW + ROB_W / 2;     // left box inner edge + half robot
-    const MAX_X =  0.5 - ROB_W / 2;               // just before net
-    const MIN_Y = (6 - tY) / tH + ROB_H / 2;     // top box inner edge + half robot
-    const MAX_Y = (H - 6 - tY) / tH - ROB_H / 2; // bottom box inner edge - half robot
+    // Clamp left-edge and y-offset so robot body stays within the table
+    const MIN_X = (6 - tX) / tW;                  // left-edge at outer left zone
+    const MAX_X =  0.5 - ROB_W;                   // right edge (left + ROB_W) at net
+    const MIN_Y = -(0.5 - ROB_H / 2);             // top of robot at top rail
+    const MAX_Y =   0.5 - ROB_H / 2;              // bottom of robot at bottom rail
 
-    robotPos.x = Math.max(MIN_X, Math.min(MAX_X, (x - tX) / tW));
-    robotPos.y = Math.max(MIN_Y, Math.min(MAX_Y, (y - tY) / tH));
+    robotPos.x = Math.max(MIN_X, Math.min(MAX_X, (x - tX) / tW - ROB_W / 2));
+    robotPos.y = Math.max(MIN_Y, Math.min(MAX_Y, (y - tY) / tH - 0.5));
 }
 
 

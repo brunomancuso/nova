@@ -734,6 +734,15 @@ body.connected .stats-inline-row { display: flex; }
     gap: 3px; padding: 4px 2px;
     min-width: 36px; align-self: stretch;
 }
+.slider-step-btn {
+    width: 22px; height: 22px; border-radius: 4px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text-light); font-size: 0.65rem; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s; flex-shrink: 0; padding: 0;
+}
+.slider-step-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+.slider-step-btn:active { transform: scale(0.92); }
 .bpm-slider-limit { font-size: 0.58rem; color: var(--text-light); line-height: 1; }
 .bpm-slider-label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--text-light); margin-top: 2px; }
 .bpm-slider-val   { font-size: 0.85rem; font-weight: 700; color: var(--primary); }
@@ -962,6 +971,22 @@ body.connected .stats-inline-row { display: flex; }
 .preset-btn:hover { border-color: var(--primary); color: var(--primary); }
 .preset-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
 
+.field-step-btn {
+    width: 26px; height: 26px; border-radius: 5px; flex-shrink: 0;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--primary); font-size: 1rem; font-weight: 700; line-height: 1;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+}
+.field-step-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.field-step-btn:active { transform: scale(0.92); }
+.field-stepper-row {
+    display: flex; align-items: center; gap: 3px; padding: 2px 0;
+}
+.field-stepper-row input {
+    flex: 1; min-width: 0;
+}
+
 /* Spin Toggle Row */
 .spin-row {
     display: flex;
@@ -1080,6 +1105,8 @@ body.connected .stats-inline-row { display: flex; }
 }
 .btn-modal:active { transform: scale(0.96); }
 
+#calibration-modal .modal-footer .btn-modal { flex: 1; }
+
 .btn-delete-drill { 
     background: var(--danger); 
     color: white; 
@@ -1116,6 +1143,93 @@ body.connected .stats-inline-row { display: flex; }
 }
 .btn-save:hover { background: var(--primary-dim); }
 
+
+/* --- CALIBRATION RESULTS PANEL --- */
+.cal-results-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 72px;
+    padding: 6px 4px;
+    align-self: stretch;
+    justify-content: center;
+}
+.cal-result-section {
+    font-size: 0.58rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text-light);
+    letter-spacing: 0.06em;
+    margin-bottom: 1px;
+}
+.cal-result-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.cal-result-lbl {
+    font-size: 0.56rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-light);
+    line-height: 1.2;
+}
+.cal-result-val {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary);
+    font-family: monospace;
+    line-height: 1.3;
+}
+
+/* --- CALIBRATION PHASE LABEL --- */
+.cal-phase-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    margin-bottom: -4px;
+}
+
+/* --- CALIBRATION STEPPER --- */
+.cal-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.cal-step {
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.38;
+    transition: opacity 0.2s;
+}
+.cal-step.selected { opacity: 1; }
+.cal-step-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2.5px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #1a1a2e;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.cal-step.selected .cal-step-circle {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-dim), 0 2px 8px rgba(0,0,0,0.28);
+}
+.cal-step-line {
+    width: 36px;
+    height: 2px;
+    background: rgba(255,255,255,0.22);
+    flex-shrink: 0;
+}
 
 /* --- RUN OVERLAY --- */
 #run-ui { 

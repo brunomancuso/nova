@@ -9,6 +9,23 @@ let tempDrillData = null;
 let editingDrillKey = null;
 let selectedSaveCat = 'custom-a';
 let _tableViewMode = localStorage.getItem('nova_editor_table_mode') === '1';
+let _spinSpeedLocked = localStorage.getItem('nova_spin_speed_lock') !== '0'; // default: locked
+const _spinSpeedAccum = new Map(); // spin→speed credit per ball key (0.5 spin = 0.1 speed)
+
+window.toggleSpinSpeedLock = () => {
+    _spinSpeedLocked = !_spinSpeedLocked;
+    localStorage.setItem('nova_spin_speed_lock', _spinSpeedLocked ? '1' : '0');
+    document.querySelectorAll('.spin-lock-btn').forEach(el => {
+        el.innerHTML = _spinSpeedLocked ? _lockIcon(true) : _lockIcon(false);
+        el.title = _spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked';
+    });
+};
+
+function _lockIcon(locked) {
+    return locked
+        ? `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+        : `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+}
 
 // --- Public Module Functions ---
 
@@ -230,60 +247,84 @@ function renderEditor() {
             const inputsHtml = `
                 <div class="editor-grid">
                     <div class="editor-field">
-                        <div class="field-header"><label>Speed</label><span class="range-hint">0-10</span></div>
+                        <div class="field-header"><label>Speed</label></div>
                         <div class="preset-row">
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,3,this)">−</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,5,this)">MED</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},7,8,this)">+</button>
                         </div>
-                        <input type="number" inputmode="decimal" id="inp-speed-${stepIndex}-${optIndex}" value="${speed}" step="0.5" min="0" max="10"
-                            onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 7, this.value)">
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-speed-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-speed-${stepIndex}-${optIndex}" value="${speed}" step="0.5" min="0" max="10"
+                                onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 7, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-speed-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                     <div class="editor-field">
-                        <div class="field-header"><label>Spin</label><span class="range-hint" id="lbl-spin-${stepIndex}-${optIndex}">Max ${currentMaxSpin}</span></div>
+                        <div class="field-header"><label>Spin</label></div>
                         <div class="preset-row">
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,2,this)">−</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,5,this)">MED</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},8,8,this)">+</button>
                         </div>
-                        <input type="number" inputmode="decimal" id="inp-spin-${stepIndex}-${optIndex}" value="${spin}" step="0.5" min="0" max="${currentMaxSpin}"
-                            style="${spinStyle}"
-                            oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 8, this.value)">
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-spin-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-spin-${stepIndex}-${optIndex}" value="${spin}" step="0.5" min="0" max="${currentMaxSpin}"
+                                style="${spinStyle}"
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 8, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-spin-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                     <div class="editor-field">
-                        <div class="field-header"><label>Height</label><span class="range-hint">-50/100</span></div>
+                        <div class="field-header"><label>Height</label></div>
                         <div class="preset-row">
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,10,this)">−</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,50,this)">MED</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},2,90,this)">+</button>
                         </div>
-                        <input type="number" inputmode="decimal" id="inp-height-${stepIndex}-${optIndex}" value="${ballParams[2]}" step="1" min="-50" max="100"
-                            oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 2, this.value)">
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-height-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-height-${stepIndex}-${optIndex}" value="${ballParams[2]}" step="1" min="-50" max="100"
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 2, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-height-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                     <div class="editor-field">
-                        <div class="field-header"><label>Drop</label><span class="range-hint">L/R</span></div>
+                        <div class="field-header"><label>Drop</label></div>
                         <div class="preset-row">
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,-5,this)">−</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,0,this)">MED</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},3,5,this)">+</button>
                         </div>
-                        <input type="number" inputmode="decimal" id="inp-drop-${stepIndex}-${optIndex}" value="${ballParams[3]}" step="0.5" min="-10" max="10"
-                            onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 3, this.value)">
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-drop-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-drop-${stepIndex}-${optIndex}" value="${ballParams[3]}" step="0.5" min="-10" max="10"
+                                onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 3, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-drop-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                     <div class="editor-field">
-                        <div class="field-header"><label>BPM</label><span class="range-hint">30-90</span></div>
+                        <div class="field-header"><label>BPM</label></div>
                         <div class="preset-row">
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,40,this)">−</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,60,this)">MED</button>
                             <button class="preset-btn" onclick="window.applyPreset(${stepIndex},${optIndex},4,80,this)">+</button>
                         </div>
-                        <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="90"
-                            oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 4, this.value)">
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="90"
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 4, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                     <div class="editor-field">
-                        <div class="field-header"><label>Reps</label><span class="range-hint">#</span></div>
-                        <input type="number" inputmode="decimal" value="${ballParams[5]}" step="1" min="1" max="100"
-                            oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 5, this.value)">
+                        <div class="field-header"><label>Reps</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-reps-${stepIndex}-${optIndex}',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="inp-reps-${stepIndex}-${optIndex}" value="${ballParams[5]}" step="1" min="1" max="100"
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 5, this.value)">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('inp-reps-${stepIndex}-${optIndex}',1)">+</button>
+                        </div>
                     </div>
                 </div>`;
 
@@ -319,57 +360,61 @@ function renderEditor() {
                                 <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
                                 <span class="reps-value">${ballParams[5]}</span>
                                 <button class="reps-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
+                                <span class="bpm-slider-label" style="margin-left:10px;">Drop</span>
+                                <span class="bpm-slider-val" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3]}</span>
                             </div>
                             <div style="position:relative;">
                                 <canvas id="${canvasId}" width="340" height="218" style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
                             </div>
                             <div class="speed-slider-row">
-                                <span class="bpm-slider-label">Speed</span>
-                                <span class="bpm-slider-limit">0</span>
-                                <input type="range" class="speed-slider-h"
+                                <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${stepIndex}-${optIndex}',-1)">−</button>
+                                <input type="range" id="rng-speed-${stepIndex}-${optIndex}" class="speed-slider-h"
                                        min="0" max="10" step="0.1" value="${speed}"
                                        oninput="window.handleEditModeSpeed(${stepIndex}, ${optIndex}, this.value)">
-                                <span class="bpm-slider-limit">10</span>
-                                <span class="bpm-slider-val" id="speed-val-${stepIndex}-${optIndex}">${speed}</span>
+                                <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${stepIndex}-${optIndex}',1)">+</button>
                             </div>
+                            <span class="bpm-slider-label" style="text-align:center; width:100%; display:block; margin-top:1px;">Speed</span>
+                            <span class="bpm-slider-val" id="speed-val-${stepIndex}-${optIndex}" style="display:block; text-align:center; width:100%;">${speed}</span>
                         </div>
                         <div class="bpm-slider-col">
-                            <span class="bpm-slider-limit">90</span>
-                            <input type="range" class="bpm-slider-v"
+                            <div style="height:19px; margin-bottom:2px;"></div>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${stepIndex}-${optIndex}',1)">▲</button>
+                            <input type="range" id="rng-bpm-${stepIndex}-${optIndex}" class="bpm-slider-v"
                                    min="30" max="90" value="${bpmValue}"
                                    oninput="window.handleEditModeBpm(${stepIndex}, ${optIndex}, this.value)">
-                            <span class="bpm-slider-limit">30</span>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-bpm-${stepIndex}-${optIndex}',-1)">▼</button>
                             <span class="bpm-slider-label">BPM</span>
                             <span class="bpm-slider-val" id="bpm-val-${stepIndex}-${optIndex}">${bpmValue}</span>
                         </div>
                         <div class="bpm-slider-col">
-                            <span class="bpm-slider-limit">+10</span>
-                            <input type="range" class="bpm-slider-v"
+                            <button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-spin-${stepIndex}-${optIndex}',1)">▲</button>
+                            <input type="range" id="rng-spin-${stepIndex}-${optIndex}" class="bpm-slider-v"
                                    min="-10" max="10" step="0.1" value="${spinSliderVal}"
                                    style="accent-color:${spinColor}"
                                    oninput="window.handleEditModeSpin(${stepIndex}, ${optIndex}, this.value, this)">
-                            <span class="bpm-slider-limit">−10</span>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-spin-${stepIndex}-${optIndex}',-1)">▼</button>
                             <span class="bpm-slider-label">Spin</span>
                             <span class="bpm-slider-val" id="spin-val-${stepIndex}-${optIndex}" style="color:${spinColor}">${spinSliderVal > 0 ? '+' : ''}${spinSliderVal}</span>
                         </div>
                         <div class="bpm-slider-col">
-                            <span class="bpm-slider-limit">100</span>
-                            <input type="range" class="bpm-slider-v"
+                            <div style="height:19px; margin-bottom:2px;"></div>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${stepIndex}-${optIndex}',1)">▲</button>
+                            <input type="range" id="rng-height-${stepIndex}-${optIndex}" class="bpm-slider-v"
                                    min="-50" max="100" step="1" value="${ballParams[2]}"
                                    style="accent-color:${heightColor}"
                                    oninput="window.handleEditModeHeight(${stepIndex}, ${optIndex}, this.value, this)">
-                            <span class="bpm-slider-limit">−50</span>
+                            <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${stepIndex}-${optIndex}',-1)">▼</button>
                             <span class="bpm-slider-label">Height</span>
                             <span class="bpm-slider-val" id="height-val-${stepIndex}-${optIndex}" style="color:${heightColor}">${ballParams[2]}</span>
                         </div>
                     </div>`;
                 optDiv.innerHTML = label + compactToggleHtml + canvasHtml + actionsHtml;
                 requestAnimationFrame(() => {
+                    _redrawEditorCanvas(stepIndex, optIndex);
                     const c = document.getElementById(canvasId);
-                    if (c && window.drawStaticRobot) {
-                        window.drawStaticRobot(c, true);
-                        if (window.attachTableClickHint) window.attachTableClickHint(c);
-                    }
+                    if (c && window.attachTableClickHint) window.attachTableClickHint(c);
+                    if (c) _attachBallDrag(c, stepIndex, optIndex);
                 });
             } else {
                 optDiv.innerHTML = label + toggleHtml + inputsHtml + actionsHtml;
@@ -482,6 +527,25 @@ window.handleSwapSteps = (idxA, idxB) => {
     renderEditor(); 
 };
 
+window.handleNumberStep = (id, delta) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const step = parseFloat(el.step) || 1;
+    const min  = el.min !== '' ? parseFloat(el.min) : -Infinity;
+    const max  = el.max !== '' ? parseFloat(el.max) :  Infinity;
+    el.value = Math.min(max, Math.max(min, parseFloat(el.value || 0) + delta * step));
+    el.dispatchEvent(new Event('input',  { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+};
+
+window.handleSliderStep = (id, delta) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const step = parseFloat(el.step) || 1;
+    el.value = Math.min(parseFloat(el.max), Math.max(parseFloat(el.min), parseFloat(el.value) + delta * step));
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+};
+
 window.handleRepsStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
     const ball = tempDrillData[stepIdx][optIdx];
@@ -497,6 +561,119 @@ window.handleEditModeBpm = (stepIdx, optIdx, value) => {
     if (el) el.textContent = Math.round(bpm);
 };
 
+// Attach vertical drag on the editor canvas to change the Drop value.
+// Dragging up = positive drop, dragging down = negative drop.
+function _attachBallDrag(canvas, stepIdx, optIdx) {
+    if (canvas._ballDragDown) {
+        canvas.removeEventListener('pointerdown',   canvas._ballDragDown);
+        canvas.removeEventListener('pointermove',   canvas._ballDragMove);
+        canvas.removeEventListener('pointermove',   canvas._ballDragHover);
+        canvas.removeEventListener('pointerup',     canvas._ballDragUp);
+        canvas.removeEventListener('pointercancel', canvas._ballDragUp);
+    }
+
+    const PX_PER_UNIT  = 6;    // pixels per 1 drop unit   (vertical)
+    const PX_PER_SPEED = 40;   // pixels per 1 speed unit (horizontal)
+    let startY     = null;
+    let startX     = null;
+    let startDrop  = null;
+    let startSpeed = null;
+
+    function _hitBall(e) {
+        const info = window.getLastBallCanvas?.();
+        if (!info || info.canvasEl !== canvas) return false;
+        const rect = canvas.getBoundingClientRect();
+        const sx = canvas.width / rect.width;
+        const sy = canvas.height / rect.height;
+        const cx = (e.clientX - rect.left) * sx;
+        const cy = (e.clientY - rect.top)  * sy;
+        const hit = info.r + 8;   // generous hit radius
+        return Math.hypot(cx - info.x, cy - info.y) <= hit;
+    }
+
+    const onHover = (e) => {
+        if (startY !== null) return;   // already dragging
+        canvas.style.cursor = _hitBall(e) ? 'grab' : 'default';
+    };
+
+    const onDown = (e) => {
+        if (!_hitBall(e)) return;
+        startY     = e.clientY;
+        startX     = e.clientX;
+        startDrop  = tempDrillData?.[stepIdx]?.[optIdx]?.[3] ?? 0;
+        startSpeed = tempDrillData?.[stepIdx]?.[optIdx]?.[7] ?? 0;
+        canvas.setPointerCapture(e.pointerId);
+        canvas.style.cursor = 'grabbing';
+        e.preventDefault();
+    };
+
+    const onMove = (e) => {
+        if (startY === null) return;
+        e.preventDefault();
+        const ball = tempDrillData?.[stepIdx]?.[optIdx];
+        if (!ball) return;
+
+        // Vertical → drop (up = positive)
+        const dy = startY - e.clientY;
+        const newDrop = Math.round(Math.max(-10, Math.min(10, startDrop + dy / PX_PER_UNIT)) * 2) / 2;
+        ball[3] = newDrop;
+        const dropEl = document.getElementById(`drop-val-${stepIdx}-${optIdx}`);
+        if (dropEl) dropEl.textContent = newDrop;
+
+        // Horizontal → speed (right = positive)
+        const dx = e.clientX - startX;
+        const newSpeed = Math.round(Math.max(0, Math.min(10, startSpeed + dx / PX_PER_SPEED)) * 10) / 10;
+        ball[7] = newSpeed;
+        const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
+        if (speedEl) speedEl.textContent = newSpeed;
+        // keep RPMs in sync
+        const res = calculateRPMs(newSpeed, ball[8] ?? 0, ball[9] ?? 'top');
+        ball[0] = res.top; ball[1] = res.bot;
+
+        _redrawEditorCanvas(stepIdx, optIdx);
+    };
+
+    const onUp = () => {
+        if (startY === null) return;
+        startY = null;
+        startX = null;
+        canvas.style.cursor = 'default';
+        // Clamp scatter so abs(drop) + scatter <= 10
+        const ball = tempDrillData?.[stepIdx]?.[optIdx];
+        if (ball) {
+            const drop = ball[3] ?? 0;
+            if (Math.abs(drop) + (ball[10] ?? 0) > 10) ball[10] = 10 - Math.abs(drop);
+        }
+    };
+
+    canvas._ballDragDown = onDown;
+    canvas._ballDragMove = onMove;
+    canvas._ballDragUp   = onUp;
+    canvas._ballDragHover = onHover;
+    canvas.addEventListener('pointerdown',   onDown);
+    canvas.addEventListener('pointermove',   onMove);
+    canvas.addEventListener('pointermove',   onHover);
+    canvas.addEventListener('pointerup',     onUp);
+    canvas.addEventListener('pointercancel', onUp);
+    canvas.style.cursor = 'default';
+}
+
+// Redraw the prediction ball on an editor canvas using current ball params.
+function _redrawEditorCanvas(stepIdx, optIdx) {
+    const c = document.getElementById(`editor-robot-canvas-${stepIdx}-${optIdx}`);
+    if (!c || !tempDrillData?.[stepIdx]?.[optIdx]) return;
+    const ball   = tempDrillData[stepIdx][optIdx];
+    const speed  = ball[7] ?? 0;
+    const spin   = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
+    const angle  = ball[2] ?? 50;
+    const drop   = ball[3] ?? 0;
+    if (window.drawEditorBall) {
+        window.drawEditorBall(c, speed, spin, angle, drop);
+    } else if (window.drawStaticRobot) {
+        window.drawStaticRobot(c, true);
+    }
+}
+
 window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
     if (!tempDrillData) return;
     const h = clamp(parseFloat(value), -50, 100);
@@ -505,6 +682,7 @@ window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
     if (sliderEl) sliderEl.style.accentColor = color;
     const el = document.getElementById(`height-val-${stepIdx}-${optIdx}`);
     if (el) { el.textContent = h; el.style.color = color; }
+    _redrawEditorCanvas(stepIdx, optIdx);
 };
 
 window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
@@ -518,12 +696,31 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
     ball[0] = res.top; ball[1] = res.bot;
     const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = v;
+    _redrawEditorCanvas(stepIdx, optIdx);
 };
 
 window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
     if (!tempDrillData) return;
     const ball = tempDrillData[stepIdx][optIdx];
     const v = parseFloat(value);
+
+    // Couple speed to spin: 0.25 spin units → 0.1 speed change
+    const oldSpin = ball[9] === 'back' ? -(ball[8] ?? 0) : (ball[8] ?? 0);
+    const spinDelta = v - oldSpin;
+    const key = `${stepIdx}-${optIdx}`;
+    if (_spinSpeedLocked && spinDelta !== 0) {
+        const accum = (_spinSpeedAccum.get(key) ?? 0) + spinDelta * 0.2;
+        const steps = Math.trunc(accum / 0.1);
+        _spinSpeedAccum.set(key, accum - steps * 0.1);
+        if (steps !== 0) {
+            ball[7] = Math.round(Math.max(0, Math.min(10, (ball[7] ?? 0) + steps * 0.1)) * 10) / 10;
+            const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
+            if (speedEl) speedEl.textContent = ball[7];
+            const speedSlider = document.getElementById(`rng-speed-${stepIdx}-${optIdx}`);
+            if (speedSlider) speedSlider.value = ball[7];
+        }
+    }
+
     ball[8] = Math.abs(v);
     ball[9] = v < 0 ? 'back' : 'top';
     const res = calculateRPMs(ball[7], ball[8], ball[9]);
@@ -532,6 +729,7 @@ window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
     if (sliderEl) sliderEl.style.accentColor = color;
     const el = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
     if (el) { el.textContent = (v > 0 ? '+' : '') + v; el.style.color = color; }
+    _redrawEditorCanvas(stepIdx, optIdx);
 };
 
 window.handleToggleBallActive = (stepIdx) => {

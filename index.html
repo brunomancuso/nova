@@ -98,6 +98,9 @@
             <button class="stats-inline-btn" onclick="window.openRobotPosModal()" title="Set Robot Position">
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.4-8 14-8 14S4 15.4 4 10a8 8 0 0 1 8-8z"/></svg>Position
             </button>
+            <button class="stats-inline-btn" onclick="window.openCalibrationModal()" title="Calibration">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="21"/><line x1="3" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="21" y2="12"/></svg>Calibration
+            </button>
         </div>
     </div>
 
@@ -322,6 +325,56 @@
     </div>
 </div>
 
+<div id="calibration-modal" class="modal-overlay">
+    <div class="modal" style="height:auto; max-width:520px;">
+        <div class="modal-header">
+            <div class="modal-title" style="font-size:1.2rem; font-weight:700; color:var(--text);">Calibration</div>
+            <div class="modal-close" onclick="window.closeCalibrationModal()">&#xD7;</div>
+        </div>
+        <div class="modal-body" style="padding:14px; display:flex; flex-direction:column; align-items:center; gap:12px;">
+            <!-- Canvas row: speed slider + table + results panel -->
+            <div style="display:flex; gap:6px; align-items:center; width:100%;">
+                <div class="bpm-slider-col">
+                    <span class="bpm-slider-limit">10</span>
+                    <input type="range" class="bpm-slider-v" id="cal-speed-slider"
+                           min="0" max="10" step="0.1" value="2"
+                           oninput="window.calSpeedChanged(this.value)">
+                    <span class="bpm-slider-limit">0</span>
+                    <span class="bpm-slider-label">Speed</span>
+                    <span class="bpm-slider-val" id="cal-speed-val">2</span>
+                </div>
+                <div style="flex:1; min-width:0;">
+                    <canvas id="calibration-table-canvas" width="340" height="218"
+                        style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
+                </div>
+                <div id="cal-results-panel" class="cal-results-panel"></div>
+            </div>
+            <!-- Phase label + Ball stepper (1)──(2)──(3) -->
+            <span id="cal-phase-label" class="cal-phase-label">Phase 1 · Spin 0</span>
+            <div class="cal-stepper">
+                <div class="cal-step selected" id="cal-ball-0" onclick="window.calSelectBall(0)">
+                    <div class="cal-step-circle">1</div>
+                </div>
+                <div class="cal-step-line"></div>
+                <div class="cal-step" id="cal-ball-1" onclick="window.calSelectBall(1)">
+                    <div class="cal-step-circle">2</div>
+                </div>
+                <div class="cal-step-line"></div>
+                <div class="cal-step" id="cal-ball-2" onclick="window.calSelectBall(2)">
+                    <div class="cal-step-circle">3</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-save-as" onclick="window.closeCalibrationModal()">Close</button>
+            <button class="btn-modal btn-delete" onclick="window.resetCalibration()">Reset</button>
+            <button class="btn-modal btn-save" onclick="window.sendCalibrationBall()">Send</button>
+            <button class="btn-modal btn-save" onclick="window.nextCalibrationBall()">Next</button>
+            <button class="btn-modal btn-save" id="cal-save-btn" style="display:none" onclick="window.saveCalibrationResult()">Save</button>
+        </div>
+    </div>
+</div>
+
 <div id="robot-pos-modal" class="modal-overlay">
     <div class="modal" style="height:auto; max-width:460px;">
         <div class="modal-header">
@@ -332,6 +385,7 @@
             <canvas id="robot-table-canvas" width="520" height="360" style="width:100%; height:auto; display:block; border-radius:10px; cursor:grab;"></canvas>
         </div>
         <div class="modal-footer">
+            <button class="btn-modal btn-delete" onclick="window.resetRobotPos()">Reset</button>
             <button class="btn-modal btn-save-as" onclick="window.cancelRobotPos()">Cancel</button>
             <button class="btn-modal btn-save" onclick="window.saveRobotPos()">Save</button>
         </div>
@@ -344,6 +398,7 @@
         <div class="sim-header-actions">
             <button class="sim-clear-btn" onclick="document.getElementById('sim-log').innerHTML=''">Clear</button>
             <button class="sim-clear-btn sim-collapse-btn" onclick="document.getElementById('sim-panel').classList.toggle('sim-collapsed')" title="Toggle console">▾</button>
+            <button class="sim-clear-btn" onclick="document.getElementById('sim-panel').style.display='none'" title="Hide console">✕</button>
         </div>
     </div>
     <div id="sim-log"></div>
