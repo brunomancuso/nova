@@ -59,6 +59,7 @@ export async function initData() {
                     ? JSON.parse(JSON.stringify(_userDefaults))
                     : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
             }
+            if (data.customDrillData) Object.assign(currentDrills, data.customDrillData);
             if (data.customData) userCustomDrills = data.customData;
             if (data.drillOrder) {
                 ['basic', 'combined', 'complex'].forEach(cat => {
@@ -94,12 +95,15 @@ export function setLevel(lvl) { selectedLevel = lvl; }
 export function setMode(mode) { runMode = mode; }
 export async function saveDrillsToStorage() {
     try {
+        const customDrillData = Object.fromEntries(
+            Object.entries(currentDrills).filter(([k]) => k.startsWith('cust_'))
+        );
         await fetch(API_DRILLS, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                drills: currentDrills,
                 customData: userCustomDrills,
+                customDrillData: customDrillData,
                 drillOrder: drillOrder,
                 userDefaults: _userDefaults
             })

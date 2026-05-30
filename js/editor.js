@@ -39,13 +39,24 @@ let editingDrillKey = null;
 let selectedSaveCat = 'custom-a';
 let _tableViewMode = localStorage.getItem('nova_editor_table_mode') === '1';
 let _spinSpeedLocked = localStorage.getItem('nova_spin_speed_lock') !== '0'; // default: locked
+let _lockDrop = localStorage.getItem('nova_lock_drop') === '1'; // default: unlocked
 
 window.toggleSpinSpeedLock = () => {
     _spinSpeedLocked = !_spinSpeedLocked;
     localStorage.setItem('nova_spin_speed_lock', _spinSpeedLocked ? '1' : '0');
     document.querySelectorAll('.spin-lock-btn').forEach(el => {
-        el.innerHTML = _spinSpeedLocked ? _lockIcon(true) : _lockIcon(false);
-        el.title = _spinSpeedLocked ? 'Spin→Speed locked' : 'Spin→Speed unlocked';
+        el.innerHTML = _lockIcon(_spinSpeedLocked);
+        el.title = _spinSpeedLocked ? 'Lock Spin→Speed (on)' : 'Lock Spin→Speed (off)';
+    });
+};
+
+window.toggleDropLock = () => {
+    _lockDrop = !_lockDrop;
+    localStorage.setItem('nova_lock_drop', _lockDrop ? '1' : '0');
+    document.querySelectorAll('.drop-lock-btn').forEach(el => {
+        el.innerHTML = _lockIcon(_lockDrop);
+        el.title = _lockDrop ? 'Lock Drop (on)' : 'Lock Drop (off)';
+        el.style.color = _lockDrop ? 'var(--primary)' : 'var(--text-light)';
     });
 };
 
@@ -56,7 +67,10 @@ function _lockIcon(locked) {
 }
 
 window.getLockIconHtml = () =>
-    `<button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Spin\u2192Speed locked' : 'Spin\u2192Speed unlocked'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>`;
+    `<button class="spin-lock-btn" onclick="window.toggleSpinSpeedLock()" title="${_spinSpeedLocked ? 'Lock Spin\u2192Speed (on)' : 'Lock Spin\u2192Speed (off)'}" style="background:none; border:none; cursor:pointer; color:var(--text-light); padding:2px; margin-bottom:2px;">${_lockIcon(_spinSpeedLocked)}</button>`;
+
+window.getDropLockIconHtml = () =>
+    `<button class="drop-lock-btn" onclick="window.toggleDropLock()" title="${_lockDrop ? 'Lock Drop (on)' : 'Lock Drop (off)'}" style="background:none; border:none; cursor:pointer; color:${_lockDrop ? 'var(--primary)' : 'var(--text-light)'}; padding:2px;">${_lockIcon(_lockDrop)}</button>`;
 
 // --- Public Module Functions ---
 
@@ -109,7 +123,7 @@ export function saveDrillChanges() {
     if (!editingDrillKey || !tempDrillData) return;
 
     const chk = document.getElementById('chk-drill-random');
-    if (chk) currentDrills[editingDrillKey].random = chk.checked;
+    if (chk && currentDrills[editingDrillKey]) currentDrills[editingDrillKey].random = chk.checked;
 
     tempDrillData.forEach(step => {
         step.forEach(ball => {
@@ -141,6 +155,7 @@ export function saveDrillChanges() {
         });
     });
 
+    if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { 1: [], 2: [], 3: [] };
     currentDrills[editingDrillKey][selectedLevel] = tempDrillData;
     saveDrillsToStorage();
 
@@ -220,13 +235,7 @@ function renderEditor() {
             </div>` : '';
 
         // Duplicate/Next Step Button (Header)
-        const plusBtn = `
-            <button class="btn-add-opt" title="Duplicate Ball" onclick="window.handleAddSequenceStep(${stepIndex})">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-            </button>`;
+        const plusBtn = ``;
 
         groupDiv.innerHTML = `
             <div class="group-title">
@@ -378,6 +387,7 @@ function renderEditor() {
                         <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
                         <span class="reps-label" style="margin-left:10px;">Drop</span>
                         <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3] ?? 0}</span>
+                        ${window.getDropLockIconHtml?.() ?? ''}
                         <span class="reps-label" style="margin-left:10px;">Reps</span>
                         <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, -1)">−</button>
                         <span class="reps-value">${ballParams[5]}</span>
@@ -390,6 +400,7 @@ function renderEditor() {
                         <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
                         <span class="reps-label" style="margin-left:10px;">Drop</span>
                         <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${ballParams[3] ?? 0}</span>
+                        ${window.getDropLockIconHtml?.() ?? ''}
                     </div>`;
                 const tableHtml = renderBallTable(stepIndex, optIndex, ballParams, bpmValue, spinSliderVal, spinColor, heightColor);
                 optDiv.innerHTML = label + multiRepsHtml + tableHtml + actionsHtml;
@@ -530,6 +541,7 @@ window.handleNumberStep = (id, delta) => {
 };
 
 window.handleSliderStep = (id, delta) => {
+    console.log("dddd");
     const el = document.getElementById(id);
     if (!el) return;
     const step = parseFloat(el.step) || 1;
@@ -619,16 +631,17 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         const dropEl = document.getElementById(`drop-val-${stepIdx}-${optIdx}`);
         if (dropEl) dropEl.textContent = newDrop;
 
-        // Horizontal → speed (right = positive)
-        const dx = e.clientX - startX;
-        const newSpeed = Math.round(Math.max(0, Math.min(10, startSpeed + dx / PX_PER_SPEED)) * 10) / 10;
-        ball[7] = newSpeed;
-        const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
-        if (speedEl) speedEl.textContent = newSpeed;
-        // keep RPMs in sync
-        if (stepIdx !== 'adj') {
-            const res = calculateRPMs(newSpeed, ball[8] ?? 0, ball[9] ?? 'top');
-            ball[0] = res.top; ball[1] = res.bot;
+        // Horizontal → speed (right = positive), skipped when drop is locked
+        if (!_lockDrop) {
+            const dx = e.clientX - startX;
+            const newSpeed = Math.round(Math.max(0, Math.min(10, startSpeed + dx / PX_PER_SPEED)) * 10) / 10;
+            ball[7] = newSpeed;
+            const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
+            if (speedEl) speedEl.textContent = newSpeed;
+            if (stepIdx !== 'adj') {
+                const res = calculateRPMs(newSpeed, ball[8] ?? 0, ball[9] ?? 'top');
+                ball[0] = res.top; ball[1] = res.bot;
+            }
         }
 
         _redrawEditorCanvas(stepIdx, optIdx);
@@ -787,6 +800,43 @@ window.handleDeleteBall = (stepIdx, optIdx) => {
     tempDrillData[stepIdx].splice(optIdx, 1);
     if (tempDrillData[stepIdx].length === 0) tempDrillData.splice(stepIdx, 1);
     renderEditor();
+};
+
+window.openImportBallModal = () => {
+    const list = document.getElementById('import-ball-list');
+    if (!list) return;
+    const allDrills = [
+        ...userCustomDrills['custom-a'].map(d => ({ ...d, cat: 'A' })),
+        ...userCustomDrills['custom-b'].map(d => ({ ...d, cat: 'B' })),
+        ...userCustomDrills['custom-c'].map(d => ({ ...d, cat: 'C' })),
+    ];
+    if (allDrills.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">No custom drills saved yet.</p>';
+    } else {
+        list.innerHTML = allDrills.map(d => `
+            <div onclick="window.importBallFromDrill('${d.key}')"
+                 style="padding:10px 14px; margin-bottom:6px; border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700;">${d.name}</span>
+                <span style="font-size:0.7rem; color:var(--text-light); background:var(--bg); padding:2px 7px; border-radius:4px;">Custom ${d.cat}</span>
+            </div>`).join('');
+    }
+    document.getElementById('import-ball-modal').classList.add('open');
+};
+
+window.closeImportBallModal = () => {
+    document.getElementById('import-ball-modal').classList.remove('open');
+};
+
+window.importBallFromDrill = (key) => {
+    const drill = currentDrills[key];
+    if (!drill || !drill[selectedLevel] || drill[selectedLevel].length === 0) {
+        showToast("No data for this drill at current level"); return;
+    }
+    const steps = JSON.parse(JSON.stringify(drill[selectedLevel]));
+    steps.forEach(step => tempDrillData.push(step));
+    window.closeImportBallModal();
+    renderEditor();
+    showToast("Balls imported");
 };
 
 window.handleSaveAsDrill = () => {

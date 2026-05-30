@@ -169,7 +169,7 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <div style="height:19px; margin-bottom:2px;"></div>
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',1)">▲</button>
             <input type="range" id="rng-speed-${si}-${oi}" class="bpm-slider-v"
-                   min="0" max="10" step="0.01" value="${ballParams[7]}"
+                   min="0" max="10" step="0.1" value="${ballParams[7]}"
                    oninput="window.handleEditModeSpeed('${si}', ${oi}, this.value)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Speed</span>
