@@ -525,8 +525,15 @@ window.handleTypeToggle = (stepIdx, optIdx, newType) => {
 
 window.handleSwapSteps = (idxA, idxB) => {
     if (!tempDrillData) return;
-    [tempDrillData[idxA], tempDrillData[idxB]] = [tempDrillData[idxB], tempDrillData[idxA]];
-    renderEditor(); 
+    const tmp = tempDrillData[idxA];
+    tempDrillData[idxA] = tempDrillData[idxB];
+    tempDrillData[idxB] = tmp;
+    // Persist immediately so runner / reload also sees the new order
+    if (editingDrillKey) {
+        if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { 1: [], 2: [], 3: [] };
+        currentDrills[editingDrillKey][selectedLevel] = tempDrillData;
+    }
+    renderEditor();
 };
 
 window.handleNumberStep = (id, delta) => {
