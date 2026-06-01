@@ -61,6 +61,33 @@ function _loadCalibration() {
     return null;
 }
 
+// Invert predictX: find speed that lands at targetFromCannonCm given angle+spin+cal.
+// predictX is monotonically increasing with speed, so bisection converges quickly.
+function _estimateSpeed(targetFromCannonCm, angle, spin, cal) {
+    let lo = 0, hi = 10;
+    for (let i = 0; i < 60; i++) {
+        const mid = (lo + hi) / 2;
+        if (predictX(angle, spin, mid, cal) < targetFromCannonCm) lo = mid;
+        else hi = mid;
+    }
+    return parseFloat(((lo + hi) / 2).toFixed(1));
+}
+
+// Recompute all 3 ball speeds to hit their target landing positions.
+// Uses freshly calibrated kv/kd if available (phases 2+), else stored/default.
+function _recomputeBallSpeeds(spin) {
+    const stored = _loadCalibration();
+    const cal = {
+        kv:  _calResult.kv  ?? stored?.kv  ?? DEFAULT_KV,
+        kd:  _calResult.kd  ?? stored?.kd  ?? DEFAULT_KD,
+        kMS: _calResult.kms ?? stored?.kms ?? DEFAULT_KMS,
+    };
+    const cannonCm = getRobotXcm() + 40;
+    for (let i = 0; i < 3; i++) {
+        _calBalls[i].speed = _estimateSpeed(CAL_BALL_X[i] - cannonCm, _calHeight, spin, cal);
+    }
+}
+
 function _drawCalCanvas() {
     const canvas = document.getElementById('calibration-table-canvas');
     if (!canvas) return;
@@ -142,6 +169,7 @@ window.openCalibrationModal = () => {
     const hi = document.getElementById('cal-height-input'); if (hi) hi.value = 50;
     const s2 = document.getElementById('cal-spin2-input');  if (s2) s2.value = 5;
     const s3 = document.getElementById('cal-spin3-input');  if (s3) s3.value = -5;
+    _recomputeBallSpeeds(0);  // phase 1: spin=0
     document.getElementById('calibration-modal')?.classList.add('open');
     requestAnimationFrame(_refreshCalUI);
 };
@@ -167,9 +195,29 @@ window.calSpeedStep = (delta) => {
     _refreshCalUI();
 };
 
-window.calHeightChanged = (val) => { const v = parseFloat(val); if (!isNaN(v)) _calHeight = v; };
-window.calSpin2Changed  = (val) => { const v = parseFloat(val); if (!isNaN(v)) _calSpin2  = v; };
-window.calSpin3Changed  = (val) => { const v = parseFloat(val); if (!isNaN(v)) _calSpin3  = v; };
+window.calHeightChanged = (val) => {
+    const v = parseFloat(val);
+    if (!isNaN(v)) {
+        _calHeight = v;
+        const spin = _calPhase === 1 ? 0 : _calPhase === 2 ? _calSpin2 : _calSpin3;
+        _recomputeBallSpeeds(spin);
+        _refreshCalUI();
+    }
+};
+window.calSpin2Changed = (val) => {
+    const v = parseFloat(val);
+    if (!isNaN(v)) {
+        _calSpin2 = v;
+        if (_calPhase === 2) { _recomputeBallSpeeds(_calSpin2); _refreshCalUI(); }
+    }
+};
+window.calSpin3Changed = (val) => {
+    const v = parseFloat(val);
+    if (!isNaN(v)) {
+        _calSpin3 = v;
+        if (_calPhase === 3) { _recomputeBallSpeeds(_calSpin3); _refreshCalUI(); }
+    }
+};
 
 window.nextCalibrationBall = () => {
     const shot = {
@@ -192,13 +240,15 @@ window.nextCalibrationBall = () => {
         const { kv, kd } = calibrateKvKd(_calPhase1Shots, getRobotXcm());
         _calResult = { kv, kd, kms: null, kms2: null };
         _calPhase        = 2;
-        _calBalls        = [{ speed: 2 }, { speed: 5 }, { speed: 8 }];
+        _calBalls        = [{ speed: 0 }, { speed: 0 }, { speed: 0 }];
+        _recomputeBallSpeeds(_calSpin2);
         _calSelectedBall = 0;
         _calPhase2Shots  = [];
     } else if (_calPhase === 2) {
         _calResult.kms2  = calibrateKms(_calPhase2Shots, _calResult.kv, _calResult.kd, getRobotXcm());
         _calPhase        = 3;
-        _calBalls        = [{ speed: 2 }, { speed: 5 }, { speed: 8 }];
+        _calBalls        = [{ speed: 0 }, { speed: 0 }, { speed: 0 }];
+        _recomputeBallSpeeds(_calSpin3);
         _calSelectedBall = 0;
         _calPhase3Shots  = [];
     } else {
@@ -221,8 +271,21 @@ window.sendCalibrationBall = async () => {
 
 window.saveCalibrationResult = () => {
     localStorage.setItem(CAL_STORAGE_KEY, JSON.stringify(_calResult));
-    showToast('Calibration saved');
-    window.closeCalibrationModal();
+    showToast('Calibration saved — you can start over or close');
+    // Reset state so the user can run another round without closing
+    _calPhase        = 1;
+    _calBalls        = [{ speed: 0 }, { speed: 0 }, { speed: 0 }];
+    _calSelectedBall = 0;
+    _calPhase1Shots  = [];
+    _calPhase2Shots  = [];
+    _calPhase3Shots  = [];
+    _calResult       = { kv: null, kd: null, kms: null };
+    _calHeight = 50; _calSpin2 = 5; _calSpin3 = -5;
+    const hi = document.getElementById('cal-height-input'); if (hi) hi.value = 50;
+    const s2 = document.getElementById('cal-spin2-input');  if (s2) s2.value = 5;
+    const s3 = document.getElementById('cal-spin3-input');  if (s3) s3.value = -5;
+    _recomputeBallSpeeds(0);
+    _refreshCalUI();
 };
 
 window.resetCalibration = () => {
