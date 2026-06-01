@@ -82,6 +82,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 // --- Event Listeners Setup ---
 
 function setupEventListeners() {
+    // Prevent Android long-press context menu when dragging sliders / canvas balls
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
     const btnConnect = document.getElementById('btn-connect');
     if (btnConnect) {
         btnConnect.onclick = () => {
