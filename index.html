@@ -121,17 +121,7 @@
     <div class="section-label">Drill Selection</div>
     
     <div class="tabs-container">
-        <div class="tab-btn active" onclick="switchTab('basic', this)">
-            <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Basic
-        </div>
-        <div class="tab-btn" onclick="switchTab('combined', this)">
-            <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Combined
-        </div>
-        <div class="tab-btn" onclick="switchTab('complex', this)">
-            <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Complex
-        </div>
-        
-        <div class="tab-btn" 
+        <div class="tab-btn active" 
              onclick="switchTab('custom-a', this)"
              ondrop="window.handleTabDrop(event, 'custom-a')" 
              ondragover="window.allowTabDrop(event)">
@@ -151,10 +141,7 @@
         </div>
     </div>
 
-    <div id="view-basic" class="drill-list"></div>
-    <div id="view-combined" class="drill-list hidden"></div>
-    <div id="view-complex" class="drill-list hidden"></div>
-    <div id="view-custom-a" class="drill-list hidden"></div>
+    <div id="view-custom-a" class="drill-list"></div>
     <div id="view-custom-b" class="drill-list hidden"></div>
     <div id="view-custom-c" class="drill-list hidden"></div>
 
@@ -401,6 +388,27 @@
             <div class="modal-close" onclick="window.closeCalibrationModal()">&#xD7;</div>
         </div>
         <div class="modal-body" style="padding:14px; display:flex; flex-direction:column; align-items:center; gap:12px;">
+            <!-- Parameter inputs: height, spin phase 2, spin phase 3 -->
+            <div style="display:flex; gap:10px; align-items:flex-end; width:100%;">
+                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                    <span style="color:var(--text-light); font-size:0.7rem;">Height</span>
+                    <input type="number" id="cal-height-input" value="50" min="-20" max="40" step="1"
+                           style="width:52px; text-align:center; padding:3px 4px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:0.78rem;"
+                           oninput="window.calHeightChanged(this.value)">
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                    <span style="color:var(--text-light); font-size:0.7rem;">Spin Ph2</span>
+                    <input type="number" id="cal-spin2-input" value="5" min="-10" max="10" step="0.5"
+                           style="width:52px; text-align:center; padding:3px 4px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:0.78rem;"
+                           oninput="window.calSpin2Changed(this.value)">
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                    <span style="color:var(--text-light); font-size:0.7rem;">Spin Ph3</span>
+                    <input type="number" id="cal-spin3-input" value="-5" min="-10" max="10" step="0.5"
+                           style="width:52px; text-align:center; padding:3px 4px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); font-size:0.78rem;"
+                           oninput="window.calSpin3Changed(this.value)">
+                </div>
+            </div>
             <!-- Canvas row: speed slider + table + results panel -->
             <div style="display:flex; gap:6px; align-items:center; width:100%;">
                 <div class="bpm-slider-col">
@@ -411,6 +419,8 @@
                     <span class="bpm-slider-limit">0</span>
                     <span class="bpm-slider-label">Speed</span>
                     <span class="bpm-slider-val" id="cal-speed-val">2</span>
+                    <button onclick="window.calSpeedStep(0.1)" style="width:26px;height:20px;padding:0;font-size:0.7rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-2);color:var(--text);cursor:pointer;margin-top:3px;">▲</button>
+                    <button onclick="window.calSpeedStep(-0.1)" style="width:26px;height:20px;padding:0;font-size:0.7rem;border:1px solid var(--border);border-radius:4px;background:var(--bg-2);color:var(--text);cursor:pointer;">▼</button>
                 </div>
                 <div style="flex:1; min-width:0;">
                     <canvas id="calibration-table-canvas" width="340" height="218"

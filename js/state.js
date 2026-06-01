@@ -1,4 +1,4 @@
-import { DEFAULT_DRILLS, RPM_MIN, RPM_MAX, SPIN_LIMITS, CATEGORIES } from './constants.js';
+import { RPM_MIN, RPM_MAX, SPIN_LIMITS } from './constants.js';
 import { showToast } from './utils.js';
 
 const API_DRILLS = '/api/drills';
@@ -6,7 +6,7 @@ let _userDefaults = null;
 
 export let currentDrills = {};
 export let userCustomDrills = { "custom-a": [], "custom-b": [], "custom-c": [] };
-export let drillOrder = JSON.parse(JSON.stringify(CATEGORIES)); 
+export let drillOrder = { "custom-a": [], "custom-b": [], "custom-c": [] };
 export let selectedLevel = 1;
 export let runMode = "reps";
 export let appStats = { balls: 0, drills: 0 };
@@ -52,26 +52,11 @@ export async function initData() {
         if (res.ok) {
             const data = await res.json();
             if (data.userDefaults) _userDefaults = data.userDefaults;
-            if (data.drills && Object.keys(data.drills).length > 0) {
-                currentDrills = data.drills;
-            } else {
-                currentDrills = _userDefaults
-                    ? JSON.parse(JSON.stringify(_userDefaults))
-                    : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
-            }
             if (data.customDrillData) Object.assign(currentDrills, data.customDrillData);
             if (data.customData) userCustomDrills = data.customData;
-            if (data.drillOrder) {
-                ['basic', 'combined', 'complex'].forEach(cat => {
-                    if (data.drillOrder[cat]) drillOrder[cat] = data.drillOrder[cat];
-                });
-            }
-        } else {
-            currentDrills = JSON.parse(JSON.stringify(DEFAULT_DRILLS));
         }
     } catch(e) {
-        console.warn('Server unavailable, using defaults:', e);
-        currentDrills = JSON.parse(JSON.stringify(DEFAULT_DRILLS));
+        console.warn('Server unavailable:', e);
     }
     normalizeDrills();
 }
@@ -129,8 +114,8 @@ export function resetToDefault() {
     if (confirm(hasUserDefault ? "Restore saved defaults?" : "Restore factory settings?")) {
         currentDrills = hasUserDefault
             ? JSON.parse(JSON.stringify(_userDefaults))
-            : JSON.parse(JSON.stringify(DEFAULT_DRILLS));
-        drillOrder = JSON.parse(JSON.stringify(CATEGORIES));
+            : {};
+        drillOrder = { "custom-a": [], "custom-b": [], "custom-c": [] };
         normalizeDrills();
         saveDrillsToStorage();
         showToast("Restored");
@@ -318,21 +303,6 @@ export function exportCustomDrills() {
              });
          });
     };
-
-    ['basic', 'combined', 'complex'].forEach(cat => {
-        const catLabel = cat.charAt(0).toUpperCase() + cat.slice(1);
-        if (drillOrder[cat]) {
-            drillOrder[cat].forEach(key => {
-                if (!currentDrills[key]) return;
-                for(let lvl=1; lvl<=3; lvl++) {
-                    if (currentDrills[key][lvl] && currentDrills[key][lvl].length > 0) {
-                        const nameWithLevel = `${formatNameForKey(key)} (Lvl ${lvl})`;
-                        appendDrillToCSV(catLabel, nameWithLevel, currentDrills[key][lvl]);
-                    }
-                }
-            });
-        }
-    });
 
     const cats = { 'custom-a': 'A', 'custom-b': 'B', 'custom-c': 'C' };
     for (let catKey in cats) {

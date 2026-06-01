@@ -2,8 +2,6 @@ import {
     currentDrills, 
     userCustomDrills, 
     appStats, 
-    drillOrder, 
-    saveDrillOrder, 
     saveDrillsToStorage, 
     selectedLevel,
     lastPlayedDrill,
@@ -118,19 +116,6 @@ window.handleTabDrop = (e, targetCat) => {
 // --- EXISTING UI LOGIC ---
 
 export function renderDrillButtons() {
-    ['basic', 'combined', 'complex'].forEach(cat => {
-        const container = document.getElementById(`view-${cat}`);
-        if (!container) return;
-        container.innerHTML = '';
-        
-        if (drillOrder[cat]) {
-            drillOrder[cat].forEach(key => {
-                if (!currentDrills[key]) return; 
-                createButton(container, key, formatDrillName(key), true, cat); 
-            });
-        }
-    });
-
     ['custom-a', 'custom-b', 'custom-c'].forEach(cat => {
         const container = document.getElementById(`view-${cat}`);
         if (!container) return;
@@ -273,22 +258,15 @@ function handleReorder(container, category) {
     const buttons = Array.from(container.querySelectorAll('.btn-drill'));
     const newKeys = buttons.map(b => b.dataset.key);
     
-    if (['basic', 'combined', 'complex'].includes(category)) {
-        if(newKeys.length === drillOrder[category].length) {
-            drillOrder[category] = newKeys;
-            saveDrillOrder();
-        }
-    } else {
-        if(newKeys.length === userCustomDrills[category].length) {
-            const oldList = userCustomDrills[category];
-            const newList = [];
-            newKeys.forEach(k => {
-                const item = oldList.find(d => d.key === k);
-                if(item) newList.push(item);
-            });
-            userCustomDrills[category] = newList;
-            localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
-        }
+    if(newKeys.length === userCustomDrills[category].length) {
+        const oldList = userCustomDrills[category];
+        const newList = [];
+        newKeys.forEach(k => {
+            const item = oldList.find(d => d.key === k);
+            if(item) newList.push(item);
+        });
+        userCustomDrills[category] = newList;
+        localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
     }
 }
 
@@ -336,7 +314,7 @@ export function setTheme(themeName) {
 }
 
 export function switchTab(catName, btn) {
-    const tabs = ['basic','combined','complex','custom-a','custom-b','custom-c'];
+    const tabs = ['custom-a','custom-b','custom-c'];
     tabs.forEach(c => {
         const el = document.getElementById('view-'+c);
         if(el) el.classList.add('hidden');
@@ -346,11 +324,6 @@ export function switchTab(catName, btn) {
     
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     if(btn) btn.classList.add('active');
-
-    const diffGroup = document.getElementById('grp-difficulty');
-    if(diffGroup) {
-        diffGroup.style.display = ['custom-a', 'custom-b', 'custom-c'].includes(catName) ? 'none' : 'flex';
-    }
 }
 
 function formatDrillName(key) {
