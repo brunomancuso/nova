@@ -8,7 +8,7 @@ Then open https://<your-pc-ip>:8443 in Chrome on Android.
 import os, ssl, socket, http.server, json
 
 HOST  = "0.0.0.0"
-PORT  = 443
+PORT  = 8443
 CERT  = "cert.pem"
 KEY   = "key.pem"
 ROOT  = os.path.dirname(os.path.abspath(__file__))
