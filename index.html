@@ -417,7 +417,6 @@
                     <canvas id="calibration-table-canvas" width="340" height="218"
                         style="width:100%; height:auto; aspect-ratio:340/218; border-radius:8px; display:block;"></canvas>
                 </div>
-                <div id="cal-results-panel" class="cal-results-panel"></div>
             </div>
             <!-- Phase label + Ball stepper (1)──(2)──(3) -->
             <span id="cal-phase-label" class="cal-phase-label">Phase 1 · Spin 0</span>
@@ -434,6 +433,8 @@
                     <div class="cal-step-circle">3</div>
                 </div>
             </div>
+            <!-- Results table: Stored / Ph1 / Ph2 / Ph3 -->
+            <div id="cal-results-panel" style="width:100%;"></div>
         </div>
         <div class="modal-footer">
             <button class="btn-modal btn-save-as" onclick="window.closeCalibrationModal()">Close</button>

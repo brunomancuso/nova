@@ -100,35 +100,54 @@ function _refreshResultsPanel() {
     if (!panel) return;
 
     const stored = _loadCalibration();
-    const hasCur = _calResult.kv !== null;
-    let html = '';
+    const r      = _calResult;
 
-    if (hasCur) {
-        html += `<div class="cal-result-section">New</div>`;
-        const dkv = stored ? _calResult.kv - stored.kv : null;
-        const dkd = stored ? _calResult.kd - stored.kd : null;
-        html += `<div class="cal-result-row"><span class="cal-result-lbl">kv</span><span class="cal-result-val">${_calResult.kv.toFixed(5)}</span></div>`;
-        if (dkv !== null) html += `<div class="cal-result-row"><span class="cal-result-lbl"></span><span class="cal-result-val" style="font-size:0.68rem;color:${dkv>=0?'#27ae60':'#e74c3c'}">${dkv>=0?'▲':'▼'}${Math.abs(dkv).toFixed(5)}</span></div>`;
-        html += `<div class="cal-result-row"><span class="cal-result-lbl">kd</span><span class="cal-result-val">${_calResult.kd.toFixed(4)}</span></div>`;
-        if (dkd !== null) html += `<div class="cal-result-row"><span class="cal-result-lbl"></span><span class="cal-result-val" style="font-size:0.68rem;color:${dkd>=0?'#27ae60':'#e74c3c'}">${dkd>=0?'▲':'▼'}${Math.abs(dkd).toFixed(4)}</span></div>`;
-        if (_calResult.kms !== null) {
-            const dkms = stored?.kms != null ? _calResult.kms - stored.kms : null;
-            html += `<div class="cal-result-row"><span class="cal-result-lbl">kMS</span><span class="cal-result-val">${_calResult.kms.toFixed(4)}</span></div>`;
-            if (dkms !== null) html += `<div class="cal-result-row"><span class="cal-result-lbl"></span><span class="cal-result-val" style="font-size:0.68rem;color:${dkms>=0?'#27ae60':'#e74c3c'}">${dkms>=0?'▲':'▼'}${Math.abs(dkms).toFixed(4)}</span></div>`;
-        }
-    }
+    // cell(formattedString, rawValue, referenceValue)
+    // ref=null → no colour (Stored column); compare raw nums for colour
+    const cell = (fmt, raw, ref) => {
+        if (raw == null) return `<td class="cal-t-empty">—</td>`;
+        const cls = ref == null ? '' : raw > ref ? ' cal-t-up' : raw < ref ? ' cal-t-dn' : '';
+        return `<td class="cal-t-val${cls}">${fmt}</td>`;
+    };
 
-    if (stored) {
-        html += `<div class="cal-result-section">Stored</div>`;
-        html += `<div class="cal-result-row"><span class="cal-result-lbl">kv</span><span class="cal-result-val">${stored.kv.toFixed(5)}</span></div>`;
-        html += `<div class="cal-result-row"><span class="cal-result-lbl">kd</span><span class="cal-result-val">${stored.kd.toFixed(4)}</span></div>`;
-        if (stored.kms != null) {
-            html += `<div class="cal-result-row"><span class="cal-result-lbl">kMS</span><span class="cal-result-val">${stored.kms.toFixed(4)}</span></div>`;
-        }
-    }
+    const f5  = v => v != null ? v.toFixed(5) : null;
+    const f4  = v => v != null ? v.toFixed(4) : null;
 
-    panel.innerHTML = html;
-    const done = _calResult.kms !== null;
+    panel.innerHTML = `
+    <table class="cal-results-table">
+      <thead><tr>
+        <th class="cal-t-hdr"></th>
+        <th class="cal-t-hdr">Stored</th>
+        <th class="cal-t-hdr">Ph 1</th>
+        <th class="cal-t-hdr">Ph 2</th>
+        <th class="cal-t-hdr">Ph 3</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td class="cal-t-lbl">kv</td>
+          ${cell(f5(stored?.kv),  stored?.kv,  null)}
+          ${cell(f5(r.kv),        r.kv,        stored?.kv)}
+          <td class="cal-t-empty">—</td>
+          <td class="cal-t-empty">—</td>
+        </tr>
+        <tr>
+          <td class="cal-t-lbl">kd</td>
+          ${cell(f4(stored?.kd),  stored?.kd,  null)}
+          ${cell(f4(r.kd),        r.kd,        stored?.kd)}
+          <td class="cal-t-empty">—</td>
+          <td class="cal-t-empty">—</td>
+        </tr>
+        <tr>
+          <td class="cal-t-lbl">kMS</td>
+          ${cell(f4(stored?.kms), stored?.kms, null)}
+          <td class="cal-t-empty">—</td>
+          ${cell(f4(r.kms2),      r.kms2,      stored?.kms)}
+          ${cell(f4(r.kms),       r.kms,       stored?.kms)}
+        </tr>
+      </tbody>
+    </table>`;
+
+    const done = r.kms !== null;
     if (saveBtn) saveBtn.style.display = done ? '' : 'none';
     const sendBtn = document.querySelector('#calibration-modal .btn-modal[onclick="window.sendCalibrationBall()"]');
     const nextBtn = document.querySelector('#calibration-modal .btn-modal[onclick="window.nextCalibrationBall()"]');
