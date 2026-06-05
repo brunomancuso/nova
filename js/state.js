@@ -209,13 +209,12 @@ export function importCustomDrills(csvText) {
             const height = parseInt(parts[6]);
             const drop = parseFloat(parts[7]);
             
-            const bpm = Math.max(30, Math.min(100, parseInt(parts[8]) || 30));
-            const freqPercent = (bpm - 30) / 0.7;
+            const bpm = Math.max(30, Math.min(120, parseInt(parts[8]) || 30));
             
             const reps = Math.max(1, parseInt(parts[9]) || 1);
 
             const motors = calculateRPMs(speed, spin, type);
-            const params = [motors.top, motors.bot, height, drop, freqPercent, reps, 1, speed, spin, type];
+            const params = [motors.top, motors.bot, height, drop, bpm, reps, 1, speed, spin, type];
 
             if (category.startsWith('custom')) {
                 const name = nameRaw.substring(0, 40);
@@ -297,7 +296,7 @@ export function exportCustomDrills() {
                      const rev = reverseCalculate(ball[0], ball[1]);
                      speed = rev.speed; spin = rev.spin; type = rev.type;
                  }
-                 const bpm = Math.round(30 + (ball[4] * 0.7));
+                 const bpm = ball[4] ?? 30;
                  const row = [setLabel, ballNum, name, speed, spin, type, ball[2], ball[3], bpm, ball[5]].join(";");
                  csvContent += row + "\n";
              });

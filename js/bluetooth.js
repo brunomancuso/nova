@@ -114,7 +114,7 @@ export function packBall(us, ls, bh, dp, freq, reps) {
     us = clamp(us, 400, 7500); ls = clamp(ls, 400, 7500);
     const bh_f = (clamp(bh,-50,100)+50)/150*50-20;
     const dp_f = (clamp(dp,-10,10)+10)/20*44-22;
-    const fr_f = (clamp(freq,0,100)/100)+0.5;
+    const fr_f = clamp(freq, 30, 120) / 60;
     
     v.setUint32(0, us, true); 
     v.setUint32(4, ls, true);
