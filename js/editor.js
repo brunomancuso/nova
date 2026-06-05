@@ -9,7 +9,7 @@ window.renderAdjTable = () => {
     const ball = window._adjBallData;
     const container = document.getElementById('adj-table-container');
     if (!ball || !container) return;
-    const bpmValue      = Math.round(30 + ((ball[4] ?? 0) * 0.6));
+    const bpmValue      = Math.round(30 + ((ball[4] ?? 0) * 0.7));
     const type          = ball[9] ?? 'top';
     const spinSliderVal = type === 'back' ? -Math.min(ball[8] ?? 0, 10) : Math.min(ball[8] ?? 0, 10);
     const spinColor     = spinSliderVal < 0 ? '#e53935' : '#43a047';
@@ -266,8 +266,8 @@ function renderEditor() {
             const spinStyle = type === 'back' ? 'background:var(--danger); color:#fff; border-radius:4px;' : '';
             // -------------------------------------
             
-            // BPM Calculation: 30 + (Percent * 0.6)
-            const bpmValue = Math.round(30 + (ballParams[4] * 0.6));
+            // BPM Calculation: 30 + (Percent * 0.7)
+            const bpmValue = Math.round(30 + (ballParams[4] * 0.7));
 
             const optDiv = document.createElement('div');
             optDiv.className = 'option-card';
@@ -331,7 +331,7 @@ function renderEditor() {
                         <div class="field-header"><label>BPM</label></div>
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',-1)">−</button>
-                            <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="90"
+                            <input type="number" inputmode="decimal" id="inp-bpm-${stepIndex}-${optIndex}" value="${bpmValue}" step="1" min="30" max="100"
                                 oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 4, this.value)">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-bpm-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
@@ -479,7 +479,7 @@ window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
     if(isNaN(val)) val = 0;
 
     if (paramIdx === 4) {
-        let percent = (val - 30) / 0.6;
+        let percent = (val - 30) / 0.7;
         ball[paramIdx] = clamp(percent, 0, 100);
     } 
     else if (paramIdx === 3) {
@@ -573,8 +573,8 @@ window.handleDelayStep = (stepIdx, optIdx, delta) => {
 window.handleEditModeBpm = (stepIdx, optIdx, value) => {
     const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
     if (!ball) return;
-    const bpm = clamp(parseFloat(value), 30, 90);
-    ball[4] = (bpm - 30) / 0.6;
+    const bpm = clamp(parseFloat(value), 30, 100);
+    ball[4] = (bpm - 30) / 0.7;
     const el = document.getElementById(`bpm-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = Math.round(bpm);
 };

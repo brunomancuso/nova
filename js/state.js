@@ -209,8 +209,8 @@ export function importCustomDrills(csvText) {
             const height = parseInt(parts[6]);
             const drop = parseFloat(parts[7]);
             
-            const bpm = Math.max(30, Math.min(90, parseInt(parts[8]) || 30));
-            const freqPercent = (bpm - 30) / 0.6;
+            const bpm = Math.max(30, Math.min(100, parseInt(parts[8]) || 30));
+            const freqPercent = (bpm - 30) / 0.7;
             
             const reps = Math.max(1, parseInt(parts[9]) || 1);
 
@@ -297,7 +297,7 @@ export function exportCustomDrills() {
                      const rev = reverseCalculate(ball[0], ball[1]);
                      speed = rev.speed; spin = rev.spin; type = rev.type;
                  }
-                 const bpm = Math.round(30 + (ball[4] * 0.6));
+                 const bpm = Math.round(30 + (ball[4] * 0.7));
                  const row = [setLabel, ballNum, name, speed, spin, type, ball[2], ball[3], bpm, ball[5]].join(";");
                  csvContent += row + "\n";
              });
