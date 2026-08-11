@@ -1,4 +1,5 @@
 import { RPM_MIN, RPM_MAX, SPIN_LIMITS } from './constants.js';
+import { Ball, Drill } from './model.js';
 import { showToast } from './utils.js';
 
 const API_DRILLS = '/api/drills';
@@ -68,8 +69,16 @@ function normalizeDrills() {
             if (currentDrills[key] && currentDrills[key][lvl]) {
                 const steps = currentDrills[key][lvl];
                 currentDrills[key][lvl] = steps.map(step => {
-                    if (step.length > 0 && typeof step[0] === 'number') return [step];
-                    return step;
+                    // Already an array of Ball instances? skip
+                    if (step.length > 0 && step[0] instanceof Ball) return step;
+                    // Flat array of numbers = single ball without wrapper step array
+                    if (step.length > 0 && typeof step[0] === 'number') return [Ball.fromArray(step)];
+                    // Named JSON object ball -> convert to Ball
+                    if (step.length > 0 && typeof step[0] === 'object' && !Array.isArray(step[0]) && step[0].topRPM !== undefined) {
+                        return step.map(b => Ball.fromJSON(b));
+                    }
+                    // Legacy array-of-arrays -> Ball
+                    return step.map(b => Array.isArray(b) ? Ball.fromArray(b) : Ball.fromJSON(b));
                 });
             }
         }
@@ -80,9 +89,19 @@ export function setLevel(lvl) { selectedLevel = lvl; }
 export function setMode(mode) { runMode = mode; }
 export async function saveDrillsToStorage() {
     try {
-        const customDrillData = Object.fromEntries(
-            Object.entries(currentDrills).filter(([k]) => k.startsWith('cust_'))
-        );
+        const customDrillData = {};
+        for (const [k, v] of Object.entries(currentDrills)) {
+            if (!k.startsWith('cust_')) continue;
+            const serialized = {};
+            for (let lvl = 1; lvl <= 3; lvl++) {
+                const steps = v[lvl];
+                serialized[lvl] = steps
+                    ? steps.map(step => step.map(b => b instanceof Ball ? b.toJSON() : b))
+                    : [];
+            }
+            serialized.random = v.random || false;
+            customDrillData[k] = serialized;
+        }
         await fetch(API_DRILLS, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -150,15 +169,6 @@ function calculateRPMs(speed, spin, type) {
     return { top: Math.max(RPM_MIN, Math.min(RPM_MAX, Math.round(top))), bot: Math.max(RPM_MIN, Math.min(RPM_MAX, Math.round(bot))) };
 }
 
-function reverseCalculate(top, bot) {
-    const type = top >= bot ? 'top' : 'back';
-    const baseSpeed = (top + bot) / 2;
-    const speedRaw = (baseSpeed - 970) / 630.5;
-    const diff = Math.abs(top - bot) / 2;
-    const spinRaw = diff / 342;
-    return { speed: Math.round(speedRaw * 2) / 2, spin: Math.round(spinRaw * 2) / 2, type: type };
-}
-
 function formatNameForKey(key) {
     return key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
@@ -214,7 +224,12 @@ export function importCustomDrills(csvText) {
             const reps = Math.max(1, parseInt(parts[9]) || 1);
 
             const motors = calculateRPMs(speed, spin, type);
-            const params = [motors.top, motors.bot, height, drop, bpm, reps, 1, speed, spin, type];
+            const params = new Ball({
+                topRPM: motors.top, bottomRPM: motors.bot,
+                height, drop,
+                frequency: bpm, reps,
+                side: 1, speed, spin, type
+            });
 
             if (category.startsWith('custom')) {
                 const name = nameRaw.substring(0, 40);
@@ -291,13 +306,10 @@ export function exportCustomDrills() {
          sequence.forEach((stepOptions, stepIndex) => {
              const ballNum = stepIndex + 1;
              stepOptions.forEach(ball => {
-                 let speed = ball[7], spin = ball[8], type = ball[9];
-                 if (speed === undefined) {
-                     const rev = reverseCalculate(ball[0], ball[1]);
-                     speed = rev.speed; spin = rev.spin; type = rev.type;
-                 }
-                 const bpm = ball[4] ?? 30;
-                 const row = [setLabel, ballNum, name, speed, spin, type, ball[2], ball[3], bpm, ball[5]].join(";");
+                 const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
+                 if (!b) return;
+                 b.ensureMeta();
+                 const row = [setLabel, ballNum, name, b.speed, b.spin, b.type, b.height, b.drop, b.frequency, b.reps].join(";");
                  csvContent += row + "\n";
              });
          });

@@ -1,4 +1,5 @@
 import { currentDrills, selectedLevel, runMode, appStats, setLastPlayed, userCustomDrills } from './state.js';
+import { Ball } from './model.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { log, showToast, clamp, toggleBodyScroll } from './utils.js';
 import { updateStatsUI, updateLastPlayedHighlight } from './ui.js';
@@ -85,7 +86,8 @@ export function startDrillSequence(drillName) {
 
     // --- FILTER INACTIVE STEPS ---
     const executableSteps = rawParams.filter(step => {
-        const isActive = step[0][6]; 
+        const first = step[0];
+        const isActive = first instanceof Ball ? first.side : 1;
         return isActive === undefined || isActive === 1;
     });
 
@@ -220,11 +222,12 @@ async function runIteration() {
     const balls = [];
     sequence.forEach((stepOptions, i) => {
         const chosenOption = stepOptions[Math.floor(Math.random() * stepOptions.length)];
-        const tempBall = [...chosenOption];
+        const tempBall = chosenOption instanceof Ball ? chosenOption.clone() : Ball.fromArray(chosenOption);
+        if (!tempBall) return;
 
-        const scatter = tempBall[10] || 0;
+        const scatter = tempBall.scatter || 0;
         if (scatter > 0) {
-            const currentDrop = tempBall[3];
+            const currentDrop = tempBall.drop;
             const minDrop = currentDrop - scatter;
             const maxDrop = currentDrop + scatter;
             const span = maxDrop - minDrop;
@@ -234,12 +237,12 @@ async function runIteration() {
                 const randomStep = Math.floor(Math.random() * (steps + 1));
                 let newDrop = minDrop + (randomStep * 0.5);
                 newDrop = clamp(newDrop, -10, 10);
-                tempBall[3] = newDrop;
+                tempBall.drop = newDrop;
                 log(`Scatter Active: Base ${currentDrop} ±${scatter} -> ${newDrop}`);
             }
         }
 
-        log(`TX Ball ${i+1}: ${tempBall.join(' ')}`);
+        log(`TX Ball ${i+1}: ${tempBall.topRPM} ${tempBall.bottomRPM} ${tempBall.height} ${tempBall.drop} ${tempBall.frequency} ${tempBall.reps} ${tempBall.side} ${tempBall.speed} ${tempBall.spin} ${tempBall.type} ${tempBall.scatter} ${tempBall.delay}`);
         balls.push(tempBall);
     });
 
@@ -251,25 +254,26 @@ async function runIteration() {
 
     setActiveDrillName(activeDrillName);
 
-    const hasDelays = balls.some(b => (b[11] ?? 0) > 0);
+    const hasDelays = balls.some(b => (b.delay ?? 0) > 0);
     if (!hasDelays) {
         // All balls in one packet (original behaviour)
-        await sendPacket(buildPacket(balls.map(b => packBall(...b))));
+        await sendPacket(buildPacket(balls.map(b => packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps))));
     } else {
         // Send each ball individually; wait for robot DONE before sending next
         for (let i = 0; i < balls.length; i++) {
             if (!isRunning) break;
-            const delay = balls[i][11] ?? 0;
+            const delay = balls[i].delay ?? 0;
             if (delay > 0) await new Promise(r => setTimeout(r, delay));
             if (!isRunning) break;
+            const b = balls[i];
             if (i < balls.length - 1) {
                 // Intermediate ball: send then wait for DONE before continuing
                 const donePromise = new Promise(r => { _perBallDoneResolve = r; });
-                await sendPacket(buildPacket([packBall(...balls[i])]));
+                await sendPacket(buildPacket([packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps)]));
                 await donePromise;
             } else {
                 // Last ball: send and let the normal handleDone drive next iteration
-                await sendPacket(buildPacket([packBall(...balls[i])]));
+                await sendPacket(buildPacket([packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps)]));
             }
         }
     }

@@ -1,4 +1,5 @@
 import { predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS, DEFAULT_KLR } from './prediction.js';
+import { Ball } from './model.js';
 import { getRobotXcm, drawBall } from './robot.js';
 import { showToast } from './utils.js';
 import { sendSingleBall } from './runner.js';
@@ -99,17 +100,19 @@ window.testAdjust = async () => {
     if (!bleState.isConnected) { showToast('Device not connected'); return; }
     const ball = window._adjBallData;
     if (!ball) return;
-    const speed = ball[7] ?? 5;
-    const spin  = ball[8] ?? 0;
-    const type  = ball[9] ?? 'top';
+    const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
+    if (!b) return;
+    const speed = b.speed ?? 5;
+    const spin  = b.spin ?? 0;
+    const type  = b.type ?? 'top';
     const base  = 970 + 630.5 * speed;
     const delta = 342 * spin;
     const RPM_MIN = 970, RPM_MAX = 8000;
     const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(v)));
     const top = type === 'top' ? clamp(base + delta, RPM_MIN, RPM_MAX) : clamp(base - delta, RPM_MIN, RPM_MAX);
     const bot = type === 'top' ? clamp(base - delta, RPM_MIN, RPM_MAX) : clamp(base + delta, RPM_MIN, RPM_MAX);
-    const bh   = ball[2] ?? 50;
-    const dp   = ball[3] ?? 0;
-    const freq = ball[4] ?? 0;
+    const bh   = b.height ?? 50;
+    const dp   = b.drop ?? 0;
+    const freq = b.frequency ?? 0;
     await sendSingleBall(top, bot, bh, dp, freq, 1);
 };

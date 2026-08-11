@@ -155,7 +155,10 @@ export function drawSideView(canvas, xFlight = 0, thetaRad = 0) {
 export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spinColor, heightColor) {
     const canvasId   = `editor-robot-canvas-${si}-${oi}`;
     const sideId     = `side-view-canvas-${si}-${oi}`;
-    const drop = ballParams[3] ?? 0;
+    // Support both Ball instances and legacy arrays
+    const drop = ballParams instanceof Object && 'drop' in ballParams ? ballParams.drop : (ballParams[3] ?? 0);
+    const speed = ballParams instanceof Object && 'speed' in ballParams ? ballParams.speed : (ballParams[7] ?? 0);
+    const height = ballParams instanceof Object && 'height' in ballParams ? ballParams.height : (ballParams[2] ?? 0);
     const lockHtml = window.getLockIconHtml?.() ?? '';
     return `
     <div class="edit-mode-canvas-row">
@@ -169,11 +172,11 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <div style="height:19px; margin-bottom:2px;"></div>
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',1)">▲</button>
             <input type="range" id="rng-speed-${si}-${oi}" class="bpm-slider-v"
-                   min="0" max="10" step="0.1" value="${ballParams[7]}"
+                   min="0" max="10" step="0.1" value="${speed}"
                    oninput="window.handleEditModeSpeed('${si}', ${oi}, this.value)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-speed-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Speed</span>
-            <span class="bpm-slider-val" id="speed-val-${si}-${oi}">${(+ballParams[7]).toFixed(2)}</span>
+            <span class="bpm-slider-val" id="speed-val-${si}-${oi}">${(+speed).toFixed(2)}</span>
         </div>
         <div class="bpm-slider-col">
             <div style="height:19px; margin-bottom:2px;"></div>
@@ -200,12 +203,12 @@ export function renderBallTable(si, oi, ballParams, bpmValue, spinSliderVal, spi
             <div style="height:19px; margin-bottom:2px;"></div>
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${si}-${oi}',1)">▲</button>
             <input type="range" id="rng-height-${si}-${oi}" class="bpm-slider-v"
-                   min="-50" max="100" step="1" value="${ballParams[2]}"
+                   min="-50" max="100" step="1" value="${height}"
                    style="accent-color:${heightColor}"
                    oninput="window.handleEditModeHeight('${si}', ${oi}, this.value, this)">
             <button class="slider-step-btn" onclick="window.handleSliderStep('rng-height-${si}-${oi}',-1)">▼</button>
             <span class="bpm-slider-label">Height</span>
-            <span class="bpm-slider-val" id="height-val-${si}-${oi}" style="color:${heightColor}">${ballParams[2]}</span>
+            <span class="bpm-slider-val" id="height-val-${si}-${oi}" style="color:${heightColor}">${height}</span>
         </div>
     </div>`;
 }
