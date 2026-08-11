@@ -1,4 +1,4 @@
-import { currentDrills, userCustomDrills, selectedLevel, saveDrillsToStorage } from './state.js';
+import { currentDrills, userCustomDrills, saveDrillsToStorage } from './state.js';
 import { Ball } from './model.js';
 import { renderBallTable, drawSideView } from './table.js';
 
@@ -82,9 +82,9 @@ export function openEditor(key) {
     const chk = document.getElementById('chk-drill-random');
     if (chk) chk.checked = !!(currentDrills[key] && currentDrills[key].random);
 
-    if (currentDrills[key] && currentDrills[key][selectedLevel]?.length) {
+    if (currentDrills[key] && currentDrills[key].steps?.length) {
         // Deep clone: Ball instances already exist from normalizeDrills
-        tempDrillData = currentDrills[key][selectedLevel].map(step =>
+        tempDrillData = currentDrills[key].steps.map(step =>
             step.map(b => b instanceof Ball ? b.clone() : Ball.fromArray(b))
         );
     } else {
@@ -138,8 +138,8 @@ export function saveDrillChanges() {
         });
     });
 
-    if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { 1: [], 2: [], 3: [] };
-    currentDrills[editingDrillKey][selectedLevel] = tempDrillData;
+    if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { steps: [], random: false };
+    currentDrills[editingDrillKey].steps = tempDrillData;
     saveDrillsToStorage();
 
     showToast("Configuration saved");
@@ -504,7 +504,7 @@ window.handleSwapSteps = (idxA, idxB) => {
     // Persist immediately so runner / reload also sees the new order
     if (editingDrillKey) {
         if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { 1: [], 2: [], 3: [] };
-        currentDrills[editingDrillKey][selectedLevel] = tempDrillData;
+        currentDrills[editingDrillKey].steps = tempDrillData;
     }
     renderEditor();
 };
@@ -819,10 +819,10 @@ window.closeImportBallModal = () => {
 
 window.importBallFromDrill = (key) => {
     const drill = currentDrills[key];
-    if (!drill || !drill[selectedLevel] || drill[selectedLevel].length === 0) {
-        showToast("No data for this drill at current level"); return;
+    if (!drill || !drill.steps || drill.steps.length === 0) {
+        showToast("No data for this drill"); return;
     }
-    const steps = JSON.parse(JSON.stringify(drill[selectedLevel]));
+    const steps = drill.steps.map(step => step.map(b => b instanceof Ball ? b.clone() : b));
     steps.forEach(step => tempDrillData.push(step));
     window.closeImportBallModal();
     renderEditor();
@@ -870,13 +870,11 @@ window.performSaveAs = () => {
     const newKey = `cust_${catChar}_${newName.replace(/\s+/g, '_')}_${Date.now()}`;
     userCustomDrills[targetCat].push({ name: newName, key: newKey });
 
-    let baseDrill = currentDrills[editingDrillKey] || { 1: [], 2: [], 3: [] }; 
-    const newDrillData = { 1: [], 2: [], 3: [] };
-    for (let lvl = 1; lvl <= 3; lvl++) {
-        const src = baseDrill[lvl];
-        newDrillData[lvl] = src ? src.map(step => step.map(b => b instanceof Ball ? b.clone() : b)) : [];
-    }
-    newDrillData[selectedLevel] = tempDrillData;
+    const baseDrill = currentDrills[editingDrillKey] || { steps: [], random: false };
+    const newDrillData = {
+        steps: tempDrillData,
+        random: baseDrill.random || false,
+    };
     
     const chk = document.getElementById('chk-drill-random');
     if (chk) newDrillData.random = chk.checked;
@@ -1047,7 +1045,6 @@ window.handleShareDrill = async () => {
 
     const payload = {
         name: drillName,
-        level: selectedLevel,
         params: tempDrillData,
         random: document.getElementById('chk-drill-random')?.checked || false
     };

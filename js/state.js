@@ -8,7 +8,6 @@ let _userDefaults = null;
 export let currentDrills = {};
 export let userCustomDrills = { "custom-a": [], "custom-b": [], "custom-c": [] };
 export let drillOrder = { "custom-a": [], "custom-b": [], "custom-c": [] };
-export let selectedLevel = 1;
 export let runMode = "reps";
 export let appStats = { balls: 0, drills: 0 };
 
@@ -64,43 +63,55 @@ export async function initData() {
 
 function normalizeDrills() {
     for (let key in currentDrills) {
-        if(key === 'random') continue; 
-        for (let lvl = 1; lvl <= 3; lvl++) {
-            if (currentDrills[key] && currentDrills[key][lvl]) {
-                const steps = currentDrills[key][lvl];
-                currentDrills[key][lvl] = steps.map(step => {
-                    // Already an array of Ball instances? skip
-                    if (step.length > 0 && step[0] instanceof Ball) return step;
-                    // Flat array of numbers = single ball without wrapper step array
-                    if (step.length > 0 && typeof step[0] === 'number') return [Ball.fromArray(step)];
-                    // Named JSON object ball -> convert to Ball
-                    if (step.length > 0 && typeof step[0] === 'object' && !Array.isArray(step[0]) && step[0].topRPM !== undefined) {
-                        return step.map(b => Ball.fromJSON(b));
+        if (key === 'random') continue;
+        const drill = currentDrills[key];
+        // Already normalized (has .steps with Ball instances)
+        if (drill.steps && drill.steps.length > 0 && drill.steps[0][0] instanceof Ball) continue;
+
+        // Legacy: drill has level keys ("1", "2", "3")
+        if (drill[1] || drill['1']) {
+            const allSteps = [];
+            for (let lvl = 1; lvl <= 3; lvl++) {
+                const raw = drill[lvl];
+                if (raw && Array.isArray(raw)) {
+                    for (const step of raw) {
+                        allSteps.push(step.map(b =>
+                            Array.isArray(b) ? Ball.fromArray(b) : Ball.fromJSON(b)
+                        ));
                     }
-                    // Legacy array-of-arrays -> Ball
-                    return step.map(b => Array.isArray(b) ? Ball.fromArray(b) : Ball.fromJSON(b));
-                });
+                }
             }
+            drill.steps = allSteps;
+            delete drill[1]; delete drill[2]; delete drill[3];
+            delete drill['1']; delete drill['2']; delete drill['3'];
+            continue;
+        }
+
+        // New format: drill has .steps with raw JSON balls
+        if (drill.steps && Array.isArray(drill.steps)) {
+            drill.steps = drill.steps.map(step =>
+                step.map(b => {
+                    if (b instanceof Ball) return b;
+                    if (typeof b === 'object' && b.topRPM !== undefined) return Ball.fromJSON(b);
+                    if (Array.isArray(b)) return Ball.fromArray(b);
+                    return b;
+                })
+            );
         }
     }
 }
 
-export function setLevel(lvl) { selectedLevel = lvl; }
 export function setMode(mode) { runMode = mode; }
 export async function saveDrillsToStorage() {
     try {
         const customDrillData = {};
         for (const [k, v] of Object.entries(currentDrills)) {
             if (!k.startsWith('cust_')) continue;
-            const serialized = {};
-            for (let lvl = 1; lvl <= 3; lvl++) {
-                const steps = v[lvl];
-                serialized[lvl] = steps
-                    ? steps.map(step => step.map(b => b instanceof Ball ? b.toJSON() : b))
-                    : [];
-            }
-            serialized.random = v.random || false;
-            customDrillData[k] = serialized;
+            const steps = v.steps || [];
+            customDrillData[k] = {
+                steps: steps.map(step => step.map(b => b instanceof Ball ? b.toJSON() : b)),
+                random: v.random || false,
+            };
         }
         await fetch(API_DRILLS, {
             method: 'POST',
@@ -237,54 +248,35 @@ export function importCustomDrills(csvText) {
 
                 if (!customBuilder[key]) {
                     let exists = newCustomData[category].find(d => d.key === key);
-                    
-                    // UPDATED LIMIT: 100
                     if (!exists && newCustomData[category].length < 100) {
                         newCustomData[category].push({ name: name, key: key });
                     }
-                    
-                    customBuilder[key] = { 1: {}, 2: {}, 3: {} }; 
+                    customBuilder[key] = {};
                 }
-                for(let lvl=1; lvl<=3; lvl++) {
-                    if (!customBuilder[key][lvl]) customBuilder[key][lvl] = {};
-                    if (!customBuilder[key][lvl][ballNum]) customBuilder[key][lvl][ballNum] = [];
-                    customBuilder[key][lvl][ballNum].push(params);
-                }
+                if (!customBuilder[key][ballNum]) customBuilder[key][ballNum] = [];
+                customBuilder[key][ballNum].push(params);
             } else {
                 const lvlMatch = nameRaw.match(/\(Lvl (\d)\)$/i);
-                let level = 1;
                 let realName = nameRaw;
-                
                 if (lvlMatch) {
-                    level = parseInt(lvlMatch[1]);
                     realName = nameRaw.replace(lvlMatch[0], '').trim();
                 }
                 const key = realName.toLowerCase().replace(/ /g, '-');
-                
                 if (!factoryBuilder[key]) factoryBuilder[key] = {};
-                if (!factoryBuilder[key][level]) factoryBuilder[key][level] = {};
-                
-                if (!factoryBuilder[key][level][ballNum]) factoryBuilder[key][level][ballNum] = [];
-                factoryBuilder[key][level][ballNum].push(params);
+                if (!factoryBuilder[key][ballNum]) factoryBuilder[key][ballNum] = [];
+                factoryBuilder[key][ballNum].push(params);
             }
         });
 
         for (let key in customBuilder) {
-            currentDrills[key] = {};
-            for(let lvl=1; lvl<=3; lvl++) {
-                const sortedBalls = Object.keys(customBuilder[key][lvl]).sort((a,b) => parseFloat(a)-parseFloat(b));
-                currentDrills[key][lvl] = sortedBalls.map(bKey => customBuilder[key][lvl][bKey]);
-            }
+            const sortedBalls = Object.keys(customBuilder[key]).sort((a,b) => parseFloat(a)-parseFloat(b));
+            currentDrills[key] = { steps: sortedBalls.map(bKey => customBuilder[key][bKey]), random: false };
         }
         userCustomDrills = newCustomData;
 
         for (let key in factoryBuilder) {
-            if (!currentDrills[key]) currentDrills[key] = {};
-            for (let lvl in factoryBuilder[key]) {
-                const ballsObj = factoryBuilder[key][lvl];
-                const sortedBalls = Object.keys(ballsObj).sort((a,b) => parseFloat(a)-parseFloat(b));
-                currentDrills[key][lvl] = sortedBalls.map(bKey => ballsObj[bKey]);
-            }
+            const sortedBalls = Object.keys(factoryBuilder[key]).sort((a,b) => parseFloat(a)-parseFloat(b));
+            currentDrills[key] = { steps: sortedBalls.map(bKey => factoryBuilder[key][bKey]), random: false };
         }
 
         saveDrillsToStorage();
@@ -321,7 +313,7 @@ export function exportCustomDrills() {
         const drillList = userCustomDrills[catKey];
         if(drillList && drillList.length > 0) {
             drillList.forEach(drill => {
-                const sequence = currentDrills[drill.key] ? currentDrills[drill.key][1] : null; 
+                const sequence = currentDrills[drill.key]?.steps || null;
                 if (sequence) {
                     appendDrillToCSV(setLabel, drill.name, sequence);
                 }

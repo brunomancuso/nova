@@ -159,103 +159,72 @@ export class Ball {
 // ── Drill ─────────────────────────────────────────────────────────────────
 
 export class Drill {
-    constructor(key = '', name = '', {
-        levels  = { 1: [], 2: [], 3: [] },
-        random  = false,
+    constructor(name = '', {
+        steps  = [],
+        random = false,
     } = {}) {
-        this.key    = key;       // unique identifier (e.g. "cust_A_MyDrill_123")
         this.name   = name;      // display name
-        this.levels = levels;    // { 1: Step[][], 2: Step[][], 3: Step[][] }
+        this.steps  = steps;     // Ball[][] — array of steps, each step is array of Ball variants
         this.random = random;    // shuffle steps during execution
-    }
-
-    // ── Get steps for a given level ───────────────────────────────────────
-    getSteps(level) {
-        return this.levels[level] || [];
-    }
-
-    // ── Set steps for a given level ───────────────────────────────────────
-    setSteps(level, steps) {
-        this.levels[level] = steps;  // steps: Ball[][] (array of step-variants)
     }
 
     // ── Deep clone ────────────────────────────────────────────────────────
     clone() {
-        const clonedLevels = {};
-        for (const lvl in this.levels) {
-            clonedLevels[lvl] = this.levels[lvl].map(step =>
+        return new Drill(this.name, {
+            steps: this.steps.map(step =>
                 step.map(ball => ball.clone())
-            );
-        }
-        return new Drill(this.key, this.name, {
-            levels: clonedLevels,
+            ),
             random: this.random,
         });
     }
 
     // ── JSON serialization ────────────────────────────────────────────────
     toJSON() {
-        const levelsJSON = {};
-        for (const lvl in this.levels) {
-            levelsJSON[lvl] = this.levels[lvl].map(step =>
-                step.map(ball => ball.toJSON())
-            );
-        }
         return {
-            key:    this.key,
             name:   this.name,
-            levels: levelsJSON,
+            steps:  this.steps.map(step =>
+                step.map(ball => ball.toJSON())
+            ),
             random: this.random,
         };
     }
 
     // ── Deserialize from JSON object ──────────────────────────────────────
     static fromJSON(json) {
-        const levels = {};
-        if (json.levels) {
-            for (const lvl in json.levels) {
-                levels[lvl] = json.levels[lvl].map(step =>
-                    step.map(b => Ball.fromJSON(b))
-                );
-            }
-        }
-        return new Drill(json.key || '', json.name || '', {
-            levels,
+        return new Drill(json.name || '', {
+            steps: (json.steps || []).map(step =>
+                step.map(b => Ball.fromJSON(b))
+            ),
             random: !!json.random,
         });
     }
 
     // ── Convert from legacy currentDrills structure ───────────────────────
     // Legacy: currentDrills[key] = { 1: [[[n,n,...]]], 2: ..., 3: ..., random: bool }
-    static fromLegacy(key, name, legacyData) {
-        const levels = {};
+    static fromLegacy(name, legacyData) {
+        const allSteps = [];
         for (let lvl = 1; lvl <= 3; lvl++) {
             const raw = legacyData[lvl];
             if (raw && Array.isArray(raw)) {
-                levels[lvl] = raw.map(step =>
-                    step.map(ballArr => Ball.fromArray(ballArr))
-                );
-            } else {
-                levels[lvl] = [];
+                for (const step of raw) {
+                    allSteps.push(step.map(ballArr =>
+                        Array.isArray(ballArr) ? Ball.fromArray(ballArr) : Ball.fromJSON(ballArr)
+                    ));
+                }
             }
         }
-        return new Drill(key, name, {
-            levels,
+        return new Drill(name, {
+            steps: allSteps,
             random: !!legacyData.random,
         });
     }
 
     // ── Convert back to legacy currentDrills structure ────────────────────
     toLegacy() {
-        const legacy = {};
-        for (let lvl = 1; lvl <= 3; lvl++) {
-            const steps = this.levels[lvl];
-            legacy[lvl] = steps
-                ? steps.map(step => step.map(ball => ball.toArray()))
-                : [];
-        }
-        legacy.random = this.random;
-        return legacy;
+        return {
+            1: this.steps.map(step => step.map(ball => ball.toArray())),
+            random: this.random,
+        };
     }
 }
 

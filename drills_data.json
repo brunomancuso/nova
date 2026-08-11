@@ -137,7 +137,8 @@
   },
   "customDrillData": {
     "cust_A_#_BH_Serve_Under_Long_1780101727729": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -153,9 +154,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -172,29 +187,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_FH_Serve_Under_Long_1780101738486": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -210,9 +207,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -229,29 +240,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_BH_Block_Long_1780102293482": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 3324,
@@ -267,9 +260,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -286,29 +293,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_FH_Block_Long_1780102310129": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 3469,
@@ -324,9 +313,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -343,29 +346,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_FH_Under_Long_1780102326932": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 996,
@@ -381,9 +366,23 @@
             "scatter": 1,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -400,29 +399,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_BH_Under_Long_1780102340729": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 647,
@@ -439,13 +420,11 @@
             "delay": 0
           }
         ]
-      ],
-      "2": [],
-      "3": [],
-      "random": false
+      ]
     },
     "cust_B_FH_Under_Block_BH_1780102458049": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 797,
@@ -477,9 +456,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -496,29 +489,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_Under_FH_Block__1780103319546": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -550,9 +525,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -569,29 +558,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_Random_BH_FH_Under_1780103808551": {
-      "1": [
+      "random": true,
+      "steps": [
         [
           {
             "topRPM": 1065,
@@ -623,9 +594,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -642,29 +627,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": true
+      ]
     },
     "cust_A_#_Counter_1780104911558": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 7201,
@@ -680,9 +647,23 @@
             "scatter": 2,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -699,29 +680,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_Under_Middle_1780105413123": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 810,
@@ -753,9 +716,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -772,29 +749,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_FH_Block_1780358913016": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 4142,
@@ -826,9 +785,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -845,29 +818,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_Under_Random_1780359349443": {
-      "1": [
+      "random": true,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -899,9 +854,23 @@
             "scatter": 2,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -918,29 +887,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": true
+      ]
     },
     "cust_A_#_BH_Dura_1780359611070": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -956,9 +907,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -975,29 +940,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_BH_Dura_Long_1780359635110": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 494,
@@ -1013,9 +960,23 @@
             "scatter": null,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1032,29 +993,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_C_FH_Punta_y_Medio_1780360184328": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 3469,
@@ -1086,9 +1029,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1105,29 +1062,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_C_Falkenberg_1_1780360602894": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 3469,
@@ -1175,9 +1114,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1194,29 +1147,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_FH_Under_Middle_Scatter_1780361270833": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 810,
@@ -1232,9 +1167,23 @@
             "scatter": 3,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1251,29 +1200,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_BH_Under_Short_1780363413652": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1289,9 +1220,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1308,29 +1253,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_FH_BH_short_BH_Long_1780363859090": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1376,9 +1303,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1395,29 +1336,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_FH_Short_BH_Long_1780364127409": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 674,
@@ -1449,9 +1372,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1468,29 +1405,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_Under_Block_1780433673562": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1522,9 +1441,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1541,29 +1474,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_Short_Block_1780670960593": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1595,9 +1510,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 60,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1614,29 +1543,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 60,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_#_FH_Short_Under_1781454671813": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1652,9 +1563,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1671,29 +1596,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_#_Saque_Corto_1782598336195": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 485,
@@ -1709,9 +1616,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1728,29 +1649,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_#_Saque_largo_1782598355526": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -1766,9 +1669,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1785,29 +1702,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_B_BH_FH_Block_Random_1785976075330": {
-      "1": [
+      "random": true,
+      "steps": [
         [
           {
             "topRPM": 4079,
@@ -1839,9 +1738,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1858,29 +1771,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": true
+      ]
     },
     "cust_A_BH_Alta_1785978459188": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 2978,
@@ -1896,9 +1791,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -1915,29 +1824,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_C_BH_Under_Random_Alta_1785978529032": {
-      "1": [
+      "random": true,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -2001,9 +1892,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -2020,29 +1925,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": true
+      ]
     },
     "cust_B_BH_FH_Under_1785978939267": {
-      "1": [
+      "random": true,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -2074,9 +1961,23 @@
             "scatter": 0,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -2093,29 +1994,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": true
+      ]
     },
     "cust_B_Random_Block_1785979356730": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 4079,
@@ -2131,9 +2014,23 @@
             "scatter": 4,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -2150,29 +2047,11 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     },
     "cust_A_BH_Under_Random__1786151542476": {
-      "1": [
+      "random": false,
+      "steps": [
         [
           {
             "topRPM": 400,
@@ -2188,9 +2067,23 @@
             "scatter": 3,
             "delay": 0
           }
-        ]
-      ],
-      "2": [
+        ],
+        [
+          {
+            "topRPM": 4123,
+            "bottomRPM": 2233,
+            "height": 50,
+            "drop": 0,
+            "frequency": 50,
+            "reps": 1,
+            "side": 1,
+            "speed": 5,
+            "spin": 2,
+            "type": "top",
+            "scatter": 0,
+            "delay": 0
+          }
+        ],
         [
           {
             "topRPM": 4123,
@@ -2207,26 +2100,7 @@
             "delay": 0
           }
         ]
-      ],
-      "3": [
-        [
-          {
-            "topRPM": 4123,
-            "bottomRPM": 2233,
-            "height": 50,
-            "drop": 0,
-            "frequency": 50,
-            "reps": 1,
-            "side": 1,
-            "speed": 5,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
-        ]
-      ],
-      "random": false
+      ]
     }
   },
   "drillOrder": {

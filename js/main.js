@@ -1,6 +1,5 @@
 import { 
     initData, 
-    setLevel, 
     setMode, 
     resetStats, 
     importCustomDrills, 
@@ -12,7 +11,6 @@ import {
     userCustomDrills,
     currentDrills,
     saveDrillsToStorage,
-    selectedLevel 
 } from './state.js';
 
 import { 
@@ -193,12 +191,6 @@ window.toggleMenu = toggleMenu;
 window.setTheme = setTheme;
 window.switchTab = switchTab;
 
-window.setLevel = (lvl, btn) => {
-    setLevel(lvl);
-    document.querySelectorAll('.lvl-dot').forEach(d => d.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-};
-
 window.setMode = (mode, btn) => {
     setMode(mode);
     document.querySelectorAll('.mode-option').forEach(d => d.classList.remove('active'));
@@ -351,9 +343,7 @@ window.performDownload = async () => {
         // Save Data
         userCustomDrills[selectedDownloadCat].push({ name: name, key: newKey });
         
-        const newDrillObj = { 1: [], 2: [], 3: [], random: data.random };
-        newDrillObj[selectedLevel] = data.params; 
-        currentDrills[newKey] = newDrillObj;
+        currentDrills[newKey] = { steps: data.params, random: data.random };
 
         localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
         saveDrillsToStorage();

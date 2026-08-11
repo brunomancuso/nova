@@ -1,4 +1,4 @@
-import { currentDrills, selectedLevel, runMode, appStats, setLastPlayed, userCustomDrills } from './state.js';
+import { currentDrills, runMode, appStats, setLastPlayed, userCustomDrills } from './state.js';
 import { Ball } from './model.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { log, showToast, clamp, toggleBodyScroll } from './utils.js';
@@ -78,7 +78,7 @@ function updatePauseBtn(text, pulse) {
 }
 
 export function startDrillSequence(drillName) {
-    const rawParams = currentDrills[drillName] ? currentDrills[drillName][selectedLevel] : null;
+    const rawParams = currentDrills[drillName]?.steps || null;
     if(!rawParams) {
          log("Drill data not found: " + drillName);
          return;

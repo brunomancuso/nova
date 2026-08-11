@@ -2,8 +2,7 @@ import {
     currentDrills, 
     userCustomDrills, 
     appStats, 
-    saveDrillsToStorage, 
-    selectedLevel,
+    saveDrillsToStorage,
     lastPlayedDrill,
     getSessionSummary 
 } from './state.js';
