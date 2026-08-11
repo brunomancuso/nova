@@ -1,5 +1,5 @@
 import { predictX, predictY, DEFAULT_KV, DEFAULT_KD, DEFAULT_KMS, DEFAULT_KLR } from './prediction.js';
-import { Ball } from './model.js';
+import { Ball } from './model/index.js';
 import { getRobotXcm, drawBall } from './robot.js';
 import { showToast } from './utils.js';
 import { sendSingleBall } from './runner.js';

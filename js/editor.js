@@ -1,5 +1,5 @@
-import { currentDrills, userCustomDrills, saveDrillsToStorage } from './state.js';
-import { Ball } from './model.js';
+import { store, saveDrillsToStorage } from './state.js';
+import { Ball, Step, Drill } from './model/index.js';
 import { renderBallTable, drawSideView } from './table.js';
 
 // Expose drawSideView for the Adjust Physics modal preview
@@ -32,12 +32,12 @@ window._redrawAdjPreviews = () => {
 import { SPIN_LIMITS } from './constants.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { showToast, clamp, toggleBodyScroll } from './utils.js';
-import { uploadDrill } from './cloud.js';
 
 // --- Local State ---
 let tempDrillData = null;
-let editingDrillKey = null;
-let selectedSaveCat = 'custom-a';
+let editingCat = null;
+let editingIndex = -1;
+let selectedSaveCat = 'dataA';
 let _tableViewMode = localStorage.getItem('nova_editor_table_mode') === '1';
 let _spinSpeedLocked = localStorage.getItem('nova_spin_speed_lock') !== '0'; // default: locked
 let _lockDrop = localStorage.getItem('nova_lock_drop') === '1'; // default: unlocked
@@ -75,34 +75,32 @@ window.getDropLockIconHtml = () =>
 
 // --- Public Module Functions ---
 
-export function openEditor(key) {
-    editingDrillKey = key;
-    updateTitleDisplay(key);
+export function openEditor(cat, index) {
+    editingCat = cat;
+    editingIndex = index;
+    const drill = store.getDrill(cat, index);
+    updateTitleDisplay(drill?.name || '');
 
     const chk = document.getElementById('chk-drill-random');
-    if (chk) chk.checked = !!(currentDrills[key] && currentDrills[key].random);
+    if (chk) chk.checked = !!(drill && drill.random);
 
-    if (currentDrills[key] && currentDrills[key].steps?.length) {
-        // Deep clone: Ball instances already exist from normalizeDrills
-        tempDrillData = currentDrills[key].steps.map(step =>
-            step.map(b => b instanceof Ball ? b.clone() : Ball.fromArray(b))
-        );
+    if (drill && drill.steps?.length) {
+        tempDrillData = drill.steps.map(s => s.clone());
     } else {
         const def = new Ball({ topRPM: 2230, bottomRPM: 2230, height: 50, drop: 0, frequency: 50, reps: 1, side: 1, speed: 2, spin: 2, type: 'top' });
         def.recalcRPMs();
-        tempDrillData = [[def]];
+        tempDrillData = [new Step({ ball: def })];
     }
 
     renderEditor();
     
     const btnDel = document.querySelector('.btn-delete-drill');
     if(btnDel) {
-        btnDel.disabled = !key.startsWith('cust_');
-        btnDel.style.opacity = key.startsWith('cust_') ? '1' : '0.5';
+        btnDel.disabled = false;
+        btnDel.style.opacity = '1';
     }
 
     document.getElementById('editor-modal').classList.add('open');
-    // Sync edit-mode button state from persisted value
     const modeBtn = document.querySelector('#editor-modal .btn-edit-mode');
     if (modeBtn) modeBtn.classList.toggle('active', _tableViewMode);
     toggleBodyScroll(true);
@@ -110,7 +108,8 @@ export function openEditor(key) {
 
 export function closeEditor() {
     document.getElementById('editor-modal').classList.remove('open');
-    editingDrillKey = null;
+    editingCat = null;
+    editingIndex = -1;
     tempDrillData = null;
     toggleBodyScroll(false);
 }
@@ -125,21 +124,22 @@ export function toggleEditorMode() {
 }
 
 export function saveDrillChanges() {
-    if (!editingDrillKey || !tempDrillData) return;
+    if (!editingCat || editingIndex < 0 || !tempDrillData) return;
+
+    const drill = store.getDrill(editingCat, editingIndex);
+    if (!drill) return;
 
     const chk = document.getElementById('chk-drill-random');
-    if (chk && currentDrills[editingDrillKey]) currentDrills[editingDrillKey].random = chk.checked;
+    if (chk) drill.random = chk.checked;
 
     tempDrillData.forEach(step => {
-        step.forEach(ball => {
-            if (!(ball instanceof Ball)) return;
-            ball.ensureMeta();
-            ball.clamp();
+        if (!(step instanceof Step)) return;
+        step.allBalls().forEach(ball => {
+            if (ball instanceof Ball) { ball.ensureMeta(); ball.clamp(); }
         });
     });
 
-    if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { steps: [], random: false };
-    currentDrills[editingDrillKey].steps = tempDrillData;
+    drill.steps = tempDrillData;
     saveDrillsToStorage();
 
     showToast("Configuration saved");
@@ -160,8 +160,9 @@ function renderEditor() {
 
     const isConnected = bleState.isConnected;
 
-    tempDrillData.forEach((stepOptions, stepIndex) => {
-        const isActive = stepOptions[0] instanceof Ball ? stepOptions[0].side : (stepOptions[0][6] === undefined ? 1 : stepOptions[0][6]);
+    tempDrillData.forEach((step, stepIndex) => {
+        if (!(step instanceof Step)) return;
+        const isActive = (step.ball ? step.ball.side : (step.variants[0]?.side ?? 1));
 
         if (stepIndex > 0) {
             const swapDiv = document.createElement('div');
@@ -173,19 +174,21 @@ function renderEditor() {
         const groupDiv = document.createElement('div');
         groupDiv.className = `ball-group ${isActive ? '' : 'inactive'}`;
         
-        const isSingle = stepOptions.length === 1;
+        const isSingle = step.isSingle;
+        const nVariants = step.variants.length || 0;
+        const allBalls = step.allBalls(); // [ball] for single, [...variants] for variant
         
         // --- SCATTER LOGIC ---
-        const firstBall = stepOptions[0] instanceof Ball ? stepOptions[0] : Ball.fromArray(stepOptions[0]);
-        const currentDrop = firstBall.drop;
-        const currentScatter = firstBall.scatter || 0;
+        const firstBall = allBalls[0];
+        const currentDrop = firstBall ? firstBall.drop : 0;
+        const currentScatter = firstBall ? (firstBall.scatter || 0) : 0;
         const maxScatter = 10 - Math.abs(currentDrop);
 
         const scatterHtml = isSingle ? `
             <div style="display:flex; align-items:center; gap:8px; margin-left:auto; margin-right:6px;">
                 <div style="display:flex; align-items:center; gap:5px;">
                     <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, 0, -1)">−</button>
-                    <span style="font-size:0.9rem; font-weight:700; min-width:22px; text-align:center; color:#fff;">${firstBall.reps}</span>
+                    <span style="font-size:0.9rem; font-weight:700; min-width:22px; text-align:center; color:#fff;">${firstBall?.reps ?? 1}</span>
                     <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, 0, 1)">+</button>
                 </div>
                 <div class="editor-field" style="flex-direction:row; align-items:center; gap:6px; padding:2px 6px; background:var(--bg); border:1px solid var(--border);">
@@ -198,9 +201,6 @@ function renderEditor() {
                 </div>
             </div>` : '';
 
-        // Duplicate/Next Step Button (Header)
-        const plusBtn = ``;
-
         groupDiv.innerHTML = `
             <div class="group-title">
                 <div style="display:flex; align-items:center; gap:10px; flex:1;">
@@ -210,13 +210,14 @@ function renderEditor() {
                     </div>
                     ${scatterHtml}
                 </div>
-                ${plusBtn}
             </div>`;
 
-        stepOptions.forEach((ballParams, optIndex) => {
+        allBalls.forEach((ballParams, optIndex) => {
             // Ensure it's a Ball instance
             const b = ballParams instanceof Ball ? ballParams : Ball.fromArray(ballParams);
-            if (!(ballParams instanceof Ball)) stepOptions[optIndex] = b;
+            // Write back to the Step
+            if (step.isSingle) step.ball = b;
+            else if (optIndex < step.variants.length) step.variants[optIndex] = b;
             b.ensureMeta();
             // Recalc RPMs from speed/spin (ensures consistency)
             b.recalcRPMs();
@@ -320,7 +321,7 @@ function renderEditor() {
                     </div>
                 </div>`;
 
-            const isLastBall = tempDrillData.length === 1 && stepOptions.length === 1;
+            const isLastBall = tempDrillData.length === 1 && allBalls.length === 1;
             
             const actionsHtml = `
                 <div class="card-actions">
@@ -335,7 +336,7 @@ function renderEditor() {
                 </div>
             `;
             
-            const label = stepOptions.length > 1 ? `<span class="option-label">Variant ${optIndex + 1}</span>` : '';
+            const label = nVariants > 1 ? `<span class="option-label">Variant ${optIndex + 1}</span>` : '';
 
             if (_tableViewMode) {
                 const spinSliderVal = type === 'back' ? -Math.min(spin, 10) : Math.min(spin, 10);
@@ -410,7 +411,9 @@ function renderEditor() {
 
 window.handleScatterChange = (stepIdx, value) => {
     if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][0]; // Scatter applies to the first ball (group level)
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.ball || step.variants[0];
     if (!(ball instanceof Ball)) return;
     
     let val = parseFloat(value);
@@ -438,7 +441,9 @@ window.applyPreset = (stepIdx, optIdx, paramIdx, value, btnEl) => {
 
 window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
     if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.isSingle ? step.ball : step.variants[optIdx];
     if (!(ball instanceof Ball)) return;
     let val = parseFloat(value);
     if(isNaN(val)) val = 0;
@@ -488,7 +493,9 @@ window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
 
 window.handleTypeToggle = (stepIdx, optIdx, newType) => {
     if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.isSingle ? step.ball : step.variants[optIdx];
     if (!(ball instanceof Ball)) return;
     if(ball.type === newType) return;
     ball.type = newType;
@@ -501,10 +508,9 @@ window.handleSwapSteps = (idxA, idxB) => {
     const tmp = tempDrillData[idxA];
     tempDrillData[idxA] = tempDrillData[idxB];
     tempDrillData[idxB] = tmp;
-    // Persist immediately so runner / reload also sees the new order
-    if (editingDrillKey) {
-        if (!currentDrills[editingDrillKey]) currentDrills[editingDrillKey] = { 1: [], 2: [], 3: [] };
-        currentDrills[editingDrillKey].steps = tempDrillData;
+    if (editingCat && editingIndex >= 0) {
+        const drill = store.getDrill(editingCat, editingIndex);
+        if (drill) drill.steps = tempDrillData;
     }
     renderEditor();
 };
@@ -531,7 +537,9 @@ window.handleSliderStep = (id, delta) => {
 
 window.handleRepsStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.isSingle ? step.ball : step.variants[optIdx];
     if (!(ball instanceof Ball)) return;
     ball.reps = Math.max(1, Math.min(200, (ball.reps || 1) + delta));
     renderEditor();
@@ -539,16 +547,23 @@ window.handleRepsStep = (stepIdx, optIdx, delta) => {
 
 window.handleDelayStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
-    const ball = tempDrillData[stepIdx][optIdx];
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.isSingle ? step.ball : step.variants[optIdx];
     if (!(ball instanceof Ball)) return;
     ball.delay = Math.max(0, Math.min(10000, (ball.delay ?? 0) + delta));
     renderEditor();
 };
 
 window.handleEditModeBpm = (stepIdx, optIdx, value) => {
-    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
-    if (!ball) return;
-    if (!(ball instanceof Ball)) return;
+    let ball;
+    if (stepIdx === 'adj') {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
+    if (!ball || !(ball instanceof Ball)) return;
     ball.frequency = clamp(parseFloat(value), 30, 120);
     const el = document.getElementById(`bpm-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = Math.round(ball.frequency);
@@ -661,9 +676,15 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
 function _redrawEditorCanvas(stepIdx, optIdx) {
     const c = document.getElementById(`editor-robot-canvas-${stepIdx}-${optIdx}`);
     if (!c) return;
-    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    let ball;
+    if (stepIdx === 'adj') {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
     if (!ball) return;
-    const b     = ball instanceof Ball ? ball : Ball.fromArray(ball);
+    const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
     if (!b) return;
     const speed  = b.speed ?? 0;
     const spin   = b.type === 'back' ? -(b.spin ?? 0) : (b.spin ?? 0);
@@ -680,9 +701,15 @@ function _redrawEditorCanvas(stepIdx, optIdx) {
 function _redrawSideView(stepIdx, optIdx) {
     const sc = document.getElementById(`side-view-canvas-${stepIdx}-${optIdx}`);
     if (!sc) return;
-    const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    let ball;
+    if (stepIdx === 'adj') {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
     if (!ball) return;
-    const b       = ball instanceof Ball ? ball : Ball.fromArray(ball);
+    const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
     if (!b) return;
     const speed    = b.speed ?? 0;
     const spin     = b.type === 'back' ? -(b.spin ?? 0) : (b.spin ?? 0);
@@ -695,7 +722,13 @@ function _redrawSideView(stepIdx, optIdx) {
 
 window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
     const isAdj = stepIdx === 'adj';
-    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    let ball;
+    if (isAdj) {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
     if (!ball || !(ball instanceof Ball)) return;
     const h = clamp(parseFloat(value), -50, 100);
     ball.height = h;
@@ -709,7 +742,13 @@ window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
 
 window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
     const isAdj = stepIdx === 'adj';
-    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    let ball;
+    if (isAdj) {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
     if (!ball || !(ball instanceof Ball)) return;
     const v = clamp(parseFloat(value), 0, 10);
     ball.speed = v;
@@ -724,7 +763,13 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
 
 window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
     const isAdj = stepIdx === 'adj';
-    const ball  = isAdj ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+    let ball;
+    if (isAdj) {
+        ball = window._adjBallData;
+    } else {
+        const s = tempDrillData?.[stepIdx];
+        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    }
     if (!ball) return;
     const v = parseFloat(value);
 
@@ -762,52 +807,74 @@ window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
 
 window.handleToggleBallActive = (stepIdx) => {
     if (!tempDrillData) return;
-    const first = tempDrillData[stepIdx][0];
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const first = step.ball || step.variants[0];
     const currentVal = first instanceof Ball ? first.side : 1;
-    tempDrillData[stepIdx].forEach(opt => {
-        if (opt instanceof Ball) opt.side = currentVal === 1 ? 0 : 1;
+    step.allBalls().forEach(b => {
+        if (b instanceof Ball) b.side = currentVal === 1 ? 0 : 1;
     });
     renderEditor();
 };
 
 window.handleAddSequenceStep = (sourceStepIndex) => {
-    const fullStepClone = tempDrillData[sourceStepIndex].map(b => b instanceof Ball ? b.clone() : b);
-    tempDrillData.splice(sourceStepIndex + 1, 0, fullStepClone);
+    const step = tempDrillData[sourceStepIndex];
+    const clone = step instanceof Step ? step.clone() : step;
+    tempDrillData.splice(sourceStepIndex + 1, 0, clone);
     renderEditor();
 };
 
 window.handleAddVariant = (stepIndex, sourceOptIndex) => {
-    const base = tempDrillData[stepIndex][sourceOptIndex];
+    const step = tempDrillData[stepIndex];
+    if (!(step instanceof Step)) return;
+    const base = step.isSingle ? step.ball : step.variants[sourceOptIndex];
     const cloned = base instanceof Ball ? base.clone() : base;
-    tempDrillData[stepIndex].push(cloned);
+    // Convert single→variant: move ball into variants array
+    if (step.isSingle && step.ball) {
+        step.variants = [step.ball.clone(), cloned];
+        step.ball = null;
+    } else {
+        step.variants.push(cloned);
+    }
     renderEditor();
 };
 
 window.handleDeleteBall = (stepIdx, optIdx) => {
-    if (tempDrillData.length <= 1 && tempDrillData[0].length <= 1) {
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    if (tempDrillData.length <= 1 && step.allBalls().length <= 1) {
         showToast("Cannot delete last ball"); return;
     }
-    tempDrillData[stepIdx].splice(optIdx, 1);
-    if (tempDrillData[stepIdx].length === 0) tempDrillData.splice(stepIdx, 1);
+    if (step.isSingle) {
+        tempDrillData.splice(stepIdx, 1);
+    } else {
+        step.variants.splice(optIdx, 1);
+        if (step.variants.length === 1) {
+            // Convert back to single: move sole variant into ball
+            step.ball = step.variants[0];
+            step.variants = [];
+        }
+        if (step.variants.length === 0 && !step.ball) tempDrillData.splice(stepIdx, 1);
+    }
     renderEditor();
 };
 
 window.openImportBallModal = () => {
     const list = document.getElementById('import-ball-list');
     if (!list) return;
-    const allDrills = [
-        ...userCustomDrills['custom-a'].map(d => ({ ...d, cat: 'A' })),
-        ...userCustomDrills['custom-b'].map(d => ({ ...d, cat: 'B' })),
-        ...userCustomDrills['custom-c'].map(d => ({ ...d, cat: 'C' })),
-    ];
+    const allDrills = [];
+    for (const cat of ['dataA', 'dataB', 'dataC']) {
+        const catLabel = cat.replace('data', '');
+        store.get(cat).forEach((d, i) => allDrills.push({ cat, index: i, name: d.name, label: catLabel }));
+    }
     if (allDrills.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">No custom drills saved yet.</p>';
+        list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">No drills saved yet.</p>';
     } else {
         list.innerHTML = allDrills.map(d => `
-            <div onclick="window.importBallFromDrill('${d.key}')"
+            <div onclick="window.importBallFromDrill('${d.cat}', ${d.index})"
                  style="padding:10px 14px; margin-bottom:6px; border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:700;">${d.name}</span>
-                <span style="font-size:0.7rem; color:var(--text-light); background:var(--bg); padding:2px 7px; border-radius:4px;">Custom ${d.cat}</span>
+                <span style="font-size:0.7rem; color:var(--text-light); background:var(--bg); padding:2px 7px; border-radius:4px;">Custom ${d.label}</span>
             </div>`).join('');
     }
     document.getElementById('import-ball-modal').classList.add('open');
@@ -817,20 +884,19 @@ window.closeImportBallModal = () => {
     document.getElementById('import-ball-modal').classList.remove('open');
 };
 
-window.importBallFromDrill = (key) => {
-    const drill = currentDrills[key];
+window.importBallFromDrill = (cat, index) => {
+    const drill = store.getDrill(cat, index);
     if (!drill || !drill.steps || drill.steps.length === 0) {
         showToast("No data for this drill"); return;
     }
-    const steps = drill.steps.map(step => step.map(b => b instanceof Ball ? b.clone() : b));
-    steps.forEach(step => tempDrillData.push(step));
+    drill.steps.forEach(s => tempDrillData.push(s.clone()));
     window.closeImportBallModal();
     renderEditor();
     showToast("Balls imported");
 };
 
 window.handleSaveAsDrill = () => {
-    selectedSaveCat = 'custom-a';
+    selectedSaveCat = 'dataA';
     const nameInput = document.getElementById('save-name');
     if (nameInput) nameInput.value = '';
     
@@ -862,47 +928,33 @@ window.performSaveAs = () => {
     if (!/^[a-zA-Z0-9.\-#\[\]><\+\)\( ]+$/.test(newName)) { showToast("Invalid characters"); return; }
 
     const targetCat = selectedSaveCat;
-    if (userCustomDrills[targetCat].length >= 100) { 
+    if (store.count(targetCat) >= 100) { 
             showToast("That bank is full (Max 100)!"); return; 
     }
 
-    const catChar = targetCat.split('-')[1].toUpperCase(); 
-    const newKey = `cust_${catChar}_${newName.replace(/\s+/g, '_')}_${Date.now()}`;
-    userCustomDrills[targetCat].push({ name: newName, key: newKey });
-
-    const baseDrill = currentDrills[editingDrillKey] || { steps: [], random: false };
-    const newDrillData = {
-        steps: tempDrillData,
-        random: baseDrill.random || false,
-    };
-    
     const chk = document.getElementById('chk-drill-random');
-    if (chk) newDrillData.random = chk.checked;
-
-    currentDrills[newKey] = newDrillData;
+    const newDrill = new Drill(newName, {
+        steps: tempDrillData,
+        random: chk?.checked || false,
+    });
+    store.add(targetCat, newDrill);
     saveDrillsToStorage(); 
 
     window.closeSaveAsModal();
     closeEditor();
-    openEditor(newKey);
+    openEditor(targetCat, store.count(targetCat) - 1);
     document.dispatchEvent(new CustomEvent('drills-updated'));
     
     const tabBtn = document.querySelector(`.tab-btn[onclick*="${targetCat}"]`);
     if (tabBtn) switchTab(targetCat, tabBtn);
-    showToast(`Saved to ${catChar}`);
+    showToast(`Saved to ${targetCat.replace('data', '')}`);
 };
 
 window.handleDeleteDrill = () => {
-    if (!editingDrillKey || !editingDrillKey.startsWith('cust_')) return;
+    if (!editingCat || editingIndex < 0) return;
     if (!confirm("Delete this drill?")) return;
 
-    const parts = editingDrillKey.split('_');
-    const catKey = `custom-${parts[1].toLowerCase()}`;
-    if (userCustomDrills[catKey]) {
-        userCustomDrills[catKey] = userCustomDrills[catKey].filter(d => d.key !== editingDrillKey);
-    }
-
-    delete currentDrills[editingDrillKey];
+    store.remove(editingCat, editingIndex);
     saveDrillsToStorage();
 
     closeEditor();
@@ -911,77 +963,44 @@ window.handleDeleteDrill = () => {
 };
 
 window.handleRenameDrill = () => {
-    if (!editingDrillKey || !editingDrillKey.startsWith('cust_')) return;
+    if (!editingCat || editingIndex < 0) return;
+    
+    const drill = store.getDrill(editingCat, editingIndex);
+    if (!drill) return;
     
     const nameEl = document.getElementById('editor-drill-name');
-    const currentName = nameEl ? nameEl.textContent : "New Drill";
+    const currentName = nameEl ? nameEl.textContent : drill.name;
     
     const newName = prompt("Rename Drill:", currentName);
     if (!newName || newName === currentName) return;
     if (newName.length > 40) { showToast("Name too long"); return; }
 
-    const parts = editingDrillKey.split('_'); 
-    const catChar = parts[1]; 
-    const catListKey = `custom-${catChar.toLowerCase()}`;
-    const newKey = `cust_${catChar}_${newName.replace(/\s+/g, '_')}_${Date.now()}`;
-    
-    const list = userCustomDrills[catListKey];
-    const entry = list.find(d => d.key === editingDrillKey);
-    
-    if (entry) {
-        entry.name = newName;
-        entry.key = newKey;
-        currentDrills[newKey] = currentDrills[editingDrillKey];
-        delete currentDrills[editingDrillKey];
-
-        editingDrillKey = newKey;
-        saveDrillsToStorage(); 
-        updateTitleDisplay(newKey);
-        showToast("Renamed");
-        document.dispatchEvent(new CustomEvent('drills-updated'));
-    }
+    drill.name = newName;
+    saveDrillsToStorage(); 
+    updateTitleDisplay(newName);
+    showToast("Renamed");
+    document.dispatchEvent(new CustomEvent('drills-updated'));
 };
 
-function updateTitleDisplay(key) {
-    let displayName = key;
-    let isCustom = false;
-    
-    if (key.startsWith('cust_')) {
-        isCustom = true;
-        const parts = key.split('_');
-        if (parts.length >= 3) {
-           const catKey = `custom-${parts[1].toLowerCase()}`;
-           const entry = userCustomDrills[catKey]?.find(d => d.key === key);
-           displayName = entry ? entry.name : key.replace(/^cust_[A-C]_/, '');
-        }
-    } else {
-        displayName = key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
+function updateTitleDisplay(name) {
+    const displayName = name || 'New Drill';
     
     const nameEl = document.getElementById('editor-drill-name');
     const iconEl = document.getElementById('editor-drill-edit-icon');
     const container = document.querySelector('#editor-modal .title-container');
 
     if(nameEl) nameEl.textContent = displayName;
-    
-    if(isCustom) {
-        if(iconEl) iconEl.style.display = 'inline-block';
-        if(container) {
-            container.style.pointerEvents = 'auto';
-            container.onclick = () => window.handleRenameDrill();
-        }
-    } else {
-        if(iconEl) iconEl.style.display = 'none';
-        if(container) {
-            container.style.pointerEvents = 'none';
-            container.onclick = null;
-        }
+    if(iconEl) iconEl.style.display = 'inline-block';
+    if(container) {
+        container.style.pointerEvents = 'auto';
+        container.onclick = () => window.handleRenameDrill();
     }
 }
 
 window.handleTestBall = async (stepIdx, optIdx) => {
     if (!bleState.isConnected) { showToast("Device not connected"); return; }
-    const d = tempDrillData[stepIdx][optIdx];
+    const s = tempDrillData[stepIdx];
+    const d = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
     if (!(d instanceof Ball)) return;
     const ballData = packBall(d.topRPM, d.bottomRPM, d.height, d.drop, d.frequency, 1); 
     const buffer = new ArrayBuffer(31); 
@@ -999,8 +1018,9 @@ window.handleTestCombo = async () => {
     if (!bleState.isConnected) { showToast("Device not connected"); return; }
     if (!tempDrillData || tempDrillData.length === 0) return;
     const balls = [];
-    tempDrillData.forEach(stepOptions => {
-        const first = stepOptions[0];
+    tempDrillData.forEach(step => {
+        if (!(step instanceof Step)) return;
+        const first = step.ball || step.variants[0];
         const isActive = first instanceof Ball ? first.side : 1;
         if (isActive === 0) return;
         const d = first instanceof Ball ? first.clone() : Ball.fromArray(first);
@@ -1035,38 +1055,4 @@ window.handleTestCombo = async () => {
     balls.forEach(b => { uint8.set(b, offset); offset += 24; });
     try { await sendPacket(uint8); showToast("Testing Drill..."); } 
     catch (e) { console.error(e); showToast("Test Failed"); }
-};
-
-window.handleShareDrill = async () => {
-    if (!editingDrillKey || !tempDrillData) return;
-    let drillName = "Shared Drill";
-    const nameEl = document.getElementById('editor-drill-name');
-    if(nameEl) drillName = nameEl.textContent;
-
-    const payload = {
-        name: drillName,
-        params: tempDrillData,
-        random: document.getElementById('chk-drill-random')?.checked || false
-    };
-
-    const btn = document.querySelector('.btn-header-share');
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<span style="font-size:10px">...</span>'; 
-    btn.disabled = true;
-
-    try {
-        const code = await uploadDrill(payload);
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-             await navigator.clipboard.writeText(code);
-             alert(`Drill Shared Successfully!\n\nCode: ${code}\n\n(Copied to clipboard)`);
-        } else {
-             prompt("Drill Shared! Copy this code:", code);
-        }
-    } catch (e) {
-        console.error("Share Error:", e);
-        showToast("Share failed. Check network.");
-    } finally {
-        btn.innerHTML = originalHtml;
-        btn.disabled = false;
-    }
 };

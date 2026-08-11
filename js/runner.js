@@ -1,8 +1,8 @@
-import { currentDrills, runMode, appStats, setLastPlayed, userCustomDrills } from './state.js';
-import { Ball } from './model.js';
+import { store, runMode, setLastPlayed } from './state.js';
+import { Ball, Step } from './model/index.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
 import { log, showToast, clamp, toggleBodyScroll } from './utils.js';
-import { updateStatsUI, updateLastPlayedHighlight } from './ui.js';
+import { updateLastPlayedHighlight } from './ui.js';
 import { setActiveDrillName, simLog } from './simulator.js';
 
 let isRunning = false;
@@ -77,16 +77,17 @@ function updatePauseBtn(text, pulse) {
     }
 }
 
-export function startDrillSequence(drillName) {
-    const rawParams = currentDrills[drillName]?.steps || null;
-    if(!rawParams) {
-         log("Drill data not found: " + drillName);
+export function startDrillSequence(cat, name) {
+    const drill = store.findByName(cat, name);
+    if(!drill || !drill.steps) {
+         log("Drill data not found: " + cat + ":" + name);
          return;
     }
 
     // --- FILTER INACTIVE STEPS ---
-    const executableSteps = rawParams.filter(step => {
-        const first = step[0];
+    const executableSteps = drill.steps.filter(step => {
+        if (!(step instanceof Step)) return true;
+        const first = step.ball || step.variants[0];
         const isActive = first instanceof Ball ? first.side : 1;
         return isActive === undefined || isActive === 1;
     });
@@ -98,18 +99,11 @@ export function startDrillSequence(drillName) {
     }
     
     activeDrillParams = executableSteps;
-    activeDrillRandom = !!currentDrills[drillName].random;
-
-    // Resolve pretty display name
-    if (drillName.startsWith('cust_')) {
-        const found = Object.values(userCustomDrills).flat().find(d => d.key === drillName);
-        activeDrillName = found ? found.name : drillName;
-    } else {
-        activeDrillName = drillName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    }
+    activeDrillRandom = !!drill.random;
+    activeDrillName = drill.name;
     
-    // --- NEW: SAVE LAST PLAYED STATE ---
-    setLastPlayed(drillName);
+    // --- SAVE LAST PLAYED STATE ---
+    setLastPlayed(cat, drill.name);
     updateLastPlayedHighlight();
 
     // --- LOCK SCROLL ON START ---
@@ -156,12 +150,6 @@ export function beginDrillExecution() {
     isRunning = true;
     isPaused = false;
     
-    // --- FIX: Increment Drill Count ONCE per session, not per rep ---
-    appStats.drills += 1;
-    localStorage.setItem('nova_stats', JSON.stringify(appStats));
-    updateStatsUI();
-    // ---------------------------------------------------------------
-
     showPauseBtn(true);
     updatePauseBtn("PAUSE", false);
     setLabel("REMAINING");
@@ -220,10 +208,17 @@ async function runIteration() {
     }
 
     const balls = [];
-    sequence.forEach((stepOptions, i) => {
-        const chosenOption = stepOptions[Math.floor(Math.random() * stepOptions.length)];
-        const tempBall = chosenOption instanceof Ball ? chosenOption.clone() : Ball.fromArray(chosenOption);
-        if (!tempBall) return;
+    sequence.forEach((step, i) => {
+        let tempBall;
+        if (step instanceof Step) {
+            tempBall = step.resolve();
+        } else {
+            // Legacy fallback: step is Ball[]
+            const chosenOption = step[Math.floor(Math.random() * step.length)];
+            tempBall = chosenOption instanceof Ball ? chosenOption.clone() : Ball.fromArray(chosenOption);
+        }
+        if (!(tempBall instanceof Ball)) return;
+        tempBall = tempBall.clone();
 
         const scatter = tempBall.scatter || 0;
         if (scatter > 0) {
@@ -245,12 +240,6 @@ async function runIteration() {
         log(`TX Ball ${i+1}: ${tempBall.topRPM} ${tempBall.bottomRPM} ${tempBall.height} ${tempBall.drop} ${tempBall.frequency} ${tempBall.reps} ${tempBall.side} ${tempBall.speed} ${tempBall.spin} ${tempBall.type} ${tempBall.scatter} ${tempBall.delay}`);
         balls.push(tempBall);
     });
-
-    // --- FIX: Only increment BALLS here ---
-    appStats.balls += balls.length;
-    localStorage.setItem('nova_stats', JSON.stringify(appStats));
-    updateStatsUI();
-    // --------------------------------------
 
     setActiveDrillName(activeDrillName);
 

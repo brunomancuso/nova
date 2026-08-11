@@ -10,7 +10,6 @@
 
 import { bleState } from './bluetooth.js';
 import { handleDone } from './runner.js';
-import { startSession } from './state.js';
 
 let ballCount = 0;
 let _activeDrillName = '';
@@ -34,7 +33,6 @@ export function connectSimulator() {
     bleState.handshakeState = 'ready';
     bleState.isConnected    = true;
 
-    startSession();
     simLog('✓  Connected (simulated)');
     document.dispatchEvent(new CustomEvent('connection-changed'));
 }

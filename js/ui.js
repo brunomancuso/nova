@@ -1,55 +1,32 @@
 import { 
-    currentDrills, 
-    userCustomDrills, 
-    appStats, 
+    store,
     saveDrillsToStorage,
     lastPlayedDrill,
-    getSessionSummary 
 } from './state.js';
+import { Drill } from './model/index.js';
 import { bleState } from './bluetooth.js';
-import { showToast, formatDuration } from './utils.js'; 
+import { showToast } from './utils.js'; 
 import { openEditor } from './editor.js';
 
-// --- NEW: Handle Create New Drill ---
-window.handleCreateNewDrill = (category) => {
-    // UPDATED LIMIT: 100
-    if (userCustomDrills[category].length >= 100) {
+// --- Handle Create New Drill ---
+window.handleCreateNewDrill = (cat) => {
+    if (store.count(cat) >= 100) {
         showToast("Category is full (Max 100)");
         return;
     }
 
     const newName = prompt("Enter Name for New Drill:");
     if (!newName) return;
+    if (newName.length > 40) { showToast("Name too long (Max 40)"); return; }
+    if (!/^[a-zA-Z0-9.\-#\[\]><\+\)\( ]+$/.test(newName)) { showToast("Invalid characters"); return; }
 
-    if (newName.length > 25) { 
-        showToast("Name too long (Max 25)"); 
-        return; 
-    }
-    
-    if (!/^[a-zA-Z0-9.\-#\[\]><\+\)\( ]+$/.test(newName)) { 
-        showToast("Invalid characters"); 
-        return; 
-    }
-
-    const catChar = category.split('-')[1].toUpperCase();
-    const newKey = `cust_${catChar}_${newName.replace(/\s+/g, '_')}_${Date.now()}`;
-
-    userCustomDrills[category].push({ name: newName, key: newKey });
-
-    const defaultBall = [[4123, 2233, 50, 0, 50, 1, 1, 5, 2, 'top']];
-    currentDrills[newKey] = { 
-        1: [JSON.parse(JSON.stringify(defaultBall))], 
-        2: [JSON.parse(JSON.stringify(defaultBall))], 
-        3: [JSON.parse(JSON.stringify(defaultBall))],
-        random: false 
-    };
-
-    localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
+    const def = new Drill(newName, { steps: [], random: false });
+    store.add(cat, def);
     saveDrillsToStorage();
 
     renderDrillButtons();
     showToast(`Created ${newName}`);
-    openEditor(newKey);
+    openEditor(cat, store.count(cat) - 1);
 };
 
 // --- NEW: Drag & Drop to Tab Handlers ---
@@ -60,53 +37,26 @@ window.allowTabDrop = (e) => {
 
 window.handleTabDrop = (e, targetCat) => {
     e.preventDefault();
-    const key = e.dataTransfer.getData('text/plain');
-    if (!key) return;
+    const data = e.dataTransfer.getData('text/plain');
+    if (!data) return;
+    const [srcCat, srcIdx] = data.split(':');
+    const idx = parseInt(srcIdx);
 
-    let sourceCat = null;
-    let drillObj = null;
-    let drillIndex = -1;
-
-    ['custom-a', 'custom-b', 'custom-c'].forEach(cat => {
-        const idx = userCustomDrills[cat].findIndex(d => d.key === key);
-        if (idx !== -1) {
-            sourceCat = cat;
-            drillIndex = idx;
-            drillObj = userCustomDrills[cat][idx];
-        }
-    });
-
-    if (!sourceCat) return; 
-    if (sourceCat === targetCat) return; 
+    if (!srcCat || isNaN(idx)) return;
+    if (srcCat === targetCat) return;
     
-    // UPDATED LIMIT: 100
-    if (userCustomDrills[targetCat].length >= 100) {
-        showToast(`Bank ${targetCat.split('-')[1].toUpperCase()} is full!`);
+    if (store.count(targetCat) >= 100) {
+        showToast(`Bank ${targetCat.replace('data', '')} is full!`);
         return;
     }
 
-    const targetChar = targetCat.split('-')[1].toUpperCase();
-    let newKey = key.replace(/^cust_[ABC]_/i, `cust_${targetChar}_`);
-    
-    if (currentDrills[newKey]) {
-        newKey = `${newKey}_${Date.now()}`;
-    }
+    const drill = store.remove(srcCat, idx);
+    if (!drill) return;
+    store.add(targetCat, drill);
 
-    currentDrills[newKey] = JSON.parse(JSON.stringify(currentDrills[key]));
-    
-    userCustomDrills[targetCat].push({
-        name: drillObj.name,
-        key: newKey
-    });
-
-    userCustomDrills[sourceCat].splice(drillIndex, 1);
-    delete currentDrills[key];
-
-    localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
     saveDrillsToStorage();
-
     renderDrillButtons(); 
-    showToast(`Moved to ${targetChar}`);
+    showToast(`Moved to ${targetCat.replace('data', '')}`);
     
     const targetBtn = document.querySelector(`.tab-btn[onclick*="${targetCat}"]`);
     if(targetBtn) switchTab(targetCat, targetBtn);
@@ -115,13 +65,13 @@ window.handleTabDrop = (e, targetCat) => {
 // --- EXISTING UI LOGIC ---
 
 export function renderDrillButtons() {
-    ['custom-a', 'custom-b', 'custom-c'].forEach(cat => {
+    ['dataA', 'dataB', 'dataC'].forEach(cat => {
         const container = document.getElementById(`view-${cat}`);
         if (!container) return;
         container.innerHTML = '';
         
-        userCustomDrills[cat].forEach(item => {
-            createButton(container, item.key, item.name, true, cat);
+        store.get(cat).forEach((drill, i) => {
+            createButton(container, cat, i, drill);
         });
 
         const addWrapper = document.createElement('div');
@@ -157,7 +107,8 @@ export function updateLastPlayedHighlight() {
     }
 }
 
-function createButton(container, key, label, allowSort, category) {
+function createButton(container, cat, index, drill) {
+    const key = `${cat}:${index}`;
     const btn = document.createElement('button');
     btn.className = 'btn-drill';
     btn.dataset.key = key;
@@ -170,62 +121,60 @@ function createButton(container, key, label, allowSort, category) {
     btn.appendChild(iconDiv);
 
     const span = document.createElement('span');
-    span.textContent = label;
+    span.textContent = drill.name;
     btn.appendChild(span);
 
-    if (currentDrills[key] && currentDrills[key].random) {
+    if (drill.random) {
         const rMark = document.createElement('div');
         rMark.className = 'mark-random';
         rMark.textContent = 'R';
         btn.appendChild(rMark);
     }
     
-    if (allowSort) {
-        const grip = document.createElement('div');
-        grip.className = 'drill-grab-handle';
-        grip.innerHTML = '≡'; 
-        grip.title = "Drag to reorder";
-        
+    const grip = document.createElement('div');
+    grip.className = 'drill-grab-handle';
+    grip.innerHTML = '≡'; 
+    grip.title = "Drag to reorder";
+    
+    btn.draggable = false; 
+
+    const enableDrag = () => { btn.draggable = true; };
+    const disableDrag = () => { btn.draggable = false; };
+
+    grip.addEventListener('mousedown', enableDrag);
+    grip.addEventListener('touchstart', enableDrag, {passive: true});
+    grip.addEventListener('mouseup', disableDrag);
+    grip.addEventListener('mouseleave', disableDrag);
+    grip.addEventListener('touchend', disableDrag);
+
+    btn.addEventListener('dragstart', (e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', key); 
+        btn.classList.add('dragging');
+    });
+
+    btn.addEventListener('dragend', () => {
+        btn.classList.remove('dragging');
         btn.draggable = false; 
-
-        const enableDrag = () => { btn.draggable = true; };
-        const disableDrag = () => { btn.draggable = false; };
-
-        grip.addEventListener('mousedown', enableDrag);
-        grip.addEventListener('touchstart', enableDrag, {passive: true});
-        grip.addEventListener('mouseup', disableDrag);
-        grip.addEventListener('mouseleave', disableDrag);
-        grip.addEventListener('touchend', disableDrag);
-
-        btn.addEventListener('dragstart', (e) => {
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', key); 
-            btn.classList.add('dragging');
-        });
-
-        btn.addEventListener('dragend', () => {
-            btn.classList.remove('dragging');
-            btn.draggable = false; 
-            handleReorder(container, category);
-        });
-        
-        btn.addEventListener('dragover', (e) => {
-            e.preventDefault(); 
-            const draggingItem = container.querySelector('.dragging');
-            if (draggingItem && draggingItem !== btn) {
-                const box = btn.getBoundingClientRect();
-                const offset = e.clientY - box.top - (box.height / 2);
-                if (offset < 0) {
-                    container.insertBefore(draggingItem, btn);
-                } else {
-                    container.insertBefore(draggingItem, btn.nextSibling);
-                }
+        handleReorder(container, cat);
+    });
+    
+    btn.addEventListener('dragover', (e) => {
+        e.preventDefault(); 
+        const draggingItem = container.querySelector('.dragging');
+        if (draggingItem && draggingItem !== btn) {
+            const box = btn.getBoundingClientRect();
+            const offset = e.clientY - box.top - (box.height / 2);
+            if (offset < 0) {
+                container.insertBefore(draggingItem, btn);
+            } else {
+                container.insertBefore(draggingItem, btn.nextSibling);
             }
-        });
+        }
+    });
 
-        grip.onclick = (e) => e.stopPropagation();
-        btn.appendChild(grip);
-    }
+    grip.onclick = (e) => e.stopPropagation();
+    btn.appendChild(grip);
 
     // Edit button (pencil)
     const editBtn = document.createElement('div');
@@ -234,7 +183,7 @@ function createButton(container, key, label, allowSort, category) {
     editBtn.title = 'Edit drill';
     editBtn.addEventListener('mousedown', (e) => e.stopPropagation());
     editBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
-    editBtn.onclick = (e) => { e.stopPropagation(); openEditor(key); };
+    editBtn.onclick = (e) => { e.stopPropagation(); openEditor(cat, index); };
     btn.appendChild(editBtn);
 
     // Run button (play icon)
@@ -246,26 +195,24 @@ function createButton(container, key, label, allowSort, category) {
     runBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
     runBtn.onclick = (e) => {
         e.stopPropagation();
-        if (!btn.classList.contains('dragging')) window.handleDrillClick(key, btn);
+        if (!btn.classList.contains('dragging')) window.handleDrillClick(cat, index, drill.name, btn);
     };
     btn.appendChild(runBtn);
 
     container.appendChild(btn);
 }
 
-function handleReorder(container, category) {
+function handleReorder(container, cat) {
     const buttons = Array.from(container.querySelectorAll('.btn-drill'));
-    const newKeys = buttons.map(b => b.dataset.key);
+    const newOrder = buttons.map(b => {
+        const [c, i] = b.dataset.key.split(':');
+        return parseInt(i);
+    });
     
-    if(newKeys.length === userCustomDrills[category].length) {
-        const oldList = userCustomDrills[category];
-        const newList = [];
-        newKeys.forEach(k => {
-            const item = oldList.find(d => d.key === k);
-            if(item) newList.push(item);
-        });
-        userCustomDrills[category] = newList;
-        localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
+    const list = store.get(cat);
+    if(newOrder.length === list.length) {
+        const reordered = newOrder.map(i => list[i]).filter(Boolean);
+        store.setCat(cat, reordered);
     }
 }
 
@@ -293,14 +240,6 @@ export function updateDrillButtonStates() {
     }
 }
 
-export function updateStatsUI() {
-    const text = `Balls: ${appStats.balls} | Drills: ${appStats.drills}`;
-    const el = document.getElementById('stats-display');
-    if(el) el.textContent = text;
-    const inline = document.getElementById('stats-inline-text');
-    if(inline) inline.textContent = text;
-}
-
 export function toggleMenu() {
     const m = document.getElementById('theme-menu');
     if(m) m.classList.toggle('open');
@@ -313,7 +252,7 @@ export function setTheme(themeName) {
 }
 
 export function switchTab(catName, btn) {
-    const tabs = ['custom-a','custom-b','custom-c'];
+    const tabs = ['dataA','dataB','dataC'];
     tabs.forEach(c => {
         const el = document.getElementById('view-'+c);
         if(el) el.classList.add('hidden');
@@ -345,35 +284,3 @@ window.closeAboutModal = () => {
     if(m) m.classList.remove('open');
 };
 
-// --- NEW: Session Summary UI ---
-export function showSessionSummary() {
-    const summary = getSessionSummary();
-    
-    const dVal = document.getElementById('sum-drills-val');
-    const bVal = document.getElementById('sum-balls-val');
-    const tVal = document.getElementById('sum-time-val'); // <--- NEW
-    
-    if(dVal) dVal.textContent = summary.drills;
-    if(bVal) bVal.textContent = summary.balls;
-    if(tVal) tVal.textContent = formatDuration(summary.duration); // <--- NEW
-    
-    const modal = document.getElementById('summary-modal');
-    if(modal) modal.classList.add('open');
-}
-
-window.closeSummaryModal = () => {
-    const modal = document.getElementById('summary-modal');
-    if(modal) modal.classList.remove('open');
-};
-
-window.openSessionSummaryModal = () => {
-    const summary = getSessionSummary();
-    const dVal = document.getElementById('sum-drills-val');
-    const bVal = document.getElementById('sum-balls-val');
-    const tVal = document.getElementById('sum-time-val');
-    if(dVal) dVal.textContent = summary.drills;
-    if(bVal) bVal.textContent = summary.balls;
-    if(tVal) tVal.textContent = formatDuration(summary.duration);
-    const modal = document.getElementById('summary-modal');
-    if(modal) modal.classList.add('open');
-};

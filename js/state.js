@@ -1,333 +1,42 @@
-import { RPM_MIN, RPM_MAX, SPIN_LIMITS } from './constants.js';
-import { Ball, Drill } from './model.js';
-import { showToast } from './utils.js';
+import { DrillStore } from './model/index.js';
 
-const API_DRILLS = '/api/drills';
-let _userDefaults = null;
-
-export let currentDrills = {};
-export let userCustomDrills = { "custom-a": [], "custom-b": [], "custom-c": [] };
-export let drillOrder = { "custom-a": [], "custom-b": [], "custom-c": [] };
+export let store = new DrillStore();
 export let runMode = "reps";
-export let appStats = { balls: 0, drills: 0 };
 
-// --- NEW: Session Summary State ---
-let sessionSnapshot = { balls: 0, drills: 0 };
-let sessionStartTime = 0;
-
-export function startSession() {
-    sessionSnapshot.balls = appStats.balls;
-    sessionSnapshot.drills = appStats.drills;
-    sessionStartTime = Date.now();
-}
-
-export function getSessionSummary() {
-    const durationMs = sessionStartTime > 0 ? (Date.now() - sessionStartTime) : 0;
-    
-    return {
-        balls: appStats.balls - sessionSnapshot.balls,
-        drills: appStats.drills - sessionSnapshot.drills,
-        duration: durationMs
-    };
-}
-// ----------------------------------
-
-// --- NEW: Last Played State ---
+// --- Last Played State ---
 export let lastPlayedDrill = localStorage.getItem('nova_last_played');
 
-export function setLastPlayed(key) {
-    lastPlayedDrill = key;
-    localStorage.setItem('nova_last_played', key);
+export function setLastPlayed(cat, name) {
+    lastPlayedDrill = `${cat}:${name}`;
+    localStorage.setItem('nova_last_played', lastPlayedDrill);
 }
 // ------------------------------
 
 export async function initData() {
     const savedTheme = localStorage.getItem('nova_theme_pref');
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
-    const savedStats = localStorage.getItem('nova_stats');
-    if (savedStats) { try { appStats = JSON.parse(savedStats); } catch(e){} }
 
     try {
-        const res = await fetch(API_DRILLS);
-        if (res.ok) {
-            const data = await res.json();
-            if (data.userDefaults) _userDefaults = data.userDefaults;
-            if (data.customDrillData) Object.assign(currentDrills, data.customDrillData);
-            if (data.customData) userCustomDrills = data.customData;
+        const saved = localStorage.getItem('nova_drills');
+        if (saved) {
+            store = DrillStore.fromJSON(JSON.parse(saved));
+        } else {
+            const res = await fetch('drills_data.json');
+            if (res.ok) {
+                store = DrillStore.fromJSON(await res.json());
+            }
         }
     } catch(e) {
-        console.warn('Server unavailable:', e);
-    }
-    normalizeDrills();
-}
-
-function normalizeDrills() {
-    for (let key in currentDrills) {
-        if (key === 'random') continue;
-        const drill = currentDrills[key];
-        // Already normalized (has .steps with Ball instances)
-        if (drill.steps && drill.steps.length > 0 && drill.steps[0][0] instanceof Ball) continue;
-
-        // Legacy: drill has level keys ("1", "2", "3")
-        if (drill[1] || drill['1']) {
-            const allSteps = [];
-            for (let lvl = 1; lvl <= 3; lvl++) {
-                const raw = drill[lvl];
-                if (raw && Array.isArray(raw)) {
-                    for (const step of raw) {
-                        allSteps.push(step.map(b =>
-                            Array.isArray(b) ? Ball.fromArray(b) : Ball.fromJSON(b)
-                        ));
-                    }
-                }
-            }
-            drill.steps = allSteps;
-            delete drill[1]; delete drill[2]; delete drill[3];
-            delete drill['1']; delete drill['2']; delete drill['3'];
-            continue;
-        }
-
-        // New format: drill has .steps with raw JSON balls
-        if (drill.steps && Array.isArray(drill.steps)) {
-            drill.steps = drill.steps.map(step =>
-                step.map(b => {
-                    if (b instanceof Ball) return b;
-                    if (typeof b === 'object' && b.topRPM !== undefined) return Ball.fromJSON(b);
-                    if (Array.isArray(b)) return Ball.fromArray(b);
-                    return b;
-                })
-            );
-        }
+        console.warn('Failed to load drills:', e);
     }
 }
 
 export function setMode(mode) { runMode = mode; }
-export async function saveDrillsToStorage() {
+
+export function saveDrillsToStorage() {
     try {
-        const customDrillData = {};
-        for (const [k, v] of Object.entries(currentDrills)) {
-            if (!k.startsWith('cust_')) continue;
-            const steps = v.steps || [];
-            customDrillData[k] = {
-                steps: steps.map(step => step.map(b => b instanceof Ball ? b.toJSON() : b)),
-                random: v.random || false,
-            };
-        }
-        await fetch(API_DRILLS, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                customData: userCustomDrills,
-                customDrillData: customDrillData,
-                drillOrder: drillOrder,
-                userDefaults: _userDefaults
-            })
-        });
+        localStorage.setItem('nova_drills', JSON.stringify(store.toJSON()));
     } catch(e) {
-        console.error('Failed to save drills to server:', e);
+        console.error('Failed to save drills:', e);
     }
-}
-
-export function saveDrillOrder() {
-    saveDrillsToStorage();
-}
-
-export function saveAsDefault() {
-    if (confirm("Save current settings as your new personal default?")) {
-        _userDefaults = JSON.parse(JSON.stringify(currentDrills));
-        saveDrillsToStorage();
-        showToast("Saved as Default");
-    }
-}
-export function resetToDefault() {
-    const hasUserDefault = !!_userDefaults;
-    if (confirm(hasUserDefault ? "Restore saved defaults?" : "Restore factory settings?")) {
-        currentDrills = hasUserDefault
-            ? JSON.parse(JSON.stringify(_userDefaults))
-            : {};
-        drillOrder = { "custom-a": [], "custom-b": [], "custom-c": [] };
-        normalizeDrills();
-        saveDrillsToStorage();
-        showToast("Restored");
-        document.dispatchEvent(new CustomEvent('drills-updated'));
-    }
-}
-export function factoryReset() {
-    if (confirm("WARNING: Delete ALL saved data and return to original factory state?")) {
-        _userDefaults = null;
-        fetch(API_DRILLS, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
-        localStorage.clear();
-        location.reload();
-    }
-}
-export function resetStats() {
-    if(confirm("Reset stats?")) {
-        appStats.balls = 0; appStats.drills = 0;
-        localStorage.setItem('nova_stats', JSON.stringify(appStats));
-        showToast("Statistics Reset");
-        document.dispatchEvent(new CustomEvent('stats-updated'));
-    }
-}
-
-// --- Helper Functions ---
-
-function calculateRPMs(speed, spin, type) {
-    const baseSpeed = 970 + (630.5 * speed);
-    const spinFactor = 342 * spin;
-    let top, bot;
-    if (type === 'top') { top = baseSpeed + spinFactor; bot = baseSpeed - spinFactor; } 
-    else { top = baseSpeed - spinFactor; bot = baseSpeed + spinFactor; }
-    return { top: Math.max(RPM_MIN, Math.min(RPM_MAX, Math.round(top))), bot: Math.max(RPM_MIN, Math.min(RPM_MAX, Math.round(bot))) };
-}
-
-function formatNameForKey(key) {
-    return key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-// --- IMPORT FUNCTION (Closes Menu on Success) ---
-export function importCustomDrills(csvText) {
-    try {
-        const lines = csvText.split(/\r?\n/);
-        const newCustomData = { "custom-a": [], "custom-b": [], "custom-c": [] };
-        
-        for (let cat in userCustomDrills) {
-            userCustomDrills[cat].forEach(drill => { if (currentDrills[drill.key]) delete currentDrills[drill.key]; });
-        }
-
-        const customBuilder = {}; 
-        const factoryBuilder = {}; 
-
-        const getCatKey = (val) => {
-            val = val.trim().toUpperCase();
-            if(val === 'A') return 'custom-a';
-            if(val === 'B') return 'custom-b';
-            if(val === 'C') return 'custom-c';
-            if(val === 'BASIC') return 'basic';
-            if(val === 'COMBINED') return 'combined';
-            if(val === 'COMPLEX') return 'complex';
-            return null;
-        };
-
-        lines.forEach((line, index) => {
-            if (!line.trim() || (index === 0 && line.toLowerCase().includes('speed;spin'))) return;
-            const parts = line.split(line.includes(';') ? ';' : ',');
-            if (parts.length < 10) return;
-
-            const setVal = parts[0].trim();
-            const category = getCatKey(setVal);
-            if (!category) return;
-
-            const ballNum = parseFloat(parts[1]); 
-            let nameRaw = parts[2].trim();
-            
-            const speed = parseFloat(parts[3]);
-            let spin = parseFloat(parts[4]);
-            const type = parts[5].trim().toLowerCase(); 
-
-            const maxAllowed = SPIN_LIMITS[speed.toString()] ?? 10;
-            if (spin > maxAllowed) spin = maxAllowed;
-
-            const height = parseInt(parts[6]);
-            const drop = parseFloat(parts[7]);
-            
-            const bpm = Math.max(30, Math.min(120, parseInt(parts[8]) || 30));
-            
-            const reps = Math.max(1, parseInt(parts[9]) || 1);
-
-            const motors = calculateRPMs(speed, spin, type);
-            const params = new Ball({
-                topRPM: motors.top, bottomRPM: motors.bot,
-                height, drop,
-                frequency: bpm, reps,
-                side: 1, speed, spin, type
-            });
-
-            if (category.startsWith('custom')) {
-                const name = nameRaw.substring(0, 40);
-                const key = `cust_${category.split('-')[1].toUpperCase()}_${name.replace(/\s+/g, '_')}`;
-
-                if (!customBuilder[key]) {
-                    let exists = newCustomData[category].find(d => d.key === key);
-                    if (!exists && newCustomData[category].length < 100) {
-                        newCustomData[category].push({ name: name, key: key });
-                    }
-                    customBuilder[key] = {};
-                }
-                if (!customBuilder[key][ballNum]) customBuilder[key][ballNum] = [];
-                customBuilder[key][ballNum].push(params);
-            } else {
-                const lvlMatch = nameRaw.match(/\(Lvl (\d)\)$/i);
-                let realName = nameRaw;
-                if (lvlMatch) {
-                    realName = nameRaw.replace(lvlMatch[0], '').trim();
-                }
-                const key = realName.toLowerCase().replace(/ /g, '-');
-                if (!factoryBuilder[key]) factoryBuilder[key] = {};
-                if (!factoryBuilder[key][ballNum]) factoryBuilder[key][ballNum] = [];
-                factoryBuilder[key][ballNum].push(params);
-            }
-        });
-
-        for (let key in customBuilder) {
-            const sortedBalls = Object.keys(customBuilder[key]).sort((a,b) => parseFloat(a)-parseFloat(b));
-            currentDrills[key] = { steps: sortedBalls.map(bKey => customBuilder[key][bKey]), random: false };
-        }
-        userCustomDrills = newCustomData;
-
-        for (let key in factoryBuilder) {
-            const sortedBalls = Object.keys(factoryBuilder[key]).sort((a,b) => parseFloat(a)-parseFloat(b));
-            currentDrills[key] = { steps: sortedBalls.map(bKey => factoryBuilder[key][bKey]), random: false };
-        }
-
-        saveDrillsToStorage();
-        showToast("Imported Successfully");
-        
-        // --- NEW: CLOSE MENU ON SUCCESS ---
-        const menu = document.getElementById('theme-menu');
-        if(menu) menu.classList.remove('open');
-        
-        return true;
-    } catch(e) { console.error(e); showToast("Import Failed"); return false; }
-}
-
-// --- EXPORT FUNCTION (Closes Menu on Success) ---
-export function exportCustomDrills() {
-    let csvContent = "Set;Ball;Name;Speed;Spin;Type;Height;Drop;BPM;Reps\n";
-    
-    const appendDrillToCSV = (setLabel, name, sequence) => {
-         sequence.forEach((stepOptions, stepIndex) => {
-             const ballNum = stepIndex + 1;
-             stepOptions.forEach(ball => {
-                 const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
-                 if (!b) return;
-                 b.ensureMeta();
-                 const row = [setLabel, ballNum, name, b.speed, b.spin, b.type, b.height, b.drop, b.frequency, b.reps].join(";");
-                 csvContent += row + "\n";
-             });
-         });
-    };
-
-    const cats = { 'custom-a': 'A', 'custom-b': 'B', 'custom-c': 'C' };
-    for (let catKey in cats) {
-        const setLabel = cats[catKey];
-        const drillList = userCustomDrills[catKey];
-        if(drillList && drillList.length > 0) {
-            drillList.forEach(drill => {
-                const sequence = currentDrills[drill.key]?.steps || null;
-                if (sequence) {
-                    appendDrillToCSV(setLabel, drill.name, sequence);
-                }
-            });
-        }
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "nova_drills_full.csv";
-    link.click();
-    
-    // --- NEW: CLOSE MENU ON SUCCESS ---
-    const menu = document.getElementById('theme-menu');
-    if(menu) menu.classList.remove('open');
 }

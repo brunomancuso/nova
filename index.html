@@ -30,8 +30,6 @@
             Inline Stop
             <div class="inline-stop-toggle" id="inline-stop-toggle"></div>
         </div>
-        <div class="theme-item" onclick="resetStats()">Reset Statistics</div>
-        <div class="theme-item reset-item" onclick="factoryReset()">Factory Reset</div>
 
         <div style="border-top: 1px solid var(--border); margin: 5px 0;"></div>
         <div class="theme-item" onclick="window.openAboutModal()">About</div>
@@ -43,9 +41,6 @@
             <div class="sim-menu-toggle" id="sim-menu-toggle"></div>
         </div>
     </div>
-    
-    <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVUpload(event)">
-
     <div class="settings-card">
         <div id="status-text">Disconnected</div>
         <button id="btn-connect" class="btn-connect">Connect</button>
@@ -104,28 +99,28 @@
     
     <div class="tabs-container">
         <div class="tab-btn active" 
-             onclick="switchTab('custom-a', this)"
-             ondrop="window.handleTabDrop(event, 'custom-a')" 
+             onclick="switchTab('dataA', this)"
+             ondrop="window.handleTabDrop(event, 'dataA')" 
              ondragover="window.allowTabDrop(event)">
             <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom A
         </div>
         <div class="tab-btn" 
-             onclick="switchTab('custom-b', this)"
-             ondrop="window.handleTabDrop(event, 'custom-b')" 
+             onclick="switchTab('dataB', this)"
+             ondrop="window.handleTabDrop(event, 'dataB')" 
              ondragover="window.allowTabDrop(event)">
             <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom B
         </div>
         <div class="tab-btn" 
-             onclick="switchTab('custom-c', this)"
-             ondrop="window.handleTabDrop(event, 'custom-c')" 
+             onclick="switchTab('dataC', this)"
+             ondrop="window.handleTabDrop(event, 'dataC')" 
              ondragover="window.allowTabDrop(event)">
             <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom C
         </div>
     </div>
 
-    <div id="view-custom-a" class="drill-list"></div>
-    <div id="view-custom-b" class="drill-list hidden"></div>
-    <div id="view-custom-c" class="drill-list hidden"></div>
+    <div id="view-dataA" class="drill-list"></div>
+    <div id="view-dataB" class="drill-list hidden"></div>
+    <div id="view-dataC" class="drill-list hidden"></div>
 
     <div class="footer-row">
         <div id="stats-display">Balls: 0 | Drills: 0</div>
@@ -197,33 +192,6 @@
     </div>
 </div>
 
-<div id="download-modal" class="modal-overlay">
-    <div class="modal" style="height:auto; min-height:300px;">
-        <div class="modal-header">
-            <div class="modal-title">Import Drill</div>
-            <div class="modal-close" onclick="window.closeDownloadModal()">×</div>
-        </div>
-        <div class="modal-body" style="display:flex; flex-direction:column; gap:20px; padding-top:15px;">
-            <div class="control-pill" style="box-shadow:none; border:1px solid var(--border);">
-                <label>Share Code</label>
-                <input type="text" id="dl-code" placeholder="ABC123" maxlength="6" 
-                       style="text-align:center; letter-spacing:4px; text-transform:uppercase; font-size:1.6rem; color:var(--primary); font-weight:800;">
-            </div>
-            <div>
-                <div class="section-label" style="text-align:center; margin-bottom:8px;">Select Destination</div>
-                <div class="mode-switch" id="dl-cat-switch">
-                    <div class="mode-option active" onclick="window.selectDlCategory('custom-a', this)">Custom A</div>
-                    <div class="mode-option" onclick="window.selectDlCategory('custom-b', this)">Custom B</div>
-                    <div class="mode-option" onclick="window.selectDlCategory('custom-c', this)">Custom C</div>
-                </div>
-            </div>
-        </div>
-        <div class="modal-footer">
-             <button class="btn-modal btn-save" onclick="window.performDownload()">Download & Import</button>
-        </div>
-    </div>
-</div>
-
 <div id="import-ball-modal" class="modal-overlay">
     <div class="modal" style="height:auto; max-height:80vh;">
         <div class="modal-header">
@@ -249,9 +217,9 @@
             <div>
                 <div class="section-label" style="text-align:center; margin-bottom:8px;">Select Destination</div>
                 <div class="mode-switch" id="save-cat-switch">
-                    <div class="mode-option active" onclick="window.selectSaveCategory('custom-a', this)">Custom A</div>
-                    <div class="mode-option" onclick="window.selectSaveCategory('custom-b', this)">Custom B</div>
-                    <div class="mode-option" onclick="window.selectSaveCategory('custom-c', this)">Custom C</div>
+                    <div class="mode-option active" onclick="window.selectSaveCategory('dataA', this)">Custom A</div>
+                    <div class="mode-option" onclick="window.selectSaveCategory('dataB', this)">Custom B</div>
+                    <div class="mode-option" onclick="window.selectSaveCategory('dataC', this)">Custom C</div>
                 </div>
             </div>
         </div>

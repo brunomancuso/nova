@@ -1,15 +1,7 @@
 import { 
     initData, 
     setMode, 
-    resetStats, 
-    importCustomDrills, 
-    exportCustomDrills, 
-    saveAsDefault, 
-    resetToDefault, 
-    factoryReset,
-    appStats,
-    userCustomDrills,
-    currentDrills,
+    store,
     saveDrillsToStorage,
 } from './state.js';
 
@@ -31,9 +23,7 @@ import {
     updateDrillButtonStates, 
     setTheme, 
     toggleMenu, 
-    switchTab, 
-    updateStatsUI,
-    showSessionSummary 
+    switchTab,
 } from './ui.js';
 
 import { showToast } from './utils.js';
@@ -46,7 +36,6 @@ import {
     sendSingleBall
 } from './runner.js';
 
-import { downloadDrill } from './cloud.js';
 import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
 import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, applyRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, getRobotXcm, getLastBallCanvas } from './robot.js';
 import { initCalibration } from './calibration.js';
@@ -57,7 +46,6 @@ import './adjust.js';
 document.addEventListener('DOMContentLoaded', async () => {
     await initData();
     renderDrillButtons();
-    updateStatsUI();
     setupEventListeners();
 
     initCalibration();
@@ -145,11 +133,6 @@ function setupEventListeners() {
         updateDrillButtonStates();
     });
     
-    // --- ADDED: Listen for stats reset ---
-    document.addEventListener('stats-updated', () => {
-        updateStatsUI();
-    });
-    
     document.addEventListener('connection-changed', () => {
         document.body.classList.toggle('connected', bleState.isConnected);
         updateDrillButtonStates();
@@ -207,27 +190,6 @@ window.setMode = (mode, btn) => {
     }
 };
 
-window.resetStats = resetStats;
-window.saveAsDefault = saveAsDefault;
-window.resetToDefault = resetToDefault;
-window.factoryReset = factoryReset;
-window.exportCustomDrills = exportCustomDrills;
-
-window.handleCSVUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function(e) { 
-        const success = importCustomDrills(e.target.result);
-        if(success) {
-            renderDrillButtons();
-            toggleMenu(); 
-        }
-    };
-    reader.readAsText(file);
-    event.target.value = '';
-};
-
 window.openEditor = openEditor;
 window.closeEditor = closeEditor;
 window.saveDrillChanges = saveDrillChanges;
@@ -246,121 +208,12 @@ window.getRobotXcm        = getRobotXcm;
 window.toggleEditorMode   = toggleEditorMode;
 window.simLog             = simLog;
 
-window.handleDrillClick = (key, btn) => {
+window.handleDrillClick = (cat, index, name, btn) => {
     if (!bleState.isConnected) {
         showToast("Device not connected");
         return;
     }
     document.querySelectorAll('.btn-drill').forEach(b => b.classList.remove('running'));
     btn.classList.add('running');
-    startDrillSequence(key);
-};
-
-// --- DOWNLOAD MODAL LOGIC (New) ---
-
-let selectedDownloadCat = 'custom-a';
-
-// 1. Open the Modal
-window.handleDownloadDialog = () => {
-    // Close main menu if open
-    const menu = document.getElementById('theme-menu');
-    if(menu) menu.classList.remove('open');
-
-    // Reset State
-    selectedDownloadCat = 'custom-a';
-    const codeInput = document.getElementById('dl-code');
-    if (codeInput) codeInput.value = '';
-    
-    // Reset Switch UI to default (A)
-    const switchEl = document.getElementById('dl-cat-switch');
-    if(switchEl) {
-        Array.from(switchEl.children).forEach(c => c.classList.remove('active'));
-        if(switchEl.children[0]) switchEl.children[0].classList.add('active'); 
-    }
-
-    const modal = document.getElementById('download-modal');
-    if(modal) {
-        modal.classList.add('open');
-        setTimeout(() => { if(codeInput) codeInput.focus(); }, 100);
-    }
-};
-
-// 2. Close the Modal
-window.closeDownloadModal = () => {
-    const modal = document.getElementById('download-modal');
-    if(modal) modal.classList.remove('open');
-};
-
-// 3. Handle Tab Switching inside Modal
-window.selectDlCategory = (val, btn) => {
-    selectedDownloadCat = val;
-    if(btn && btn.parentElement) {
-        Array.from(btn.parentElement.children).forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-    }
-};
-
-// 4. Perform Download
-window.performDownload = async () => {
-    const codeInput = document.getElementById('dl-code');
-    if(!codeInput) return;
-    
-    const code = codeInput.value.trim().toUpperCase();
-
-    if (code.length !== 6) {
-        showToast("Invalid code (Must be 6 chars)");
-        return;
-    }
-
-    // Check capacity before calling server
-    // UPDATED LIMIT: 100
-    if (userCustomDrills[selectedDownloadCat].length >= 100) {
-        const catChar = selectedDownloadCat.split('-')[1].toUpperCase();
-        showToast(`Bank ${catChar} is full!`);
-        return;
-    }
-
-    showToast("Searching...");
-
-    try {
-        const data = await downloadDrill(code);
-        if (!data) {
-            showToast("Code not found");
-            return;
-        }
-
-        let name = data.name;
-        // Check for duplicates in the specific target category
-        const existingNames = userCustomDrills[selectedDownloadCat].map(d => d.name);
-        if (existingNames.includes(name)) {
-            name = `${name} (Imp)`;
-        }
-
-        // Unique Key Generation
-        const catChar = selectedDownloadCat.split('-')[1].toUpperCase();
-        const newKey = `cust_${catChar}_${name.replace(/\s+/g, '_')}_${Date.now()}`;
-
-        // Save Data
-        userCustomDrills[selectedDownloadCat].push({ name: name, key: newKey });
-        
-        currentDrills[newKey] = { steps: data.params, random: data.random };
-
-        localStorage.setItem('custom_data', JSON.stringify(userCustomDrills));
-        saveDrillsToStorage();
-
-        // UI Refresh
-        renderDrillButtons();
-        window.closeDownloadModal();
-        
-        // Auto-switch to the target tab
-        const tabBtn = document.querySelector(`.tab-btn[onclick*="${selectedDownloadCat}"]`);
-        if (tabBtn) switchTab(selectedDownloadCat, tabBtn);
-
-        showToast(`Imported to ${catChar}`);
-        toggleMenu(); // Close main menu if it was open behind modal
-
-    } catch (e) {
-        console.error(e);
-        showToast("Download Error");
-    }
+    startDrillSequence(cat, name);
 };

@@ -1,7 +1,6 @@
 import { SERVICE_UUID, UUID_S, UUID_N, UUID_W, SALT, MSG_DONE } from './constants.js';
 import { log, showToast, MD5, clamp } from './utils.js';
 import { handleDone } from './runner.js';
-import { startSession } from './state.js'; // <--- ADDED IMPORT
 
 export const bleState = {
     isConnected: false,
@@ -96,7 +95,6 @@ function onNotify(e) {
         sendPacket([0x80,1,0,0]);
         bleState.handshakeState = "ready";
         bleState.isConnected = true;
-        startSession(); // <--- ADDED: Capture stats snapshot on connect
         log("Ready");
         showToast("Connected");
         document.dispatchEvent(new CustomEvent('connection-changed'));

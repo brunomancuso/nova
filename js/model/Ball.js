@@ -1,13 +1,10 @@
-// ─── Ball & Drill Model ───────────────────────────────────────────────────
-// Defines the data model for a single ball configuration and a drill.
-// JSON serialization uses named fields (not positional arrays).
+// ─── Ball Model ───────────────────────────────────────────────────────────
+// Single ball configuration. JSON serialization uses named fields.
 
-import { RPM_MIN, RPM_MAX, SPIN_LIMITS } from './constants.js';
-
-// ── Ball ──────────────────────────────────────────────────────────────────
+import { RPM_MIN, RPM_MAX, SPIN_LIMITS } from '../constants.js';
+import { clamp } from './helpers.js';
 
 export class Ball {
-    // Construct from named fields (or from legacy array via Ball.fromArray)
     constructor({
         topRPM       = 2200,
         bottomRPM    = 2200,
@@ -119,7 +116,6 @@ export class Ball {
         this.speed     = clamp(this.speed,       0,  10);
         this.spin      = clamp(this.spin,        0,  10);
 
-        // Scatter constrained by drop
         if (Math.abs(this.drop) + this.scatter > 10) {
             this.scatter = clamp(10 - Math.abs(this.drop), 0, 10);
         }
@@ -127,12 +123,10 @@ export class Ball {
         this.delay   = clamp(this.delay ?? 0, 0, 10000);
     }
 
-    // ── Deep clone ────────────────────────────────────────────────────────
     clone() {
         return new Ball({ ...this });
     }
 
-    // ── JSON serialization (named fields only) ────────────────────────────
     toJSON() {
         return {
             topRPM:    this.topRPM,
@@ -150,89 +144,7 @@ export class Ball {
         };
     }
 
-    // ── Deserialize from JSON object ──────────────────────────────────────
     static fromJSON(json) {
         return new Ball(json);
     }
 }
-
-// ── Drill ─────────────────────────────────────────────────────────────────
-
-export class Drill {
-    constructor(name = '', {
-        steps  = [],
-        random = false,
-    } = {}) {
-        this.name   = name;      // display name
-        this.steps  = steps;     // Ball[][] — array of steps, each step is array of Ball variants
-        this.random = random;    // shuffle steps during execution
-    }
-
-    // ── Deep clone ────────────────────────────────────────────────────────
-    clone() {
-        return new Drill(this.name, {
-            steps: this.steps.map(step =>
-                step.map(ball => ball.clone())
-            ),
-            random: this.random,
-        });
-    }
-
-    // ── JSON serialization ────────────────────────────────────────────────
-    toJSON() {
-        return {
-            name:   this.name,
-            steps:  this.steps.map(step =>
-                step.map(ball => ball.toJSON())
-            ),
-            random: this.random,
-        };
-    }
-
-    // ── Deserialize from JSON object ──────────────────────────────────────
-    static fromJSON(json) {
-        return new Drill(json.name || '', {
-            steps: (json.steps || []).map(step =>
-                step.map(b => Ball.fromJSON(b))
-            ),
-            random: !!json.random,
-        });
-    }
-
-    // ── Convert from legacy currentDrills structure ───────────────────────
-    // Legacy: currentDrills[key] = { 1: [[[n,n,...]]], 2: ..., 3: ..., random: bool }
-    static fromLegacy(name, legacyData) {
-        const allSteps = [];
-        for (let lvl = 1; lvl <= 3; lvl++) {
-            const raw = legacyData[lvl];
-            if (raw && Array.isArray(raw)) {
-                for (const step of raw) {
-                    allSteps.push(step.map(ballArr =>
-                        Array.isArray(ballArr) ? Ball.fromArray(ballArr) : Ball.fromJSON(ballArr)
-                    ));
-                }
-            }
-        }
-        return new Drill(name, {
-            steps: allSteps,
-            random: !!legacyData.random,
-        });
-    }
-
-    // ── Convert back to legacy currentDrills structure ────────────────────
-    toLegacy() {
-        return {
-            1: this.steps.map(step => step.map(ball => ball.toArray())),
-            random: this.random,
-        };
-    }
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-function clamp(val, min, max) {
-    return Math.max(min, Math.min(max, val));
-}
-
-export { clamp }; // re-export for convenience
-// also keep the one from utils.js, but provide it here for model self-containment
