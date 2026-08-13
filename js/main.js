@@ -40,6 +40,7 @@ import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
 import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, applyRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, getRobotXcm, getLastBallCanvas } from './robot.js';
 import { initCalibration } from './calibration.js';
 import './adjust.js';
+import './alexa.js';
 
 // --- Initialization ---
 

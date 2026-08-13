@@ -1,14 +1,17 @@
 """
-HTTPS dev server for Nova Drill Control.
-Generates a self-signed cert (cert.pem / key.pem) on first run.
-Run:  python serve_https.py
-Then open https://<your-pc-ip>:8443 in Chrome on Android.
+Dev server for Nova Drill Control.
+
+Default: HTTPS with a self-signed cert. Use --http for plain HTTP.
+
+Run:
+    python server.py                # HTTPS on :8443 (default)
+    python server.py --http         # HTTP on :8000
+    python server.py --port 5000    # custom port
 """
 
+import argparse
 import os, ssl, socket, http.server, json
 
-HOST  = "0.0.0.0"
-PORT  = 8443
 CERT  = "cert.pem"
 KEY   = "key.pem"
 ROOT  = os.path.dirname(os.path.abspath(__file__))
@@ -109,27 +112,46 @@ class NovaHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass  # suppress per-request access logs
 
-ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ctx.load_cert_chain(CERT, KEY)
+def main():
+    parser = argparse.ArgumentParser(description="Serve the Nova app over HTTPS or HTTP.")
+    parser.add_argument("--https", action="store_true",
+                        help="Serve over HTTPS (this is the default)")
+    parser.add_argument("--http", action="store_true",
+                        help="Serve plain HTTP instead of HTTPS")
+    parser.add_argument("--port", type=int, default=None,
+                        help="Port to listen on (default: 8443 for HTTPS, 8000 for HTTP)")
+    parser.add_argument("--host", default="0.0.0.0", help="Bind address")
+    args = parser.parse_args()
 
-server = http.server.HTTPServer((HOST, PORT), NovaHandler)
-server.socket = ctx.wrap_socket(server.socket, server_side=True)
+    use_https = (not args.http) or args.https
+    port = args.port if args.port is not None else (8443 if use_https else 8000)
+    scheme = "https" if use_https else "http"
 
-# Print all LAN IPs
-try:
-    ips = set()
-    for info in socket.getaddrinfo(socket.gethostname(), None):
-        ip = info[4][0]
-        if not ip.startswith("127.") and ":" not in ip:
-            ips.add(ip)
-    for ip in sorted(ips):
-        print(f"  https://{ip}:{PORT}")
-except Exception:
-    pass
-print(f"  https://localhost:{PORT}")
-print()
-print("On Android: open the URL above in Chrome.")
-print("Accept the security warning (Advanced → Proceed) — it's your own cert.")
-print("Press Ctrl+C to stop.\n")
+    server = http.server.HTTPServer((args.host, port), NovaHandler)
 
-server.serve_forever()
+    if use_https:
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.load_cert_chain(CERT, KEY)
+        server.socket = ctx.wrap_socket(server.socket, server_side=True)
+
+    print(f"Serving {scheme.upper()} on port {port}...")
+    try:
+        ips = set()
+        for info in socket.getaddrinfo(socket.gethostname(), None):
+            ip = info[4][0]
+            if not ip.startswith("127.") and ":" not in ip:
+                ips.add(ip)
+        for ip in sorted(ips):
+            print(f"  {scheme}://{ip}:{port}")
+    except Exception:
+        pass
+    print(f"  {scheme}://localhost:{port}")
+    if use_https:
+        print("On Android: accept the security warning (Advanced → Proceed) — it's your own cert.")
+    print("Press Ctrl+C to stop.\n")
+
+    server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
