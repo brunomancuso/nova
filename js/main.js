@@ -41,6 +41,7 @@ import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, re
 import { initCalibration } from './calibration.js';
 import './adjust.js';
 import './alexa.js';
+import './alexaDrill.js';
 
 // --- Initialization ---
 

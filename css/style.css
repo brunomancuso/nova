@@ -254,6 +254,35 @@ input[type="number"] {
 input[type="number"]:focus { outline: none; }
 input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--text-light); }
 
+.alexa-ball-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px;
+}
+.alexa-ball-form .control-pill {
+    padding: 6px 8px;
+    align-items: stretch;
+}
+.alexa-ball-form .control-pill label {
+    font-size: 0.55rem;
+    margin-bottom: 2px;
+    text-align: left;
+}
+.alexa-ball-form input[type="number"],
+.alexa-ball-form select {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    background: var(--surface);
+    color: var(--primary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 6px;
+}
+
 .mode-switch { 
     display: flex; 
     background: rgba(0,0,0,0.05); 
@@ -589,6 +618,127 @@ body.alexa-active .alexa-panel { display: flex; }
     font-weight: 400;
     color: var(--text-light);
 }
+
+.alexa-table-panel {
+    display: none;
+    margin-top: 16px;
+    padding: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+body.alexa-active .alexa-table-panel {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+}
+.alexa-table-panel canvas {
+    display: block;
+    width: 50%;
+    height: auto;
+    border-radius: 8px;
+}
+.alexa-balls-col {
+    flex: 1;
+    min-width: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.alexa-add-ball {
+    align-self: flex-end;
+    margin-top: auto;
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow);
+}
+.alexa-add-ball::before,
+.alexa-add-ball::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: #fff;
+    transform: translate(-50%, -50%);
+    border-radius: 1px;
+}
+.alexa-add-ball::before { width: 20px; height: 2px; }
+.alexa-add-ball::after { width: 2px; height: 20px; }
+.alexa-balls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.alexa-ball-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.alexa-ball-index {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+.alexa-ball-card {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: #e5e5e5;
+    border: 2px solid #111;
+    border-radius: 50%;
+    padding: 0;
+    color: #000;
+    cursor: pointer;
+    text-align: center;
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+    font-size: 0.55rem;
+    line-height: 1.15;
+}
+.alexa-ball-card .abc-text {
+    display: grid;
+    grid-template-columns: 6ch auto;
+    column-gap: 0;
+    line-height: 1.15;
+}
+.alexa-ball-card .abc-label {
+    text-align: left;
+    color: #333;
+}
+.alexa-ball-card .abc-val {
+    font-weight: 700;
+    text-align: left;
+}
+.alexa-ball-card .abc-freq {
+    grid-column: 1 / -1;
+    font-weight: 400;
+    color: #666;
+    font-size: 0.5rem;
+}
+.alexa-ball-card .abc-arrow {
+    font-size: 1.2rem;
+    font-weight: 900;
+    line-height: 1;
+    -webkit-text-stroke: 0.6px;
+}
+.alexa-ball-card .abc-up { color: #16a34a; }
+.alexa-ball-card .abc-down { color: #dc2626; }
+[data-theme="night"] .alexa-ball-card { background: #fff; }
 
 /* Hide drill selection while Alexa is active */
 body.alexa-active .section-label,

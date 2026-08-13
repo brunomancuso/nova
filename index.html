@@ -89,6 +89,42 @@
         <div id="alexa-command" class="alexa-command"></div>
     </div>
 
+    <div id="alexa-table-panel" class="alexa-table-panel">
+        <canvas id="alexa-table-canvas" width="520" height="360"></canvas>
+        <div class="alexa-balls-col">
+            <div id="alexa-balls" class="alexa-balls"></div>
+            <button id="alexa-add-ball" class="alexa-add-ball" onclick="window.addAlexaBall()" title="Add ball"></button>
+        </div>
+    </div>
+
+    <div id="alexa-ball-modal" class="modal-overlay">
+        <div class="modal" style="height:auto; max-width:420px;">
+            <div class="modal-header">
+                <div class="modal-title">Ball</div>
+                <div class="modal-close" onclick="window.closeAlexaBallModal()">×</div>
+            </div>
+            <div class="modal-body alexa-ball-form">
+                <div class="control-pill"><label>Speed</label><input type="number" id="alexa-ball-speed" min="0" max="10" step="0.5"></div>
+                <div class="control-pill"><label>Spin</label><input type="number" id="alexa-ball-spin" min="0" max="10" step="0.5"></div>
+                <div class="control-pill"><label>Freq (BPM)</label><input type="number" id="alexa-ball-freq" min="30" max="120" step="1"></div>
+                <div class="control-pill"><label>Type</label>
+                    <select id="alexa-ball-type">
+                        <option value="top">Topspin</option>
+                        <option value="back">Backspin</option>
+                    </select>
+                </div>
+                <div class="control-pill"><label>Height</label><input type="number" id="alexa-ball-height" min="-50" max="100" step="1"></div>
+                <div class="control-pill"><label>Drop</label><input type="number" id="alexa-ball-drop" min="-10" max="10" step="0.5"></div>
+                <div class="control-pill"><label>Reps</label><input type="number" id="alexa-ball-reps" min="1" max="200" step="1"></div>
+                <div class="control-pill"><label>Scatter</label><input type="number" id="alexa-ball-scatter" min="0" max="10" step="0.5"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-delete" onclick="window.deleteAlexaBall()">Delete</button>
+                <button class="btn-modal btn-save" onclick="window.saveAlexaBall()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="inline-run-section" class="inline-run-section">
         <div class="inline-run-info">
             <div id="inline-run-label" class="inline-run-label">GET READY</div>

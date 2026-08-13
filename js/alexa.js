@@ -1,5 +1,6 @@
 // js/alexa.js — voice control via a local whisper WebSocket server (server.py)
 import { showToast } from './utils.js';
+import { drawStaticRobot } from './robot.js';
 
 // The whisper server (server.py) runs on this machine by default.
 // Use wss:// when the page itself is served over HTTPS.
@@ -27,6 +28,7 @@ function showPanel() {
     document.body.classList.add('alexa-active');
     const btn = el('alexa-btn');
     if (btn) btn.classList.add('active');
+    drawAlexaTable();
 }
 
 function hidePanel() {
@@ -146,3 +148,26 @@ const alexaBtn = el('alexa-btn');
 if (alexaBtn) {
     alexaBtn.addEventListener('click', () => window.toggleAlexa());
 }
+
+// Top-down table view below the Alexa panel (rotated 90° clockwise).
+const tableCanvas = el('alexa-table-canvas');
+
+function drawAlexaTable() {
+    if (!tableCanvas) return;
+    const off = document.createElement('canvas');
+    off.width = 520;
+    off.height = 360;
+    const theme = document.documentElement.getAttribute('data-theme') || 'light';
+    drawStaticRobot(off, true, theme);
+
+    tableCanvas.width = 360;
+    tableCanvas.height = 520;
+    const ctx = tableCanvas.getContext('2d');
+    ctx.save();
+    ctx.translate(tableCanvas.width / 2, tableCanvas.height / 2);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(off, -off.width / 2, -off.height / 2);
+    ctx.restore();
+}
+
+drawAlexaTable();

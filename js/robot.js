@@ -79,9 +79,9 @@ export function resetRobotPos() {
 
 // Draw the table+robot onto any canvas element without attaching drag events
 // compact=true skips the outside-zone boxes
-export function drawStaticRobot(canvas, compact = false) {
+export function drawStaticRobot(canvas, compact = false, theme = 'light') {
     if (!canvas) return;
-    _draw(canvas, compact);
+    _draw(canvas, compact, theme);
 }
 
 // Draw robot at a fixed cm position (does not affect saved robotPos)
@@ -154,7 +154,7 @@ function _initCanvas() {
 
 // ── Drawing ──────────────────────────────────────────────────────────────────
 
-function _draw(canvas, compact = false) {
+function _draw(canvas, compact = false, theme = 'light') {
     const ctx = canvas.getContext('2d');
     const W = canvas.width;   // 520
     const H = canvas.height;  // 360
@@ -207,7 +207,8 @@ function _draw(canvas, compact = false) {
     _rrFill(ctx, tX, tY, tW, tH, 5);
 
     // Table border
-    ctx.strokeStyle = '#ffffff';
+    const tableBorderColor = theme === 'night' ? '#ffffff' : '#4a4a4a';
+    ctx.strokeStyle = tableBorderColor;
     ctx.lineWidth = 2.5;
     _rrStroke(ctx, tX, tY, tW, tH, 5);
 
