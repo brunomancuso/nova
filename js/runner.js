@@ -84,16 +84,10 @@ export function startDrillSequence(cat, name) {
          return;
     }
 
-    // --- FILTER INACTIVE STEPS ---
-    const executableSteps = drill.steps.filter(step => {
-        if (!(step instanceof Step)) return true;
-        const first = step.ball || step.variants[0];
-        const isActive = first instanceof Ball ? first.side : 1;
-        return isActive === undefined || isActive === 1;
-    });
+    const executableSteps = drill.steps;
 
     if (executableSteps.length === 0) {
-        showToast("no active balls to play");
+        showToast("no balls to play");
         document.querySelectorAll('.btn-drill').forEach(b => b.classList.remove('running'));
         return;
     }
@@ -237,7 +231,8 @@ async function runIteration() {
             }
         }
 
-        log(`TX Ball ${i+1}: ${tempBall.topRPM} ${tempBall.bottomRPM} ${tempBall.height} ${tempBall.drop} ${tempBall.frequency} ${tempBall.reps} ${tempBall.side} ${tempBall.speed} ${tempBall.spin} ${tempBall.type} ${tempBall.scatter} ${tempBall.delay}`);
+        const rpm = tempBall.getRPMs();
+        log(`TX Ball ${i+1}: ${rpm.top} ${rpm.bot} ${tempBall.height} ${tempBall.drop} ${tempBall.frequency} ${tempBall.reps} ${tempBall.speed} ${tempBall.spin} ${tempBall.type} ${tempBall.scatter} ${tempBall.delay}`);
         balls.push(tempBall);
     });
 
@@ -246,7 +241,7 @@ async function runIteration() {
     const hasDelays = balls.some(b => (b.delay ?? 0) > 0);
     if (!hasDelays) {
         // All balls in one packet (original behaviour)
-        await sendPacket(buildPacket(balls.map(b => packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps))));
+        await sendPacket(buildPacket(balls.map(b => { const r = b.getRPMs(); return packBall(r.top, r.bot, b.height, b.drop, b.frequency, b.reps); })));
     } else {
         // Send each ball individually; wait for robot DONE before sending next
         for (let i = 0; i < balls.length; i++) {
@@ -258,11 +253,13 @@ async function runIteration() {
             if (i < balls.length - 1) {
                 // Intermediate ball: send then wait for DONE before continuing
                 const donePromise = new Promise(r => { _perBallDoneResolve = r; });
-                await sendPacket(buildPacket([packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps)]));
+                const r = b.getRPMs();
+                await sendPacket(buildPacket([packBall(r.top, r.bot, b.height, b.drop, b.frequency, b.reps)]));
                 await donePromise;
             } else {
                 // Last ball: send and let the normal handleDone drive next iteration
-                await sendPacket(buildPacket([packBall(b.topRPM, b.bottomRPM, b.height, b.drop, b.frequency, b.reps)]));
+                const r = b.getRPMs();
+                await sendPacket(buildPacket([packBall(r.top, r.bot, b.height, b.drop, b.frequency, b.reps)]));
             }
         }
     }

@@ -55,11 +55,4 @@ export class Drill {
             random: !!legacyData.random,
         });
     }
-
-    toLegacy() {
-        return {
-            1: this.steps.map(s => s.allBalls().map(b => b.toArray())),
-            random: this.random,
-        };
-    }
 }

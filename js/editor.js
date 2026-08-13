@@ -87,8 +87,7 @@ export function openEditor(cat, index) {
     if (drill && drill.steps?.length) {
         tempDrillData = drill.steps.map(s => s.clone());
     } else {
-        const def = new Ball({ topRPM: 2230, bottomRPM: 2230, height: 50, drop: 0, frequency: 50, reps: 1, side: 1, speed: 2, spin: 2, type: 'top' });
-        def.recalcRPMs();
+        const def = new Ball({ height: 50, drop: 0, frequency: 50, reps: 1, speed: 2, spin: 2, type: 'top' });
         tempDrillData = [new Step({ ball: def })];
     }
 
@@ -162,7 +161,6 @@ function renderEditor() {
 
     tempDrillData.forEach((step, stepIndex) => {
         if (!(step instanceof Step)) return;
-        const isActive = (step.ball ? step.ball.side : (step.variants[0]?.side ?? 1));
 
         if (stepIndex > 0) {
             const swapDiv = document.createElement('div');
@@ -172,7 +170,7 @@ function renderEditor() {
         }
 
         const groupDiv = document.createElement('div');
-        groupDiv.className = `ball-group ${isActive ? '' : 'inactive'}`;
+        groupDiv.className = 'ball-group';
         
         const isSingle = step.isSingle;
         const nVariants = step.variants.length || 0;
@@ -205,9 +203,6 @@ function renderEditor() {
             <div class="group-title">
                 <div style="display:flex; align-items:center; gap:10px; flex:1;">
                     <span>Ball ${stepIndex + 1}</span>
-                    <div class="ball-toggle ${isActive ? 'active' : ''}" onclick="window.handleToggleBallActive(${stepIndex})">
-                        <div class="toggle-switch"></div>
-                    </div>
                     ${scatterHtml}
                 </div>
             </div>`;
@@ -219,8 +214,6 @@ function renderEditor() {
             if (step.isSingle) step.ball = b;
             else if (optIndex < step.variants.length) step.variants[optIndex] = b;
             b.ensureMeta();
-            // Recalc RPMs from speed/spin (ensures consistency)
-            b.recalcRPMs();
 
             const speed = b.speed;
             const spin = b.spin;
@@ -327,7 +320,7 @@ function renderEditor() {
                 <div class="card-actions">
                      <button class="btn-action btn-act-test" 
                              onclick="window.handleTestBall(${stepIndex}, ${optIndex})" 
-                             ${isConnected && isActive ? '' : 'disabled'}>Test</button>
+                             ${isConnected ? '' : 'disabled'}>Test</button>
                      <button class="btn-action btn-act-clone" 
                              onclick="window.handleAddVariant(${stepIndex}, ${optIndex})">+ Variant</button>
                      <button class="btn-action btn-act-del" 
@@ -486,9 +479,7 @@ window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
         if (spinInput) { spinInput.max = maxAllowed; spinInput.value = ball.spin; }
     }
 
-    if (paramIdx === 7 || paramIdx === 8) {
-        ball.recalcRPMs();
-    }
+    // RPMs are computed on demand via getRPMs()
 };
 
 window.handleTypeToggle = (stepIdx, optIdx, newType) => {
@@ -499,7 +490,6 @@ window.handleTypeToggle = (stepIdx, optIdx, newType) => {
     if (!(ball instanceof Ball)) return;
     if(ball.type === newType) return;
     ball.type = newType;
-    ball.recalcRPMs();
     renderEditor(); 
 };
 
@@ -637,7 +627,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
             const speedEl = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
             if (speedEl) speedEl.textContent = newSpeed;
             if (stepIdx !== 'adj') {
-                ball.recalcRPMs();
+                // RPMs computed on demand
             }
         }
 
@@ -754,7 +744,6 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
     ball.speed = v;
     const maxSpin = SPIN_LIMITS[v.toString()] ?? 10;
     if (ball.spin > maxSpin) ball.spin = maxSpin;
-    if (!isAdj) ball.recalcRPMs();
     const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = v.toFixed(2);
     _redrawEditorCanvas(stepIdx, optIdx);
@@ -796,25 +785,12 @@ window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
 
     ball.spin = Math.abs(v);
     ball.type = v < 0 ? 'back' : 'top';
-    if (!isAdj) ball.recalcRPMs();
     const color = v < 0 ? '#e53935' : '#43a047';
     if (sliderEl) sliderEl.style.accentColor = color;
     const el = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
     if (el) { el.textContent = (v > 0 ? '+' : '') + v; el.style.color = color; }
     _redrawEditorCanvas(stepIdx, optIdx);
     _redrawSideView(stepIdx, optIdx);
-};
-
-window.handleToggleBallActive = (stepIdx) => {
-    if (!tempDrillData) return;
-    const step = tempDrillData[stepIdx];
-    if (!(step instanceof Step)) return;
-    const first = step.ball || step.variants[0];
-    const currentVal = first instanceof Ball ? first.side : 1;
-    step.allBalls().forEach(b => {
-        if (b instanceof Ball) b.side = currentVal === 1 ? 0 : 1;
-    });
-    renderEditor();
 };
 
 window.handleAddSequenceStep = (sourceStepIndex) => {
@@ -1002,7 +978,8 @@ window.handleTestBall = async (stepIdx, optIdx) => {
     const s = tempDrillData[stepIdx];
     const d = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
     if (!(d instanceof Ball)) return;
-    const ballData = packBall(d.topRPM, d.bottomRPM, d.height, d.drop, d.frequency, 1); 
+    const rpm = d.getRPMs();
+    const ballData = packBall(rpm.top, rpm.bot, d.height, d.drop, d.frequency, 1); 
     const buffer = new ArrayBuffer(31); 
     const view = new DataView(buffer);
     view.setUint8(0, 0x81); view.setUint16(1, 28, true); 
@@ -1021,8 +998,6 @@ window.handleTestCombo = async () => {
     tempDrillData.forEach(step => {
         if (!(step instanceof Step)) return;
         const first = step.ball || step.variants[0];
-        const isActive = first instanceof Ball ? first.side : 1;
-        if (isActive === 0) return;
         const d = first instanceof Ball ? first.clone() : Ball.fromArray(first);
         if (!d) return;
         
@@ -1040,7 +1015,8 @@ window.handleTestCombo = async () => {
             }
         }
         
-        balls.push(packBall(d.topRPM, d.bottomRPM, d.height, d.drop, d.frequency, 1));
+        const rpm = d.getRPMs();
+        balls.push(packBall(rpm.top, rpm.bot, d.height, d.drop, d.frequency, 1));
     });
     if (balls.length === 0) { showToast("No active balls"); return; }
     const totalLen = 7 + (balls.length * 24);

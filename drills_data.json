@@ -6,13 +6,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 494,
-            "bottomRPM": 4598,
             "height": 40,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 2.5,
             "spin": 6,
             "type": "back",
@@ -29,13 +26,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4712,
             "height": 33,
             "drop": -5.5,
             "frequency": 59,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 6.7,
             "type": "back",
@@ -52,13 +46,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 647,
-            "bottomRPM": 4067,
             "height": 40,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 2.2,
             "spin": 5,
             "type": "back",
@@ -75,13 +66,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 996,
-            "bottomRPM": 4210,
             "height": 35,
             "drop": 5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 2.59,
             "spin": 4.7,
             "type": "back",
@@ -98,13 +86,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3469,
-            "bottomRPM": 2922,
             "height": 35,
             "drop": 5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 0.8,
             "type": "top",
@@ -121,13 +106,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -144,13 +126,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4723,
             "height": -31,
             "drop": -6.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 0.8,
             "spin": 9.5,
             "type": "back",
@@ -167,13 +146,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4346,
             "height": -40,
             "drop": 3,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 2.1,
             "spin": 6,
             "type": "back",
@@ -190,13 +166,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 7201,
-            "bottomRPM": 1045,
             "height": 26,
             "drop": 4.5,
             "frequency": 45,
             "reps": 1,
-            "side": 1,
             "speed": 5,
             "spin": 9,
             "type": "top",
@@ -213,13 +186,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 3842,
             "height": 36,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 1.3,
             "spin": 6,
             "type": "back",
@@ -236,13 +206,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 3500,
             "height": 45,
             "drop": 5,
             "frequency": 35,
             "reps": 1,
-            "side": 1,
             "speed": 1.3,
             "spin": 5,
             "type": "back",
@@ -259,13 +226,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 2978,
-            "bottomRPM": 1610,
             "height": 100,
             "drop": -6.5,
             "frequency": 50,
             "reps": 1,
-            "side": 1,
             "speed": 2.1,
             "spin": 2,
             "type": "top",
@@ -282,13 +246,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4712,
             "height": 33,
             "drop": -3.5,
             "frequency": 59,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 6.7,
             "type": "back",
@@ -307,13 +268,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 797,
-            "bottomRPM": 4422,
             "height": 35,
             "drop": 4.5,
             "frequency": 93,
             "reps": 1,
-            "side": 1,
             "speed": 2.6,
             "spin": 5.3,
             "type": "back",
@@ -324,13 +282,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3593,
-            "bottomRPM": 2635,
             "height": 30,
             "drop": -4,
             "frequency": 72,
             "reps": 1,
-            "side": 1,
             "speed": 3.4,
             "spin": 1.4,
             "type": "top",
@@ -347,13 +302,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4712,
             "height": 33,
             "drop": -5.5,
             "frequency": 90,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 6.7,
             "type": "back",
@@ -364,13 +316,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3469,
-            "bottomRPM": 2922,
             "height": 35,
             "drop": 4,
             "frequency": 66,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 0.8,
             "type": "top",
@@ -387,13 +336,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 1065,
-            "bottomRPM": 4280,
             "height": 35,
             "drop": -4.5,
             "frequency": 65,
             "reps": 1,
-            "side": 1,
             "speed": 2.7,
             "spin": 4.7,
             "type": "back",
@@ -404,13 +350,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 1065,
-            "bottomRPM": 4280,
             "height": 35,
             "drop": 4.5,
             "frequency": 65,
             "reps": 1,
-            "side": 1,
             "speed": 2.7,
             "spin": 4.7,
             "type": "back",
@@ -427,13 +370,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 810,
-            "bottomRPM": 4914,
             "height": 30,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3,
             "spin": 6,
             "type": "back",
@@ -444,13 +384,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3538,
-            "bottomRPM": 2854,
             "height": 35,
             "drop": 0,
             "frequency": 70,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 1,
             "type": "top",
@@ -467,13 +404,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 4142,
-            "bottomRPM": 2842,
             "height": 30,
             "drop": -4,
             "frequency": 100,
             "reps": 1,
-            "side": 1,
             "speed": 4,
             "spin": 1.9,
             "type": "top",
@@ -484,13 +418,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 4142,
-            "bottomRPM": 2842,
             "height": 30,
             "drop": 4,
             "frequency": 90,
             "reps": 1,
-            "side": 1,
             "speed": 4,
             "spin": 1.9,
             "type": "top",
@@ -507,13 +438,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4940,
             "height": 30,
             "drop": -3.5,
             "frequency": 70,
             "reps": 1,
-            "side": 1,
             "speed": 2.5,
             "spin": 7,
             "type": "back",
@@ -524,13 +452,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 647,
-            "bottomRPM": 4067,
             "height": 40,
             "drop": -4,
             "frequency": 70,
             "reps": 1,
-            "side": 1,
             "speed": 2.2,
             "spin": 5,
             "type": "back",
@@ -547,13 +472,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 810,
-            "bottomRPM": 4914,
             "height": 30,
             "drop": 0,
             "frequency": 45,
             "reps": 1,
-            "side": 1,
             "speed": 3,
             "spin": 6,
             "type": "back",
@@ -570,13 +492,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 3842,
             "height": 36,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 1.3,
             "spin": 6,
             "type": "back",
@@ -587,13 +506,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -610,13 +526,10 @@
         {
           "variants": [
             {
-              "topRPM": 400,
-              "bottomRPM": 3716,
               "height": 33,
               "drop": -5.5,
               "frequency": 60,
               "reps": 1,
-              "side": 1,
               "speed": 1.1,
               "spin": 6,
               "type": "back",
@@ -624,13 +537,10 @@
               "delay": 0
             },
             {
-              "topRPM": 400,
-              "bottomRPM": 3716,
               "height": 33,
               "drop": 5.5,
               "frequency": 60,
               "reps": 1,
-              "side": 1,
               "speed": 1.1,
               "spin": 6,
               "type": "back",
@@ -643,13 +553,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3495,
-            "bottomRPM": 2606,
             "height": 35,
             "drop": -4,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 1.3,
             "type": "top",
@@ -666,13 +573,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 674,
-            "bottomRPM": 3410,
             "height": 40,
             "drop": 7.5,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 1.7,
             "spin": 4,
             "type": "back",
@@ -683,13 +587,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -706,13 +607,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4814,
             "height": 33,
             "drop": -5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 7,
             "type": "back",
@@ -723,13 +621,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -746,13 +641,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 485,
-            "bottomRPM": 3221,
             "height": -41,
             "drop": -0.5,
             "frequency": 36,
             "reps": 1,
-            "side": 1,
             "speed": 1.4,
             "spin": 4,
             "type": "back",
@@ -769,13 +661,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4457,
             "height": -38,
             "drop": -0.5,
             "frequency": 30,
             "reps": 1,
-            "side": 1,
             "speed": 1.3,
             "spin": 7.8,
             "type": "back",
@@ -792,13 +681,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 4079,
-            "bottomRPM": 2779,
             "height": 35,
             "drop": -4,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.9,
             "spin": 1.9,
             "type": "top",
@@ -809,13 +695,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 4079,
-            "bottomRPM": 2779,
             "height": 35,
             "drop": 4,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.9,
             "spin": 1.9,
             "type": "top",
@@ -832,13 +715,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4712,
             "height": 37,
             "drop": -5.5,
             "frequency": 59,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 6.7,
             "type": "back",
@@ -849,13 +729,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4712,
             "height": 37,
             "drop": 4.5,
             "frequency": 59,
             "reps": 1,
-            "side": 1,
             "speed": 2.3,
             "spin": 6.7,
             "type": "back",
@@ -872,13 +749,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 4079,
-            "bottomRPM": 2779,
             "height": 35,
             "drop": 0,
             "frequency": 75,
             "reps": 1,
-            "side": 1,
             "speed": 3.9,
             "spin": 1.9,
             "type": "top",
@@ -897,13 +771,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3469,
-            "bottomRPM": 2922,
             "height": 35,
             "drop": 5.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 0.8,
             "type": "top",
@@ -914,13 +785,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3469,
-            "bottomRPM": 2922,
             "height": 35,
             "drop": 1.5,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 0.8,
             "type": "top",
@@ -937,13 +805,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3469,
-            "bottomRPM": 2922,
             "height": 35,
             "drop": 3,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.53,
             "spin": 0.8,
             "type": "top",
@@ -954,13 +819,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -971,13 +833,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 3324,
-            "bottomRPM": 2777,
             "height": 35,
             "drop": -4,
             "frequency": 60,
             "reps": 1,
-            "side": 1,
             "speed": 3.3,
             "spin": 0.8,
             "type": "top",
@@ -994,13 +853,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4283,
             "height": 33,
             "drop": -1,
             "frequency": 41,
             "reps": 1,
-            "side": 1,
             "speed": 2,
             "spin": 6,
             "type": "back",
@@ -1011,13 +867,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4283,
             "height": 33,
             "drop": -1,
             "frequency": 43,
             "reps": 1,
-            "side": 1,
             "speed": 2,
             "spin": 6,
             "type": "back",
@@ -1028,13 +881,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 400,
-            "bottomRPM": 4283,
             "height": 33,
             "drop": -1,
             "frequency": 47,
             "reps": 1,
-            "side": 1,
             "speed": 2,
             "spin": 6,
             "type": "back",
@@ -1045,13 +895,10 @@
         {
           "variants": [],
           "ball": {
-            "topRPM": 2978,
-            "bottomRPM": 1610,
             "height": 100,
             "drop": -2,
             "frequency": 34,
             "reps": 1,
-            "side": 1,
             "speed": 2.1,
             "spin": 2,
             "type": "top",
