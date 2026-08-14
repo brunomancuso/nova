@@ -10,9 +10,7 @@ DrillStore
 
 Drill { name, steps: Step[], random }
 
-Step
-  ├── variants: Ball[]   ← pool, pick one randomly each rep
-  └── ball: Ball         ← single fixed ball
+Step { balls: Ball[] }   ← one ball fired per step; >1 = random pick
 
 Ball { height, drop, frequency, reps, speed, spin, type, scatter, delay }
 ```
@@ -51,18 +49,18 @@ type = 'back':  topRPM = baseSpeed - spinFactor,  bottomRPM = baseSpeed + spinFa
 
 ## `Step`
 
-One position in a drill sequence. Two mutually exclusive modes.
+One position in a drill sequence. Holds an ordered list of candidate balls, but
+the robot fires exactly ONE ball per step.
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `variants` | Ball[] | Pool of candidates — pick one randomly each rep |
-| `ball` | Ball \| null | Single fixed ball — fires every rep |
+| `balls` | Ball[] | Ordered candidate balls for this position |
 
 | Mode | Condition | Behavior |
 |------|-----------|----------|
-| **Variant** | `variants.length > 0` | Random ball from pool |
-| **Single** | `ball !== null` | The single ball |
-| **Empty** | neither | Nothing fires |
+| **Variant** | `balls.length > 1` | Random ball from the list each rep |
+| **Single** | `balls.length === 1` | That ball fires every rep |
+| **Empty** | `balls.length === 0` | Nothing fires |
 
 ---
 
@@ -96,8 +94,8 @@ Flat drill storage grouped by category A/B/C.
     {
       "name": "BH Dura",
       "steps": [
-        { "variants": [], "ball": { "height": 50, "drop": 0, "speed": 2, "spin": 2, "type": "top" } },
-        { "variants": [{}, {}], "ball": null }
+        { "balls": [{ "height": 50, "drop": 0, "speed": 2, "spin": 2, "type": "top" }] },
+        { "balls": [{ "height": 40, "drop": -3, "speed": 3, "spin": 6, "type": "back" }, { "height": 60, "drop": 2, "speed": 2.5, "spin": 2, "type": "top" }] }
       ],
       "random": false
     }

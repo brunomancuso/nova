@@ -4,18 +4,19 @@
       "name": "# BH Dura Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 40,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 2.5,
-            "spin": 6,
-            "type": "back",
-            "scatter": null,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 40,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 2.5,
+              "spin": 6,
+              "type": "back",
+              "scatter": null,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -24,18 +25,19 @@
       "name": "# BH Dura",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -5.5,
-            "frequency": 59,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 6.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -5.5,
+              "frequency": 59,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 6.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -44,18 +46,19 @@
       "name": "# BH Under Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 40,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 2.2,
-            "spin": 5,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 40,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 2.2,
+              "spin": 5,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -64,18 +67,19 @@
       "name": "# FH Under Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 2.59,
-            "spin": 4.7,
-            "type": "back",
-            "scatter": 1,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 2.59,
+              "spin": 4.7,
+              "type": "back",
+              "scatter": 1,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -84,18 +88,19 @@
       "name": "# FH Block Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -104,18 +109,19 @@
       "name": "# BH Block Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -124,18 +130,19 @@
       "name": "# BH Serve Under Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": -31,
-            "drop": -6.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 0.8,
-            "spin": 9.5,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": -31,
+              "drop": -6.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 0.8,
+              "spin": 9.5,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -144,18 +151,19 @@
       "name": "# FH Serve Under Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": -40,
-            "drop": 3,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 2.1,
-            "spin": 6,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": -40,
+              "drop": 3,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 2.1,
+              "spin": 6,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -164,18 +172,19 @@
       "name": "# Counter",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 26,
-            "drop": 4.5,
-            "frequency": 45,
-            "reps": 1,
-            "speed": 5,
-            "spin": 9,
-            "type": "top",
-            "scatter": 2,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 26,
+              "drop": 4.5,
+              "frequency": 45,
+              "reps": 1,
+              "speed": 5,
+              "spin": 9,
+              "type": "top",
+              "scatter": 2,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -184,18 +193,19 @@
       "name": "# BH Under Short",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 36,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 1.3,
-            "spin": 6,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 36,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 1.3,
+              "spin": 6,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -204,18 +214,19 @@
       "name": "# FH Short Under",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 45,
-            "drop": 5,
-            "frequency": 35,
-            "reps": 1,
-            "speed": 1.3,
-            "spin": 5,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 45,
+              "drop": 5,
+              "frequency": 35,
+              "reps": 1,
+              "speed": 1.3,
+              "spin": 5,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -224,18 +235,19 @@
       "name": "BH Alta",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 100,
-            "drop": -6.5,
-            "frequency": 50,
-            "reps": 1,
-            "speed": 2.1,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 100,
+              "drop": -6.5,
+              "frequency": 50,
+              "reps": 1,
+              "speed": 2.1,
+              "spin": 2,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -244,18 +256,19 @@
       "name": "BH Under Random ",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -3.5,
-            "frequency": 59,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 6.7,
-            "type": "back",
-            "scatter": 3,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -3.5,
+              "frequency": 59,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 6.7,
+              "type": "back",
+              "scatter": 3,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -266,32 +279,34 @@
       "name": "FH Under Block BH",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 4.5,
-            "frequency": 93,
-            "reps": 1,
-            "speed": 2.6,
-            "spin": 5.3,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 4.5,
+              "frequency": 93,
+              "reps": 1,
+              "speed": 2.6,
+              "spin": 5.3,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": -4,
-            "frequency": 72,
-            "reps": 1,
-            "speed": 3.4,
-            "spin": 1.4,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": -4,
+              "frequency": 72,
+              "reps": 1,
+              "speed": 3.4,
+              "spin": 1.4,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -300,32 +315,34 @@
       "name": "BH Under FH Block ",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -5.5,
-            "frequency": 90,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 6.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -5.5,
+              "frequency": 90,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 6.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 4,
-            "frequency": 66,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 4,
+              "frequency": 66,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -334,32 +351,34 @@
       "name": "Random BH FH Under",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4.5,
-            "frequency": 65,
-            "reps": 1,
-            "speed": 2.7,
-            "spin": 4.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4.5,
+              "frequency": 65,
+              "reps": 1,
+              "speed": 2.7,
+              "spin": 4.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 4.5,
-            "frequency": 65,
-            "reps": 1,
-            "speed": 2.7,
-            "spin": 4.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 4.5,
+              "frequency": 65,
+              "reps": 1,
+              "speed": 2.7,
+              "spin": 4.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": true
@@ -368,32 +387,34 @@
       "name": "BH Under Middle",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3,
-            "spin": 6,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3,
+              "spin": 6,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 0,
-            "frequency": 70,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 1,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 0,
+              "frequency": 70,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 1,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -402,32 +423,34 @@
       "name": "BH FH Block",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": -4,
-            "frequency": 100,
-            "reps": 1,
-            "speed": 4,
-            "spin": 1.9,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": -4,
+              "frequency": 100,
+              "reps": 1,
+              "speed": 4,
+              "spin": 1.9,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": 4,
-            "frequency": 90,
-            "reps": 1,
-            "speed": 4,
-            "spin": 1.9,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": 4,
+              "frequency": 90,
+              "reps": 1,
+              "speed": 4,
+              "spin": 1.9,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -436,32 +459,34 @@
       "name": "BH Under Random",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": -3.5,
-            "frequency": 70,
-            "reps": 1,
-            "speed": 2.5,
-            "spin": 7,
-            "type": "back",
-            "scatter": 2,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": -3.5,
+              "frequency": 70,
+              "reps": 1,
+              "speed": 2.5,
+              "spin": 7,
+              "type": "back",
+              "scatter": 2,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 40,
-            "drop": -4,
-            "frequency": 70,
-            "reps": 1,
-            "speed": 2.2,
-            "spin": 5,
-            "type": "back",
-            "scatter": 2,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 40,
+              "drop": -4,
+              "frequency": 70,
+              "reps": 1,
+              "speed": 2.2,
+              "spin": 5,
+              "type": "back",
+              "scatter": 2,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": true
@@ -470,18 +495,19 @@
       "name": "FH Under Middle Scatter",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 30,
-            "drop": 0,
-            "frequency": 45,
-            "reps": 1,
-            "speed": 3,
-            "spin": 6,
-            "type": "back",
-            "scatter": 3,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 30,
+              "drop": 0,
+              "frequency": 45,
+              "reps": 1,
+              "speed": 3,
+              "spin": 6,
+              "type": "back",
+              "scatter": 3,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -490,32 +516,34 @@
       "name": "BH Short Block",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 36,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 1.3,
-            "spin": 6,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 36,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 1.3,
+              "spin": 6,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -524,7 +552,7 @@
       "name": "FH BH short BH Long",
       "steps": [
         {
-          "variants": [
+          "balls": [
             {
               "height": 33,
               "drop": -5.5,
@@ -547,22 +575,22 @@
               "scatter": 0,
               "delay": 0
             }
-          ],
-          "ball": null
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 1.3,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 1.3,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -571,32 +599,34 @@
       "name": "FH Short BH Long",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 40,
-            "drop": 7.5,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 1.7,
-            "spin": 4,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 40,
+              "drop": 7.5,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 1.7,
+              "spin": 4,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -605,32 +635,34 @@
       "name": "BH Under Block",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -639,18 +671,19 @@
       "name": "# Saque Corto",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": -41,
-            "drop": -0.5,
-            "frequency": 36,
-            "reps": 1,
-            "speed": 1.4,
-            "spin": 4,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": -41,
+              "drop": -0.5,
+              "frequency": 36,
+              "reps": 1,
+              "speed": 1.4,
+              "spin": 4,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -659,18 +692,19 @@
       "name": "# Saque largo",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": -38,
-            "drop": -0.5,
-            "frequency": 30,
-            "reps": 1,
-            "speed": 1.3,
-            "spin": 7.8,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": -38,
+              "drop": -0.5,
+              "frequency": 30,
+              "reps": 1,
+              "speed": 1.3,
+              "spin": 7.8,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -679,32 +713,34 @@
       "name": "BH FH Block Random",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.9,
-            "spin": 1.9,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.9,
+              "spin": 1.9,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 4,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.9,
-            "spin": 1.9,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 4,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.9,
+              "spin": 1.9,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": true
@@ -713,32 +749,34 @@
       "name": "BH FH Under",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 37,
-            "drop": -5.5,
-            "frequency": 59,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 6.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 37,
+              "drop": -5.5,
+              "frequency": 59,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 6.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 37,
-            "drop": 4.5,
-            "frequency": 59,
-            "reps": 1,
-            "speed": 2.3,
-            "spin": 6.7,
-            "type": "back",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 37,
+              "drop": 4.5,
+              "frequency": 59,
+              "reps": 1,
+              "speed": 2.3,
+              "spin": 6.7,
+              "type": "back",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": true
@@ -747,18 +785,19 @@
       "name": "Random Block",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 0,
-            "frequency": 75,
-            "reps": 1,
-            "speed": 3.9,
-            "spin": 1.9,
-            "type": "top",
-            "scatter": 4,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 0,
+              "frequency": 75,
+              "reps": 1,
+              "speed": 3.9,
+              "spin": 1.9,
+              "type": "top",
+              "scatter": 4,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -769,32 +808,34 @@
       "name": "FH Punta y Medio",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 5.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 5.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 1.5,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 1.5,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -803,46 +844,49 @@
       "name": "Falkenberg 1",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": 3,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.53,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": 3,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.53,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 35,
-            "drop": -4,
-            "frequency": 60,
-            "reps": 1,
-            "speed": 3.3,
-            "spin": 0.8,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 35,
+              "drop": -4,
+              "frequency": 60,
+              "reps": 1,
+              "speed": 3.3,
+              "spin": 0.8,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": false
@@ -851,60 +895,64 @@
       "name": "BH Under Random Alta",
       "steps": [
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -1,
-            "frequency": 41,
-            "reps": 1,
-            "speed": 2,
-            "spin": 6,
-            "type": "back",
-            "scatter": 3,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -1,
+              "frequency": 41,
+              "reps": 1,
+              "speed": 2,
+              "spin": 6,
+              "type": "back",
+              "scatter": 3,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -1,
-            "frequency": 43,
-            "reps": 1,
-            "speed": 2,
-            "spin": 6,
-            "type": "back",
-            "scatter": 3,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -1,
+              "frequency": 43,
+              "reps": 1,
+              "speed": 2,
+              "spin": 6,
+              "type": "back",
+              "scatter": 3,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 33,
-            "drop": -1,
-            "frequency": 47,
-            "reps": 1,
-            "speed": 2,
-            "spin": 6,
-            "type": "back",
-            "scatter": 3,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 33,
+              "drop": -1,
+              "frequency": 47,
+              "reps": 1,
+              "speed": 2,
+              "spin": 6,
+              "type": "back",
+              "scatter": 3,
+              "delay": 0
+            }
+          ]
         },
         {
-          "variants": [],
-          "ball": {
-            "height": 100,
-            "drop": -2,
-            "frequency": 34,
-            "reps": 1,
-            "speed": 2.1,
-            "spin": 2,
-            "type": "top",
-            "scatter": 0,
-            "delay": 0
-          }
+          "balls": [
+            {
+              "height": 100,
+              "drop": -2,
+              "frequency": 34,
+              "reps": 1,
+              "speed": 2.1,
+              "spin": 2,
+              "type": "top",
+              "scatter": 0,
+              "delay": 0
+            }
+          ]
         }
       ],
       "random": true

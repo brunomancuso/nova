@@ -61,16 +61,15 @@ function render() {
             if (prevStep === step) card.classList.add('chain-above');
             const isTop = ball.type === 'top';
             const isVariant = step.isVariant;
-            const variantPos = isVariant ? step.variants.indexOf(ball) : -1;
+            const variantPos = isVariant ? step.balls.indexOf(ball) : -1;
             const isFirstVariant = isVariant && variantPos === 0;
-            const isLastVariant = isVariant && variantPos === step.variants.length - 1;
+            const isLastVariant = isVariant && variantPos === step.balls.length - 1;
             card.innerHTML =
                 `<span class="abc-text">` +
                 `<span class="abc-label">Speed</span><span class="abc-val">${ball.speed}</span>` +
                 `<span class="abc-label">Spin</span><span class="abc-val">${ball.spin}</span>` +
                 `<span class="abc-freq">${ball.frequency} bpm</span>` +
                 `</span>` +
-                `<span class="abc-arrow ${isTop ? 'abc-up' : 'abc-down'}">${isTop ? '↑' : '↓'}</span>` +
                 `<span class="abc-edit" title="Edit ball"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>` +
                 `<span class="abc-play" title="Test ball"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` +
                 (isVariant
@@ -102,7 +101,7 @@ function render() {
             if (moveUpBtn) {
                 moveUpBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (isVariant && !isFirstVariant) removeVariant(step, ball);
+                    if (isVariant && !isFirstVariant) removeVariant(step, ball, 'up');
                     else mergeBalls(ballIdx, 'up');
                 });
             }
@@ -110,7 +109,7 @@ function render() {
             if (moveDownBtn) {
                 moveDownBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    if (isVariant && !isLastVariant) removeVariant(step, ball);
+                    if (isVariant && !isLastVariant) removeVariant(step, ball, 'down');
                     else mergeBalls(ballIdx, 'down');
                 });
             }
@@ -123,9 +122,52 @@ function render() {
             gauge.className = 'alexa-ball-height';
             gauge.style.setProperty('--pos', pos + '%');
 
+            const heightVal = document.createElement('span');
+            heightVal.className = 'alexa-ball-height-value';
+            heightVal.textContent = String(ball.height ?? 0);
+
+            const spinArrow = document.createElement('span');
+            const hasSpin = (ball.spin ?? 0) >= 1;
+            spinArrow.className = 'alexa-ball-spin ' + (hasSpin ? (isTop ? 'top' : 'back') : 'gray');
+            spinArrow.textContent = isTop ? '↑' : '↓';
+
+            // Drag the vertical gauge to change the ball's height.
+            let dragY = null;
+            let dragStartHeight = null;
+            gauge.addEventListener('pointerdown', (e) => {
+                dragY = e.clientY;
+                dragStartHeight = ball.height ?? 0;
+                gauge.setPointerCapture(e.pointerId);
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            gauge.addEventListener('pointermove', (e) => {
+                if (dragY === null) return;
+                e.preventDefault();
+                const rect = gauge.getBoundingClientRect();
+                const pxPerUnit = (rect.height || 45) / 150;
+                const dy = e.clientY - dragY;
+                const h = Math.round(Math.max(-50, Math.min(100, dragStartHeight - dy / pxPerUnit)));
+                ball.height = h;
+                const pct = ((h + 50) / 150) * 100;
+                gauge.style.setProperty('--pos', Math.max(3, Math.min(97, 100 - pct)) + '%');
+                heightVal.textContent = String(h);
+            });
+            const endDrag = () => {
+                if (dragY === null) return;
+                dragY = null;
+                dragStartHeight = null;
+                save();
+                window.drawAlexaTable?.();
+            };
+            gauge.addEventListener('pointerup', endDrag);
+            gauge.addEventListener('pointercancel', endDrag);
+
             item.appendChild(label);
             item.appendChild(card);
             item.appendChild(gauge);
+            item.appendChild(heightVal);
+            item.appendChild(spinArrow);
             box.appendChild(item);
             prevStep = step;
         }
@@ -158,20 +200,9 @@ function mergeStepIntoUpper(upperIdx, lowerIdx) {
     const upper = drill.steps[upperIdx];
     const lower = drill.steps[lowerIdx];
 
-    if (upper.isVariant && lower.isVariant) {
-        upper.variants.push(...lower.variants);
-        drill.steps.splice(lowerIdx, 1);
-    } else if (upper.isVariant && lower.isSingle) {
-        upper.variants.push(lower.ball);
-        drill.steps.splice(lowerIdx, 1);
-    } else if (upper.isSingle && lower.isVariant) {
-        lower.variants.unshift(upper.ball);
-        drill.steps.splice(upperIdx, 1);
-    } else if (upper.isSingle && lower.isSingle) {
-        upper.variants = [upper.ball, lower.ball];
-        upper.ball = null;
-        drill.steps.splice(lowerIdx, 1);
-    }
+    // Merge two adjacent steps by concatenating their balls in order.
+    upper.balls.push(...lower.balls);
+    drill.steps.splice(lowerIdx, 1);
 }
 
 function mergeBalls(flatIndex, direction) {
@@ -188,37 +219,28 @@ function mergeBalls(flatIndex, direction) {
     render();
 }
 
-function removeVariant(step, ball) {
+function removeVariant(step, ball, dir) {
     if (!step || !step.isVariant) return;
-    if (step.variants.length <= 1) return;
+    if (step.balls.length <= 1) return;
     const stepIndex = drill.steps.indexOf(step);
-    const pos = step.variants.indexOf(ball);
+    const pos = step.balls.indexOf(ball);
     if (pos < 0) return;
 
-    const above = step.variants.slice(0, pos);
-    const below = step.variants.slice(pos + 1);
-
-    // Keep the balls above in the original step (single if 1, variant if more).
-    if (above.length === 1) {
-        step.ball = above[0];
-        step.variants = [];
+    // Split the variant chain at this ball, keeping the order untouched:
+    //  'down' → cut after the ball  (ball stays with the group above it)
+    //  'up'   → cut before the ball (ball goes with the group below it)
+    let above, below;
+    if (dir === 'up') {
+        above = step.balls.slice(0, pos);
+        below = step.balls.slice(pos);
     } else {
-        step.variants = above;
+        above = step.balls.slice(0, pos + 1);
+        below = step.balls.slice(pos + 1);
     }
+    if (above.length === 0 || below.length === 0) return;
 
-    // Removed ball becomes its own single step.
-    const newSteps = [new Step({ ball })];
-
-    // All balls below go into one new step (variant if >1, single if 1).
-    if (below.length > 1) newSteps.push(new Step({ variants: below }));
-    else if (below.length === 1) newSteps.push(new Step({ ball: below[0] }));
-
-    drill.steps.splice(stepIndex + 1, 0, ...newSteps);
-
-    // Drop the original step if it ended up empty.
-    if (step.variants.length === 0 && !step.ball) {
-        drill.steps.splice(stepIndex, 1);
-    }
+    step.balls = above;
+    drill.steps.splice(stepIndex + 1, 0, new Step({ balls: below }));
 
     save();
     render();
@@ -243,7 +265,7 @@ function closeModal() {
 }
 
 window.addAlexaBall = () => {
-    drill.steps.push(new Step({ ball: new Ball() }));
+    drill.steps.push(new Step({ balls: [new Ball()] }));
     save();
     render();
 };

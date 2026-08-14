@@ -28,14 +28,14 @@ const el = (id) => document.getElementById(id);
 
 const MEGA_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>';
 const EAR_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8.5a6.5 6.5 0 1 1 13 0c0 6-6 6-6 10a3.5 3.5 0 1 1-7 0"/><path d="M15 8.5a2.5 2.5 0 0 0-5 0v1a2 2 0 1 1 0 4"/></svg>';
-const BRAIN_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M12 5v13"/><path d="M9 3h3"/><path d="M9 21h3"/></svg>';
+const REFRESH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>';
 const LINK_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/><path d="M5 12.859a10 10 0 0 1 5.17-2.69"/><path d="M19 12.859a10 10 0 0 0-2.007-1.523"/><path d="M2 8.82a15 15 0 0 1 4.177-2.643"/><path d="M22 8.82a15 15 0 0 0-11.288-3.764"/><path d="m2 2 20 20"/></svg>';
 
 const STATUS_ICONS = {
     'SAY "ALEXA"': MEGA_ICON,
     'Listening': EAR_ICON,
-    'Command': BRAIN_ICON,
-    'Thinking…': BRAIN_ICON,
+    'Command': REFRESH_ICON,
+    'Thinking…': REFRESH_ICON,
     'Whisper server unreachable': LINK_OFF_ICON,
     'Whisper disconnected': LINK_OFF_ICON,
 };
@@ -44,6 +44,7 @@ function setStatus(text) {
     const node = el('alexa-status');
     if (!node) return;
     node.innerHTML = STATUS_ICONS[text] || '';
+    node.title = text === 'SAY "ALEXA"' ? 'SAY ALEXA' : '';
 }
 
 function setCommand(text) {
@@ -92,7 +93,7 @@ let _micFillEl = null;
 let _micLevelSmooth = 0;
 let _micOn = false;
 
-const MIC_MIN_FILL = 40; // % green shown when connected but silent
+const MIC_MIN_FILL = 10; // % green shown when connected but silent
 
 function setMicLevel(level) {
     // Fast attack, slow decay for a smooth, stable meter.
@@ -511,8 +512,7 @@ function collectLandings() {
         if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0 });
     };
     for (const step of (drill?.steps || [])) {
-        (step?.variants || []).forEach(pushBall);
-        pushBall(step?.ball);
+        (step?.balls || []).forEach(pushBall);
     }
     return landings;
 }
@@ -520,10 +520,10 @@ function collectLandings() {
 function drawAlexaTable() {
     if (!tableCanvas) return;
     const off = document.createElement('canvas');
-    off.width = 520;
-    off.height = 360;
+    off.width = 600;    // a little extra length beyond the far end
+    off.height = 400;   // a little extra room around the table
     const theme = document.documentElement.getAttribute('data-theme') || 'light';
-    drawStaticRobot(off, true, theme);
+    drawStaticRobot(off, true, theme, 20, 80);
 
     // Draw a landing marker for every ball in the Alexa drill.
     let landings = [];
@@ -535,8 +535,8 @@ function drawAlexaTable() {
     drawLandingMarkers(off, landings, selectedBallIndex);
     alexaLandingPositions = getLandingMarkerPositions(landings);
 
-    tableCanvas.width = 360;
-    tableCanvas.height = 520;
+    tableCanvas.width = off.height;   // 440 (rotated)
+    tableCanvas.height = off.width;   // 520 (rotated)
     const ctx = tableCanvas.getContext('2d');
     ctx.save();
     ctx.translate(tableCanvas.width / 2, tableCanvas.height / 2);
@@ -570,13 +570,9 @@ function findAlexaBallByIndex(index) {
     const drill = getAlexaDrill();
     let i = 0;
     for (const step of (drill?.steps || [])) {
-        for (const b of (step?.variants || [])) {
+        for (const b of (step?.balls || [])) {
             i++;
             if (i === index) return b;
-        }
-        if (step?.ball) {
-            i++;
-            if (i === index) return step.ball;
         }
     }
     return null;
@@ -584,14 +580,24 @@ function findAlexaBallByIndex(index) {
 
 // ── Table ball interaction (select + drag) ───────────────────────────────
 function tableToOff(dx, dy) {
-    return { ox: dy, oy: 360 - dx };
+    // After the 90° rotation, the offscreen height == tableCanvas.width.
+    return { ox: dy, oy: tableCanvas.width - dx };
 }
 
 function clientToCanvas(e) {
     const rect = tableCanvas.getBoundingClientRect();
+    // The canvas bitmap is rendered with object-fit: contain, anchored top-center
+    // (.alexa-table-panel canvas), so map from the visible bitmap, not the full rect.
+    const cw = tableCanvas.width;   // 360
+    const ch = tableCanvas.height;  // 520
+    const scale = Math.min(rect.width / cw, rect.height / ch);
+    const dw = cw * scale;
+    const dh = ch * scale;
+    const bx = rect.left + (rect.width - dw) / 2;  // horizontally centred
+    const by = rect.top;                            // anchored top
     return {
-        dx: (e.clientX - rect.left) * (tableCanvas.width / rect.width),
-        dy: (e.clientY - rect.top) * (tableCanvas.height / rect.height),
+        dx: (e.clientX - bx) * (cw / dw),
+        dy: (e.clientY - by) * (ch / dh),
     };
 }
 
@@ -646,3 +652,12 @@ function attachAlexaTableInteractions() {
 
 drawAlexaTable();
 attachAlexaTableInteractions();
+
+// Deselect the selected ball when clicking anywhere else on the page.
+document.addEventListener('click', (e) => {
+    if (selectedBallIndex === null) return;
+    const t = e.target;
+    if (t && t.closest && (t.closest('.alexa-ball-card') || t.closest('#alexa-table-canvas'))) return;
+    selectedBallIndex = null;
+    window.renderAlexaBalls?.();
+});

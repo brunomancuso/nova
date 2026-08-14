@@ -628,7 +628,7 @@ body.alexa-active .alexa-panel { display: flex; }
     transition: color 0.2s;
 }
 .alexa-mic.error .alexa-mic-icon { color: #dc2626; }
-.alexa-mic.muted .alexa-mic-icon { color: #dc2626; }
+.alexa-mic.muted .alexa-mic-icon { color: var(--primary); }
 .alexa-mic.muted .alexa-mic-fill { opacity: 0; }
 .alexa-mic.muted::after {
     content: '';
@@ -637,7 +637,7 @@ body.alexa-active .alexa-panel { display: flex; }
     top: 50%;
     width: 2px;
     height: 26px;
-    background: #dc2626;
+    background: var(--primary);
     transform: translate(-50%, -50%) rotate(45deg);
     border-radius: 1px;
     z-index: 2;
@@ -740,7 +740,9 @@ body.alexa-active .alexa-table-panel {
 .alexa-table-panel canvas {
     display: block;
     width: 50%;
-    height: auto;
+    align-self: stretch;
+    object-fit: contain;
+    object-position: top center;
     border-radius: 8px;
 }
 .alexa-balls-col {
@@ -841,6 +843,7 @@ body.alexa-active .alexa-table-panel {
     width: 10px;
     height: 45px; /* 70% of the 64px ball diameter */
     flex-shrink: 0;
+    touch-action: none;
 }
 .alexa-ball-height::before {
     content: '';
@@ -864,6 +867,23 @@ body.alexa-active .alexa-table-panel {
     background: #fff;
     border-radius: 1px;
 }
+.alexa-ball-height-value {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 2.5ch;
+    line-height: 1;
+}
+.alexa-ball-spin {
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+    flex-shrink: 0;
+    -webkit-text-stroke: 1px currentColor;
+}
+.alexa-ball-spin.top { color: #16a34a; }
+.alexa-ball-spin.back { color: #dc2626; }
+.alexa-ball-spin.gray { color: #9ca3af; }
 .alexa-ball-card {
     position: relative;
     width: 64px;

@@ -79,9 +79,9 @@ export function resetRobotPos() {
 
 // Draw the table+robot onto any canvas element without attaching drag events
 // compact=true skips the outside-zone boxes
-export function drawStaticRobot(canvas, compact = false, theme = 'light') {
+export function drawStaticRobot(canvas, compact = false, theme = null, padY = 0, padX = 0) {
     if (!canvas) return;
-    _draw(canvas, compact, theme);
+    _draw(canvas, compact, theme, padY, padX);
 }
 
 // Draw robot at a fixed cm position (does not affect saved robotPos)
@@ -94,20 +94,37 @@ export function drawAtCm(canvas, xCm, yCm, compact = false) {
     robotPos = saved;
 }
 
+// Soft-compress a pixel position outside the table bounds so it smoothly
+// approaches the canvas edge instead of being clipped (never hard-clamped).
+function _softClampPx(px, edgeMin, edgeMax, limitMin, limitMax) {
+    if (px < edgeMin) {
+        const room = edgeMin - limitMin;
+        const excess = edgeMin - px;
+        return edgeMin - (room * excess) / (room + excess);
+    }
+    if (px > edgeMax) {
+        const room = limitMax - edgeMax;
+        const excess = px - edgeMax;
+        return edgeMax + (room * excess) / (room + excess);
+    }
+    return px;
+}
+
 // Draw table (compact) + a ball at xCm from near end, with a dashed
 // trajectory line from the cannon tip to the ball.
 export function drawBall(canvas, xCm, yCm = 0, noLine = false) {
     if (!canvas) return;
     _draw(canvas, true);
     const ctx = canvas.getContext('2d');
-    const { tX, tY, tW, tH } = _layout;
+    const { tX, tY, tW, tH, W, H } = _layout;
 
     // Ball canvas position
-    const ballX = tX + (xCm / 274) * tW;
     const cannonX = tX + (_savedPos.x + ROB_W) * tW + 9;       // right edge of robot body
     const cannonY = tY + (0.5 + _savedPos.y) * tH;              // vertical centre
-    const ballY   = cannonY - (yCm / 152.5) * tH;               // lateral offset (up = positive)
     const ballR = Math.max(3.5, (3 / 274) * tW);   // ~3 cm radius
+    // Soft-compress off-table positions so the ball never disappears off-canvas.
+    const ballX = _softClampPx(tX + (xCm / 274) * tW, tX, tX + tW, ballR, W - ballR);
+    const ballY = _softClampPx(cannonY - (yCm / 152.5) * tH, tY, tY + tH, ballR, H - ballR);
     _ballCanvasMap.set(canvas, { x: ballX, y: ballY, r: ballR });
 
     ctx.save();
@@ -137,13 +154,13 @@ export function drawBall(canvas, xCm, yCm = 0, noLine = false) {
 // Draw landing markers (no dashed line) on an already-drawn compact table.
 // `landings` is an array of { xCm, yCm } in table coordinates.
 export function getLandingMarkerPositions(landings) {
-    const { tX, tY, tW, tH } = _layout;
+    const { tX, tY, tW, tH, W, H } = _layout;
     const cannonY = tY + (0.5 + _savedPos.y) * tH;
     const ballR = Math.max(4, (3 / 274) * tW) * 2.0;
     return (landings || []).map(l => ({
         index: l.index,
-        x: tX + (l.xCm / 274) * tW,
-        y: cannonY - (l.yCm / 152.5) * tH,
+        x: _softClampPx(tX + (l.xCm / 274) * tW, tX, tX + tW, ballR, W - ballR),
+        y: _softClampPx(cannonY - (l.yCm / 152.5) * tH, tY, tY + tH, ballR, H - ballR),
         r: ballR,
         drop: l.drop,
         speed: l.speed,
@@ -204,21 +221,22 @@ function _initCanvas() {
 
 // ── Drawing ──────────────────────────────────────────────────────────────────
 
-function _draw(canvas, compact = false, theme = 'light') {
+function _draw(canvas, compact = false, theme = null, padY = 0, padX = 0) {
+    theme = theme || document.documentElement.getAttribute('data-theme') || 'standard';
     const ctx = canvas.getContext('2d');
     const W = canvas.width;   // 520
     const H = canvas.height;  // 360
 
     // Outside zones stay same pixel size (48px pads); table fills remaining space
     const LEFT_PAD = compact ? 10  : 100;
-    const PAD_H    = compact ? 10  : 100;  // right — equal to LEFT_PAD → table centred
-    const PAD_V    = compact ? 20  : 91;   // compact: no outside rails needed
+    const PAD_H    = compact ? 10 + padX : 100;  // right — extra padX leaves room beyond the far end
+    const PAD_V    = compact ? 20 + padY : 91;   // compact: extra padY leaves room for off-table balls
     const tX = LEFT_PAD;
     const tY = PAD_V;
     const tW = W - LEFT_PAD - PAD_H;  // full:320 compact:320 — keeps 274:152.5 ratio
     const tH = H - PAD_V * 2;         // full:178 compact:178 ✓
 
-    _layout = { tX, tY, tW, tH };
+    _layout = { tX, tY, tW, tH, W, H };
 
     ctx.clearRect(0, 0, W, H);
 

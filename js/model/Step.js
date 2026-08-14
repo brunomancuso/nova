@@ -1,64 +1,42 @@
 // ─── Step Model ───────────────────────────────────────────────────────────
-// A Step is one position in a drill. Two modes (mutually exclusive):
-//   1. variants: Ball[] — pool of candidates, one randomly chosen each rep.
-//   2. ball:     Ball   — a single fixed ball, fires every rep.
+// A Step is one launch position in a drill. It holds an ordered list of
+// candidate Balls, but the robot fires exactly ONE ball per step:
+//   - 1 ball   → single step: that ball fires on every rep.
+//   - >1 balls → variant step: one ball is picked at random each rep.
+//   - 0 balls  → empty step.
 
 import { Ball } from './Ball.js';
 
 export class Step {
-    constructor({
-        variants = [],   // Ball[] — candidate balls, pick one randomly
-        ball     = null, // Ball   — single fixed ball
-    } = {}) {
-        this.variants = variants;
-        this.ball     = ball;
+    constructor({ balls = [] } = {}) {
+        this.balls = balls;
     }
 
-    get isVariant() { return this.variants.length > 0; }
-    get isSingle()  { return !this.isVariant && this.ball !== null; }
-    get isEmpty()   { return !this.isVariant && !this.isSingle; }
+    get isVariant() { return this.balls.length > 1; }
+    get isSingle()  { return this.balls.length === 1; }
+    get isEmpty()   { return this.balls.length === 0; }
 
-    /** Resolve to a single Ball for this rep (variants = random pick) */
+    /** Resolve to a single Ball for this rep (variant = random pick). */
     resolve() {
-        if (this.isVariant) {
-            return this.variants[Math.floor(Math.random() * this.variants.length)];
-        }
-        return this.ball;
+        if (this.balls.length === 0) return null;
+        return this.balls[Math.floor(Math.random() * this.balls.length)];
     }
 
     clone() {
-        return new Step({
-            variants: this.variants.map(b => b.clone()),
-            ball:     this.ball ? this.ball.clone() : null,
-        });
+        return new Step({ balls: this.balls.map(b => b.clone()) });
     }
 
-    /** All balls in this step (for iteration) */
+    /** All balls in this step, in order (for iteration). */
     allBalls() {
-        const list = [...this.variants];
-        if (this.ball) list.push(this.ball);
-        return list;
+        return [...this.balls];
     }
 
     toJSON() {
-        return {
-            variants: this.variants.map(b => b.toJSON()),
-            ball:     this.ball ? this.ball.toJSON() : null,
-        };
+        return { balls: this.balls.map(b => b.toJSON()) };
     }
 
     static fromJSON(json) {
-        return new Step({
-            variants: (json.variants || []).map(b => Ball.fromJSON(b)),
-            ball:     json.ball ? Ball.fromJSON(json.ball) : null,
-        });
-    }
-
-    /** Legacy: Ball[][] → Step */
-    static fromLegacy(arr) {
-        if (arr.length === 1) {
-            return new Step({ ball: arr[0] instanceof Ball ? arr[0] : Ball.fromArray(arr[0]) });
-        }
-        return new Step({ variants: arr.map(b => b instanceof Ball ? b : Ball.fromArray(b)) });
+        const balls = (json?.balls || []).map(b => Ball.fromJSON(b));
+        return new Step({ balls });
     }
 }

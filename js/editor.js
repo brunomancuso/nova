@@ -88,7 +88,7 @@ export function openEditor(cat, index) {
         tempDrillData = drill.steps.map(s => s.clone());
     } else {
         const def = new Ball({ height: 50, drop: 0, frequency: 50, reps: 1, speed: 2, spin: 2, type: 'top' });
-        tempDrillData = [new Step({ ball: def })];
+        tempDrillData = [new Step({ balls: [def] })];
     }
 
     renderEditor();
@@ -173,8 +173,8 @@ function renderEditor() {
         groupDiv.className = 'ball-group';
         
         const isSingle = step.isSingle;
-        const nVariants = step.variants.length || 0;
-        const allBalls = step.allBalls(); // [ball] for single, [...variants] for variant
+        const nVariants = step.balls.length || 0;
+        const allBalls = step.allBalls(); // ordered list of balls
         
         // --- SCATTER LOGIC ---
         const firstBall = allBalls[0];
@@ -211,8 +211,7 @@ function renderEditor() {
             // Ensure it's a Ball instance
             const b = ballParams instanceof Ball ? ballParams : Ball.fromArray(ballParams);
             // Write back to the Step
-            if (step.isSingle) step.ball = b;
-            else if (optIndex < step.variants.length) step.variants[optIndex] = b;
+            if (optIndex < step.balls.length) step.balls[optIndex] = b;
             b.ensureMeta();
 
             const speed = b.speed;
@@ -406,7 +405,7 @@ window.handleScatterChange = (stepIdx, value) => {
     if (!tempDrillData) return;
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
-    const ball = step.ball || step.variants[0];
+    const ball = step.balls[0];
     if (!(ball instanceof Ball)) return;
     
     let val = parseFloat(value);
@@ -436,7 +435,7 @@ window.handleEditorInput = (stepIdx, optIdx, paramIdx, value) => {
     if (!tempDrillData) return;
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
-    const ball = step.isSingle ? step.ball : step.variants[optIdx];
+    const ball = step.balls[optIdx];
     if (!(ball instanceof Ball)) return;
     let val = parseFloat(value);
     if(isNaN(val)) val = 0;
@@ -486,7 +485,7 @@ window.handleTypeToggle = (stepIdx, optIdx, newType) => {
     if (!tempDrillData) return;
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
-    const ball = step.isSingle ? step.ball : step.variants[optIdx];
+    const ball = step.balls[optIdx];
     if (!(ball instanceof Ball)) return;
     if(ball.type === newType) return;
     ball.type = newType;
@@ -529,7 +528,7 @@ window.handleRepsStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
-    const ball = step.isSingle ? step.ball : step.variants[optIdx];
+    const ball = step.balls[optIdx];
     if (!(ball instanceof Ball)) return;
     ball.reps = Math.max(1, Math.min(200, (ball.reps || 1) + delta));
     renderEditor();
@@ -539,7 +538,7 @@ window.handleDelayStep = (stepIdx, optIdx, delta) => {
     if (!tempDrillData) return;
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
-    const ball = step.isSingle ? step.ball : step.variants[optIdx];
+    const ball = step.balls[optIdx];
     if (!(ball instanceof Ball)) return;
     ball.delay = Math.max(0, Math.min(10000, (ball.delay ?? 0) + delta));
     renderEditor();
@@ -551,7 +550,7 @@ window.handleEditModeBpm = (stepIdx, optIdx, value) => {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball || !(ball instanceof Ball)) return;
     ball.frequency = clamp(parseFloat(value), 30, 120);
@@ -598,7 +597,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         if (!_hitBall(e)) return;
         startY     = e.clientY;
         startX     = e.clientX;
-        const b    = (stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx]);
+        const b    = (stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.balls?.[optIdx]);
         startDrop  = b instanceof Ball ? b.drop : 0;
         startSpeed = b instanceof Ball ? b.speed : 0;
         canvas.setPointerCapture(e.pointerId);
@@ -609,7 +608,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
     const onMove = (e) => {
         if (startY === null) return;
         e.preventDefault();
-        const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.[optIdx];
+        const ball = stepIdx === 'adj' ? window._adjBallData : tempDrillData?.[stepIdx]?.balls?.[optIdx];
         if (!ball || !(ball instanceof Ball)) return;
 
         // Vertical → drop (up = positive)
@@ -642,7 +641,7 @@ function _attachBallDrag(canvas, stepIdx, optIdx) {
         canvas.style.cursor = 'default';
         // Clamp scatter so abs(drop) + scatter <= 10 (not needed for adj preview)
         if (stepIdx !== 'adj') {
-            const ball = tempDrillData?.[stepIdx]?.[optIdx];
+            const ball = tempDrillData?.[stepIdx]?.balls?.[optIdx];
             if (ball && ball instanceof Ball) {
                 const drop = ball.drop ?? 0;
                 if (Math.abs(drop) + (ball.scatter ?? 0) > 10) ball.scatter = 10 - Math.abs(drop);
@@ -671,7 +670,7 @@ function _redrawEditorCanvas(stepIdx, optIdx) {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball) return;
     const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
@@ -696,7 +695,7 @@ function _redrawSideView(stepIdx, optIdx) {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball) return;
     const b = ball instanceof Ball ? ball : Ball.fromArray(ball);
@@ -717,7 +716,7 @@ window.handleEditModeHeight = (stepIdx, optIdx, value, sliderEl) => {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball || !(ball instanceof Ball)) return;
     const h = clamp(parseFloat(value), -50, 100);
@@ -737,7 +736,7 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball || !(ball instanceof Ball)) return;
     const v = clamp(parseFloat(value), 0, 10);
@@ -757,7 +756,7 @@ window.handleEditModeSpin = (stepIdx, optIdx, value, sliderEl) => {
         ball = window._adjBallData;
     } else {
         const s = tempDrillData?.[stepIdx];
-        ball = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+        ball = s instanceof Step ? s.balls[optIdx] : null;
     }
     if (!ball) return;
     const v = parseFloat(value);
@@ -803,15 +802,10 @@ window.handleAddSequenceStep = (sourceStepIndex) => {
 window.handleAddVariant = (stepIndex, sourceOptIndex) => {
     const step = tempDrillData[stepIndex];
     if (!(step instanceof Step)) return;
-    const base = step.isSingle ? step.ball : step.variants[sourceOptIndex];
+    const base = step.balls[sourceOptIndex];
     const cloned = base instanceof Ball ? base.clone() : base;
-    // Convert single→variant: move ball into variants array
-    if (step.isSingle && step.ball) {
-        step.variants = [step.ball.clone(), cloned];
-        step.ball = null;
-    } else {
-        step.variants.push(cloned);
-    }
+    // Append a clone of the chosen ball to this step's list.
+    step.balls.push(cloned);
     renderEditor();
 };
 
@@ -821,16 +815,11 @@ window.handleDeleteBall = (stepIdx, optIdx) => {
     if (tempDrillData.length <= 1 && step.allBalls().length <= 1) {
         showToast("Cannot delete last ball"); return;
     }
-    if (step.isSingle) {
+    if (step.balls.length === 1) {
         tempDrillData.splice(stepIdx, 1);
     } else {
-        step.variants.splice(optIdx, 1);
-        if (step.variants.length === 1) {
-            // Convert back to single: move sole variant into ball
-            step.ball = step.variants[0];
-            step.variants = [];
-        }
-        if (step.variants.length === 0 && !step.ball) tempDrillData.splice(stepIdx, 1);
+        step.balls.splice(optIdx, 1);
+        if (step.balls.length === 0) tempDrillData.splice(stepIdx, 1);
     }
     renderEditor();
 };
@@ -976,7 +965,7 @@ function updateTitleDisplay(name) {
 window.handleTestBall = async (stepIdx, optIdx) => {
     if (!bleState.isConnected) { showToast("Device not connected"); return; }
     const s = tempDrillData[stepIdx];
-    const d = s instanceof Step ? (s.isSingle ? s.ball : s.variants[optIdx]) : null;
+    const d = s instanceof Step ? s.balls[optIdx] : null;
     if (!(d instanceof Ball)) return;
     const rpm = d.getRPMs();
     const ballData = packBall(rpm.top, rpm.bot, d.height, d.drop, d.frequency, 1); 
@@ -997,7 +986,7 @@ window.handleTestCombo = async () => {
     const balls = [];
     tempDrillData.forEach(step => {
         if (!(step instanceof Step)) return;
-        const first = step.ball || step.variants[0];
+        const first = step.balls[0];
         const d = first instanceof Ball ? first.clone() : Ball.fromArray(first);
         if (!d) return;
         
