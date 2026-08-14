@@ -35,10 +35,16 @@ function render() {
     if (!box) return;
     box.innerHTML = '';
 
+    let total = 0;
+    for (const step of drill.steps) {
+        total += step.allBalls().length;
+    }
+
     let idx = 0;
     for (const step of drill.steps) {
         for (const ball of step.allBalls()) {
             idx++;
+            const ballIdx = idx;
             const item = document.createElement('div');
             item.className = 'alexa-ball-item';
 
@@ -55,8 +61,28 @@ function render() {
                 `<span class="abc-label">Spin</span><span class="abc-val">${ball.spin}</span>` +
                 `<span class="abc-freq">${ball.frequency} bpm</span>` +
                 `</span>` +
-                `<span class="abc-arrow ${isTop ? 'abc-up' : 'abc-down'}">${isTop ? '↑' : '↓'}</span>`;
-            card.addEventListener('click', () => openModal(step, ball));
+                `<span class="abc-arrow ${isTop ? 'abc-up' : 'abc-down'}">${isTop ? '↑' : '↓'}</span>` +
+                `<span class="abc-edit" title="Edit ball"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>` +
+                `<span class="abc-play" title="Test ball"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` +
+                (idx > 1 ? `<span class="abc-move-up" title="Merge up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></span>` : '') +
+                (idx < total ? `<span class="abc-move-down" title="Merge down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span>` : '');
+            card.addEventListener('click', () => window.selectAlexaTableBall?.(ballIdx));
+            const editBtn = card.querySelector('.abc-edit');
+            if (editBtn) {
+                editBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openModal(step, ball);
+                });
+            }
+            const playBtn = card.querySelector('.abc-play');
+            if (playBtn) {
+                playBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.testAlexaBall?.(ballIdx);
+                });
+            }
+
+            if (window.getSelectedAlexaBall?.() === ballIdx) card.classList.add('selected');
 
             const heightPct = Math.max(0, Math.min(100, ((ball.height + 50) / 150) * 100));
             const pos = Math.max(3, Math.min(97, 100 - heightPct));
@@ -132,6 +158,24 @@ window.deleteAlexaBall = () => {
     closeModal();
 };
 
+window.updateAlexaBall = (index, patch) => {
+    let i = 0;
+    for (const step of drill.steps) {
+        for (const ball of step.allBalls()) {
+            i++;
+            if (i === index) {
+                if (patch && 'drop' in patch) ball.drop = patch.drop;
+                if (patch && 'speed' in patch) ball.speed = patch.speed;
+                ball.clamp();
+                save();
+                render();
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
 window.deleteAlexaDrill = () => {
     drill = new Drill('My Drill', { steps: [] });
     editingStep = null;
@@ -142,6 +186,7 @@ window.deleteAlexaDrill = () => {
 };
 
 window.closeAlexaBallModal = closeModal;
+window.renderAlexaBalls = render;
 
 // ── Exposed for alexa.js → nova-agent integration ─────────────────────────
 export function getAlexaDrill() {

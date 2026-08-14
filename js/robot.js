@@ -136,30 +136,48 @@ export function drawBall(canvas, xCm, yCm = 0, noLine = false) {
 
 // Draw landing markers (no dashed line) on an already-drawn compact table.
 // `landings` is an array of { xCm, yCm } in table coordinates.
-export function drawLandingMarkers(canvas, landings) {
-    if (!canvas || !landings || !landings.length) return;
-    const ctx = canvas.getContext('2d');
+export function getLandingMarkerPositions(landings) {
     const { tX, tY, tW, tH } = _layout;
     const cannonY = tY + (0.5 + _savedPos.y) * tH;
-    const ballR = Math.max(4, (3 / 274) * tW) * 1.5;
-    for (const l of landings) {
-        const ballX = tX + (l.xCm / 274) * tW;
-        const ballY = cannonY - (l.yCm / 152.5) * tH;
+    const ballR = Math.max(4, (3 / 274) * tW) * 2.0;
+    return (landings || []).map(l => ({
+        index: l.index,
+        x: tX + (l.xCm / 274) * tW,
+        y: cannonY - (l.yCm / 152.5) * tH,
+        r: ballR,
+        drop: l.drop,
+        speed: l.speed,
+    }));
+}
+
+export function drawLandingMarkers(canvas, landings, selectedIndex = null) {
+    if (!canvas || !landings || !landings.length) return;
+    const ctx = canvas.getContext('2d');
+    for (const m of getLandingMarkerPositions(landings)) {
+        const isSelected = m.index === selectedIndex;
+        if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(m.x, m.y, m.r + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffd60a';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+        }
+        // Ball body (no border)
         ctx.beginPath();
-        ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+        ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        if (l.index != null) {
-            ctx.fillStyle = '#1565C0';
-            ctx.font = `bold ${Math.max(8, Math.round(ballR * 1.2))}px sans-serif`;
+        // Index label — rotated 90° CCW so it reads upright on the rotated table
+        if (m.index != null) {
+            ctx.save();
+            ctx.translate(m.x, m.y);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillStyle = '#000000';
+            ctx.font = `bold ${Math.max(8, Math.round(m.r))}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(String(l.index), ballX, ballY + 0.5);
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
+            ctx.fillText(String(m.index), 0, 0);
+            ctx.restore();
         }
     }
 }

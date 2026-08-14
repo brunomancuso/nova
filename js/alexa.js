@@ -1,6 +1,6 @@
 // js/alexa.js — voice control via a local whisper WebSocket server (server.py)
 import { showToast } from './utils.js';
-import { drawStaticRobot, drawLandingMarkers } from './robot.js';
+import { drawStaticRobot, drawLandingMarkers, getLandingMarkerPositions } from './robot.js';
 import { getAlexaDrill, setAlexaDrill } from './alexaDrill.js';
 import { Ball } from './model/index.js';
 import { sendSingleBall } from './runner.js';
@@ -495,6 +495,10 @@ if (whisperStopBtn) {
 // Top-down table view below the Alexa panel (rotated 90° clockwise).
 const tableCanvas = el('alexa-table-canvas');
 
+let selectedBallIndex = null;
+let alexaLandingPositions = [];
+let tableDrag = null;
+
 function collectLandings() {
     const drill = getAlexaDrill();
     const landings = [];
@@ -504,7 +508,7 @@ function collectLandings() {
         index += 1;
         const spin = b.type === 'back' ? -(b.spin ?? 0) : (b.spin ?? 0);
         const l = window.getBallLanding?.(b.speed ?? 0, spin, b.height ?? 50, b.drop ?? 0);
-        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index });
+        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0 });
     };
     for (const step of (drill?.steps || [])) {
         (step?.variants || []).forEach(pushBall);
@@ -522,11 +526,14 @@ function drawAlexaTable() {
     drawStaticRobot(off, true, theme);
 
     // Draw a landing marker for every ball in the Alexa drill.
+    let landings = [];
     try {
-        drawLandingMarkers(off, collectLandings());
+        landings = collectLandings();
     } catch (e) {
         // Drill not ready yet — static table only.
     }
+    drawLandingMarkers(off, landings, selectedBallIndex);
+    alexaLandingPositions = getLandingMarkerPositions(landings);
 
     tableCanvas.width = 360;
     tableCanvas.height = 520;
@@ -540,4 +547,102 @@ function drawAlexaTable() {
 
 window.drawAlexaTable = drawAlexaTable;
 
+window.getSelectedAlexaBall = () => selectedBallIndex;
+
+window.selectAlexaTableBall = (index) => {
+    selectedBallIndex = index;
+    window.renderAlexaBalls?.();
+};
+
+window.testAlexaBall = (index) => {
+    const b = findAlexaBallByIndex(index);
+    if (!b) return;
+    const ball = new Ball(b);
+    ball.ensureMeta();
+    ball.clamp();
+    const rpm = ball.getRPMs();
+    sendSingleBall(rpm.top, rpm.bot, ball.height, ball.drop, ball.frequency, ball.reps)
+        .then((ok) => showToast(ok ? 'Test ball fired' : 'Robot not connected'))
+        .catch(() => showToast('Test ball failed'));
+};
+
+function findAlexaBallByIndex(index) {
+    const drill = getAlexaDrill();
+    let i = 0;
+    for (const step of (drill?.steps || [])) {
+        for (const b of (step?.variants || [])) {
+            i++;
+            if (i === index) return b;
+        }
+        if (step?.ball) {
+            i++;
+            if (i === index) return step.ball;
+        }
+    }
+    return null;
+}
+
+// ── Table ball interaction (select + drag) ───────────────────────────────
+function tableToOff(dx, dy) {
+    return { ox: dy, oy: 360 - dx };
+}
+
+function clientToCanvas(e) {
+    const rect = tableCanvas.getBoundingClientRect();
+    return {
+        dx: (e.clientX - rect.left) * (tableCanvas.width / rect.width),
+        dy: (e.clientY - rect.top) * (tableCanvas.height / rect.height),
+    };
+}
+
+function hitTestMarker(e, padding = 12) {
+    const { dx, dy } = clientToCanvas(e);
+    const { ox, oy } = tableToOff(dx, dy);
+    for (const m of alexaLandingPositions) {
+        if (Math.hypot(ox - m.x, oy - m.y) <= (m.r + padding)) return m;
+    }
+    return null;
+}
+
+function attachAlexaTableInteractions() {
+    if (!tableCanvas) return;
+    tableCanvas.style.touchAction = 'none';
+
+    tableCanvas.addEventListener('pointerdown', (e) => {
+        const m = hitTestMarker(e);
+        if (!m) {
+            selectedBallIndex = null;
+            tableDrag = null;
+            window.renderAlexaBalls?.();
+            return;
+        }
+        selectedBallIndex = m.index;
+        tableDrag = {
+            index: m.index,
+            startClientX: e.clientX,
+            startClientY: e.clientY,
+            startDrop: m.drop ?? 0,
+            startSpeed: m.speed ?? 0,
+        };
+        tableCanvas.setPointerCapture(e.pointerId);
+        window.renderAlexaBalls?.();
+        e.preventDefault();
+    });
+
+    tableCanvas.addEventListener('pointermove', (e) => {
+        if (!tableDrag) return;
+        e.preventDefault();
+        const dxc = e.clientX - tableDrag.startClientX;
+        const dyc = e.clientY - tableDrag.startClientY;
+        const newDrop = Math.round(Math.max(-10, Math.min(10, tableDrag.startDrop + dxc / 6)) * 2) / 2;
+        const newSpeed = Math.round(Math.max(0, Math.min(10, tableDrag.startSpeed + dyc / 40)) * 10) / 10;
+        window.updateAlexaBall?.(tableDrag.index, { drop: newDrop, speed: newSpeed });
+    });
+
+    const endDrag = () => { tableDrag = null; };
+    tableCanvas.addEventListener('pointerup', endDrag);
+    tableCanvas.addEventListener('pointercancel', endDrag);
+}
+
 drawAlexaTable();
+attachAlexaTableInteractions();

@@ -828,9 +828,13 @@ body.alexa-active .alexa-table-panel {
     gap: 10px;
 }
 .alexa-ball-index {
-    font-size: 1rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--primary);
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+    line-height: 1;
+    text-align: center;
+    min-width: 2ch;
 }
 .alexa-ball-height {
     position: relative;
@@ -880,6 +884,89 @@ body.alexa-active .alexa-table-panel {
     font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
     font-size: 0.55rem;
     line-height: 1.15;
+}
+.alexa-ball-card.selected {
+    box-shadow: 0 0 0 3px #ffd60a, 0 0 7px 2px rgba(255, 214, 10, 0.4);
+}
+.alexa-ball-card .abc-edit {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 3;
+    pointer-events: auto;
+}
+.alexa-ball-card .abc-edit:hover {
+    opacity: 1;
+}
+.alexa-ball-card .abc-edit svg {
+    width: 10px;
+    height: 10px;
+}
+.alexa-ball-card .abc-play {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 3;
+    pointer-events: auto;
+}
+.alexa-ball-card .abc-play:hover {
+    opacity: 1;
+}
+.alexa-ball-card .abc-play svg {
+    width: 10px;
+    height: 10px;
+}
+.alexa-ball-card .abc-move-up,
+.alexa-ball-card .abc-move-down {
+    position: absolute;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 3;
+    pointer-events: auto;
+}
+.alexa-ball-card .abc-move-up:hover,
+.alexa-ball-card .abc-move-down:hover {
+    opacity: 1;
+}
+.alexa-ball-card .abc-move-up {
+    top: 2px;
+}
+.alexa-ball-card .abc-move-down {
+    bottom: 2px;
+}
+.alexa-ball-card .abc-move-up svg,
+.alexa-ball-card .abc-move-down svg {
+    width: 10px;
+    height: 10px;
 }
 .alexa-ball-card .abc-text {
     display: grid;
