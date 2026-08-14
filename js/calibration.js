@@ -319,16 +319,21 @@ window.resetCalibration = () => {
 };
 
 // ── Editor ball prediction (uses stored calibration) ─────────────────────────
-window.drawEditorBall = (canvas, speed, spin, angle, drop = 0) => {
+window.getBallLanding = (speed, spin, angle, drop = 0) => {
     const stored = _loadCalibration();
     const kv  = stored?.kv  ?? DEFAULT_KV;
     const kd  = stored?.kd  ?? DEFAULT_KD;
     const kMS = stored?.kms ?? DEFAULT_KMS;
     const klr = stored?.klr ?? DEFAULT_KLR;
     const xFlight = predictX(angle, spin, speed, { kv, kd, kMS });
-    const cannonM = getRobotXcm() + 40;
+    const xCm = getRobotXcm() + 40 + xFlight;
     const yCm = predictY(drop, xFlight, klr);
-    drawBall(canvas, xFlight + cannonM, yCm);
+    return { xCm, yCm };
+};
+
+window.drawEditorBall = (canvas, speed, spin, angle, drop = 0, noLine = false) => {
+    const { xCm, yCm } = window.getBallLanding(speed, spin, angle, drop);
+    drawBall(canvas, xCm, yCm, noLine);
 };
 
 window.getEditorXFlight = (speed, spin, angle) => {

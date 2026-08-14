@@ -592,31 +592,128 @@ body.connected .stats-inline-row { display: flex; }
     display: none;
     flex-direction: column;
     margin-top: 16px;
-    padding: 14px 16px;
+    padding: 8px 12px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
     box-shadow: 0 2px 10px var(--shadow);
 }
 body.alexa-active .alexa-panel { display: flex; }
+.alexa-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 0;
+}
+.alexa-mic-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+.alexa-mic {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.alexa-mic-icon {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+.alexa-mic.error .alexa-mic-icon { color: #dc2626; }
+.alexa-mic.muted .alexa-mic-icon { color: #dc2626; }
+.alexa-mic.muted .alexa-mic-fill { opacity: 0; }
+.alexa-mic.muted::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 26px;
+    background: #dc2626;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border-radius: 1px;
+    z-index: 2;
+}
+.alexa-mic-fill-wrap {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 0%;
+    overflow: hidden;
+}
+.alexa-mic-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 22px;
+    height: 22px;
+    color: #16a34a;
+}
+.alexa-status-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.alexa-whisper-stop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+}
+.alexa-whisper-stop svg {
+    width: 16px;
+    height: 16px;
+}
+.alexa-whisper-stop:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
 .alexa-status {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-size: 0.62rem;
     font-weight: 600;
     color: var(--text-light);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-align: right;
-    margin-top: -5px;
-    margin-right: -5px;
-    margin-bottom: 8px;
+    margin: 0;
     opacity: 0.85;
 }
+.alexa-status svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+.alexa-status-text {
+    line-height: 1;
+}
 .alexa-command {
-    min-height: 2.5em;
+    flex: 1;
+    min-width: 0;
     text-align: left;
-    font-size: 0.85rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 0.8rem;
     font-weight: 400;
     color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .alexa-table-panel {
@@ -630,9 +727,15 @@ body.alexa-active .alexa-panel { display: flex; }
 }
 body.alexa-active .alexa-table-panel {
     display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.alexa-table-body {
+    display: flex;
     flex-direction: row;
     align-items: flex-start;
     gap: 10px;
+    width: 100%;
 }
 .alexa-table-panel canvas {
     display: block;
@@ -648,9 +751,32 @@ body.alexa-active .alexa-table-panel {
     flex-direction: column;
     gap: 8px;
 }
-.alexa-add-ball {
-    align-self: flex-end;
+.alexa-drill-meta {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+.alexa-drill-name {
+    text-align: center;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-light);
+}
+.alexa-random-toggle .toggle-label {
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.68rem;
+    font-weight: 600;
+}
+.alexa-balls-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
     margin-top: auto;
+}
+.alexa-add-ball {
     position: relative;
     width: 40px;
     height: 40px;
@@ -661,6 +787,22 @@ body.alexa-active .alexa-table-panel {
     padding: 0;
     cursor: pointer;
     box-shadow: 0 2px 6px var(--shadow);
+}
+.alexa-delete-drill {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    color: var(--primary);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.alexa-delete-drill svg {
+    width: 20px;
+    height: 20px;
 }
 .alexa-add-ball::before,
 .alexa-add-ball::after {
@@ -690,7 +832,36 @@ body.alexa-active .alexa-table-panel {
     font-weight: 800;
     color: var(--primary);
 }
+.alexa-ball-height {
+    position: relative;
+    width: 10px;
+    height: 45px; /* 70% of the 64px ball diameter */
+    flex-shrink: 0;
+}
+.alexa-ball-height::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+    background: #9ca3af;
+    border-radius: 1px;
+}
+.alexa-ball-height::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: var(--pos, 50%);
+    width: 7px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border-radius: 1px;
+}
 .alexa-ball-card {
+    position: relative;
     width: 64px;
     height: 64px;
     flex-shrink: 0;
@@ -700,7 +871,7 @@ body.alexa-active .alexa-table-panel {
     justify-content: center;
     gap: 3px;
     background: #e5e5e5;
-    border: 2px solid #111;
+    border: 2px solid #1565C0;
     border-radius: 50%;
     padding: 0;
     color: #000;
@@ -715,9 +886,12 @@ body.alexa-active .alexa-table-panel {
     grid-template-columns: 6ch auto;
     column-gap: 0;
     line-height: 1.15;
+    position: relative;
+    z-index: 1;
 }
 .alexa-ball-card .abc-label {
     text-align: left;
+    font-weight: 700;
     color: #333;
 }
 .alexa-ball-card .abc-val {
@@ -726,19 +900,156 @@ body.alexa-active .alexa-table-panel {
 }
 .alexa-ball-card .abc-freq {
     grid-column: 1 / -1;
-    font-weight: 400;
+    font-weight: 700;
     color: #666;
     font-size: 0.5rem;
 }
 .alexa-ball-card .abc-arrow {
-    font-size: 1.2rem;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.2rem;
     font-weight: 900;
     line-height: 1;
+    opacity: 0.4;
+    z-index: 0;
     -webkit-text-stroke: 0.6px;
 }
 .alexa-ball-card .abc-up { color: #16a34a; }
 .alexa-ball-card .abc-down { color: #dc2626; }
 [data-theme="night"] .alexa-ball-card { background: #fff; }
+
+/* --- ALEXA AGENT PANEL (prompt + agent messages) --- */
+.alexa-agent-panel {
+    display: none;
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+body.alexa-active .alexa-agent-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.alexa-agent-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.alexa-agent-status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #9ca3af;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.alexa-agent-status.online { background: #16a34a; }
+.alexa-agent-status.error { background: #dc2626; }
+.alexa-agent-status.thinking {
+    background: var(--primary);
+    animation: alexa-agent-pulse 1s ease-in-out infinite;
+}
+@keyframes alexa-agent-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.35; transform: scale(1.5); }
+}
+.alexa-agent-title {
+    flex: 1;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.alexa-agent-reset,
+.alexa-agent-stop {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+.alexa-agent-reset svg,
+.alexa-agent-stop svg {
+    width: 16px;
+    height: 16px;
+}
+.alexa-agent-stop:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+.alexa-agent-messages {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 170px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+.alexa-agent-msg {
+    padding: 8px 10px;
+    border-radius: 10px;
+    max-width: 90%;
+    word-break: break-word;
+}
+.alexa-agent-msg.user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: #fff;
+    max-width: 80%;
+}
+.alexa-agent-msg.agent {
+    align-self: flex-start;
+    background: var(--primary-dim);
+    color: var(--text);
+}
+.alexa-agent-msg.note {
+    align-self: flex-start;
+    color: var(--text-light);
+    background: transparent;
+    font-size: 0.72rem;
+    padding: 2px 4px;
+}
+.alexa-agent-input {
+    display: flex;
+    gap: 8px;
+}
+.alexa-agent-input input {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.85rem;
+}
+.alexa-agent-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+.alexa-agent-send {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
 
 /* Hide drill selection while Alexa is active */
 body.alexa-active .section-label,

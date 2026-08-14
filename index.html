@@ -85,16 +85,72 @@
     </div>
 
     <div id="alexa-panel" class="alexa-panel">
-        <div id="alexa-status" class="alexa-status"></div>
-        <div id="alexa-command" class="alexa-command"></div>
+        <div class="alexa-top">
+            <div class="alexa-mic-group">
+                <div id="alexa-mic" class="alexa-mic" title="Mute / unmute microphone">
+                <svg class="alexa-mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 14a3.5 3.5 0 0 0 3.5-3.5v-5A3.5 3.5 0 0 0 12 2a3.5 3.5 0 0 0-3.5 3.5v5A3.5 3.5 0 0 0 12 14z"/>
+                    <path d="M19 11v.5a7 7 0 0 1-14 0V11"/>
+                    <path d="M12 18.5V21"/>
+                </svg>
+                <div id="alexa-mic-fill-wrap" class="alexa-mic-fill-wrap">
+                    <svg class="alexa-mic-fill" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 14a3.5 3.5 0 0 0 3.5-3.5v-5A3.5 3.5 0 0 0 12 2a3.5 3.5 0 0 0-3.5 3.5v5A3.5 3.5 0 0 0 12 14z"/>
+                        <path d="M19 11v.5a7 7 0 0 1-14 0V11"/>
+                        <path d="M12 18.5V21"/>
+                    </svg>
+                </div>
+                </div>
+            </div>
+            <div id="alexa-command" class="alexa-command"></div>
+            <div class="alexa-status-group">
+                <button id="alexa-whisper-stop" class="alexa-whisper-stop" title="Stop listening" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>
+                </button>
+                <div id="alexa-status" class="alexa-status"></div>
+            </div>
+        </div>
     </div>
 
     <div id="alexa-table-panel" class="alexa-table-panel">
-        <canvas id="alexa-table-canvas" width="520" height="360"></canvas>
-        <div class="alexa-balls-col">
-            <div id="alexa-balls" class="alexa-balls"></div>
-            <button id="alexa-add-ball" class="alexa-add-ball" onclick="window.addAlexaBall()" title="Add ball"></button>
+        <div class="alexa-drill-meta">
+            <span id="alexa-drill-name" class="alexa-drill-name"></span>
         </div>
+        <div class="alexa-table-body">
+            <canvas id="alexa-table-canvas" width="520" height="360"></canvas>
+            <div class="alexa-balls-col">
+                <div id="alexa-balls" class="alexa-balls"></div>
+                <div class="alexa-balls-footer">
+                    <label class="random-toggle-container alexa-random-toggle">
+                        <span class="toggle-label">Random</span>
+                        <input type="checkbox" id="alexa-random">
+                        <div class="toggle-switch"></div>
+                    </label>
+                    <button id="alexa-delete-drill" class="alexa-delete-drill" onclick="window.deleteAlexaDrill()" title="Delete drill">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg>
+                    </button>
+                    <button id="alexa-add-ball" class="alexa-add-ball" onclick="window.addAlexaBall()" title="Add ball"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alexa-agent-panel" class="alexa-agent-panel">
+        <div class="alexa-agent-head">
+            <span id="alexa-agent-status" class="alexa-agent-status" title="Agent status"></span>
+            <span class="alexa-agent-title">Nova Agent</span>
+            <button id="alexa-agent-stop" class="alexa-agent-stop" type="button" title="Stop agent" disabled>
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+            </button>
+            <button id="alexa-agent-reset" class="alexa-agent-reset" type="button" title="Reset conversation">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg>
+            </button>
+        </div>
+        <div id="alexa-agent-messages" class="alexa-agent-messages"></div>
+        <form id="alexa-agent-form" class="alexa-agent-input" autocomplete="off">
+            <input id="alexa-agent-prompt" type="text" placeholder="Type a prompt…" />
+            <button type="submit" class="alexa-agent-send">Send</button>
+        </form>
     </div>
 
     <div id="alexa-ball-modal" class="modal-overlay">

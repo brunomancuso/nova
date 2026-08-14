@@ -96,7 +96,7 @@ export function drawAtCm(canvas, xCm, yCm, compact = false) {
 
 // Draw table (compact) + a ball at xCm from near end, with a dashed
 // trajectory line from the cannon tip to the ball.
-export function drawBall(canvas, xCm, yCm = 0) {
+export function drawBall(canvas, xCm, yCm = 0, noLine = false) {
     if (!canvas) return;
     _draw(canvas, true);
     const ctx = canvas.getContext('2d');
@@ -111,15 +111,17 @@ export function drawBall(canvas, xCm, yCm = 0) {
     _ballCanvasMap.set(canvas, { x: ballX, y: ballY, r: ballR });
 
     ctx.save();
-    // Dashed trajectory line
-    ctx.beginPath();
-    ctx.setLineDash([5, 4]);
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-    ctx.lineWidth = 1.5;
-    ctx.moveTo(cannonX, cannonY);
-    ctx.lineTo(ballX, ballY);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    if (!noLine) {
+        // Dashed trajectory line
+        ctx.beginPath();
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(cannonX, cannonY);
+        ctx.lineTo(ballX, ballY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 
     // Ball circle
     ctx.beginPath();
@@ -130,6 +132,36 @@ export function drawBall(canvas, xCm, yCm = 0) {
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.restore();
+}
+
+// Draw landing markers (no dashed line) on an already-drawn compact table.
+// `landings` is an array of { xCm, yCm } in table coordinates.
+export function drawLandingMarkers(canvas, landings) {
+    if (!canvas || !landings || !landings.length) return;
+    const ctx = canvas.getContext('2d');
+    const { tX, tY, tW, tH } = _layout;
+    const cannonY = tY + (0.5 + _savedPos.y) * tH;
+    const ballR = Math.max(4, (3 / 274) * tW) * 1.5;
+    for (const l of landings) {
+        const ballX = tX + (l.xCm / 274) * tW;
+        const ballY = cannonY - (l.yCm / 152.5) * tH;
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballR, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        if (l.index != null) {
+            ctx.fillStyle = '#1565C0';
+            ctx.font = `bold ${Math.max(8, Math.round(ballR * 1.2))}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(l.index), ballX, ballY + 0.5);
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+        }
+    }
 }
 
 export function openRobotPosModal() {

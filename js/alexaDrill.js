@@ -14,7 +14,7 @@ function load() {
         const s = localStorage.getItem(STORAGE_KEY);
         if (s) return Drill.fromJSON(JSON.parse(s));
     } catch (e) {}
-    return new Drill('Alexa', { steps: [new Step({ ball: new Ball() })] });
+    return new Drill('My Drill', { steps: [] });
 }
 
 function save() {
@@ -58,11 +58,28 @@ function render() {
                 `<span class="abc-arrow ${isTop ? 'abc-up' : 'abc-down'}">${isTop ? '↑' : '↓'}</span>`;
             card.addEventListener('click', () => openModal(step, ball));
 
+            const heightPct = Math.max(0, Math.min(100, ((ball.height + 50) / 150) * 100));
+            const pos = Math.max(3, Math.min(97, 100 - heightPct));
+            const gauge = document.createElement('span');
+            gauge.className = 'alexa-ball-height';
+            gauge.style.setProperty('--pos', pos + '%');
+
             item.appendChild(label);
             item.appendChild(card);
+            item.appendChild(gauge);
             box.appendChild(item);
         }
     }
+
+    renderMeta();
+    window.drawAlexaTable?.();
+}
+
+function renderMeta() {
+    const nameEl = $('alexa-drill-name');
+    if (nameEl) nameEl.textContent = drill.name || '-';
+    const randomEl = $('alexa-random');
+    if (randomEl) randomEl.checked = !!drill.random;
 }
 
 function openModal(step, ball) {
@@ -115,6 +132,35 @@ window.deleteAlexaBall = () => {
     closeModal();
 };
 
+window.deleteAlexaDrill = () => {
+    drill = new Drill('My Drill', { steps: [] });
+    editingStep = null;
+    editingBall = null;
+    closeModal();
+    save();
+    render();
+};
+
 window.closeAlexaBallModal = closeModal;
+
+// ── Exposed for alexa.js → nova-agent integration ─────────────────────────
+export function getAlexaDrill() {
+    return drill.toJSON();
+}
+
+export function setAlexaDrill(json) {
+    drill = Drill.fromJSON(json || {});
+    save();
+    render();
+}
+
+// Random toggle wiring
+const randomToggle = $('alexa-random');
+if (randomToggle) {
+    randomToggle.addEventListener('change', () => {
+        drill.random = randomToggle.checked;
+        save();
+    });
+}
 
 render();
