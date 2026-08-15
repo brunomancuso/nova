@@ -85,7 +85,7 @@ All runtime state and localStorage synchronization:
 - `importCustomDrills(csv)` — parses CSV, validates physics, updates state
 - `exportCustomDrills()` — serializes drills back to CSV
 - `factoryReset()` / `resetStats()` — destructive resets with confirmation
-- `startSession()` / `getSessionSummary()` — tracks per-session ball/drill deltas
+- `setLastPlayed(cat, name)` — remembers the most recently played drill
 
 #### `js/bluetooth.js` — BLE Communication
 Manages the full Bluetooth lifecycle:
@@ -124,7 +124,6 @@ Handles all dynamic DOM work:
 - `updateLastPlayedHighlight()` — highlights the last executed drill
 - `switchTab()` / `toggleMenu()` / `setTheme()` — navigation and theming
 - **Drag-to-reorder**: grip handle on custom drills; drop zones for reordering and moving between custom categories; order persisted to localStorage
-- `showSessionSummary()` — displays session stats popup on disconnect
 
 #### `js/cloud.js` — Drill Sharing
 Communicates with a PocketBase backend (`https://nova.varandal.de`):
@@ -196,6 +195,6 @@ Demonstrates multi-ball drills, variant rows (same ball number = randomization),
 | Countdown skip | No | Yes (tap to skip) |
 | Drag-to-reorder | No | Yes (custom categories) |
 | Pause duration | Milliseconds | Seconds (0.0–5.0 s) |
-| Session summary | No | Yes (on disconnect) |
+| Session summary | No | No (removed) |
 | Last-played highlight | No | Yes |
 | Download modal | No | Yes |

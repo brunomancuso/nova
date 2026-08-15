@@ -1651,9 +1651,9 @@ body.alexa-active .drill-list {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Color Coding for Toggle */
-.sc-opt:first-child.active { background: #e17055; color: white; } /* Topspin */
-.sc-opt:last-child.active { background: #0984e3; color: white; } /* Backspin */
+/* Color Coding for Toggle — Top=Blue, Back=Red (matches editor + Alexa modal) */
+.sc-opt:first-child.active { background: #0984e3; color: white; } /* Topspin */
+.sc-opt:last-child.active { background: var(--danger); color: white; } /* Backspin */
 
 /* --- EDITOR ACTION BUTTONS --- */
 .card-actions { 

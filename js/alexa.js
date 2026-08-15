@@ -509,7 +509,7 @@ function collectLandings() {
         index += 1;
         const spin = b.type === 'back' ? -(b.spin ?? 0) : (b.spin ?? 0);
         const l = window.getBallLanding?.(b.speed ?? 0, spin, b.height ?? 50, b.drop ?? 0);
-        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0, type: b.type, spin: b.spin ?? 0 });
+        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0, type: b.type ?? 'top', spin: b.spin ?? 0 });
     };
     for (const step of (drill?.steps || [])) {
         (step?.balls || []).forEach(pushBall);
@@ -535,8 +535,8 @@ function drawAlexaTable() {
     drawLandingMarkers(off, landings, selectedBallIndex);
     alexaLandingPositions = getLandingMarkerPositions(landings);
 
-    tableCanvas.width = off.height;   // 440 (rotated)
-    tableCanvas.height = off.width;   // 520 (rotated)
+    tableCanvas.width = off.height;   // 400 (rotated)
+    tableCanvas.height = off.width;   // 600 (rotated)
     const ctx = tableCanvas.getContext('2d');
     ctx.save();
     ctx.translate(tableCanvas.width / 2, tableCanvas.height / 2);
@@ -588,8 +588,8 @@ function clientToCanvas(e) {
     const rect = tableCanvas.getBoundingClientRect();
     // The canvas bitmap is rendered with object-fit: contain, anchored top-center
     // (.alexa-table-panel canvas), so map from the visible bitmap, not the full rect.
-    const cw = tableCanvas.width;   // 360
-    const ch = tableCanvas.height;  // 520
+    const cw = tableCanvas.width;   // 400
+    const ch = tableCanvas.height;  // 600
     const scale = Math.min(rect.width / cw, rect.height / ch);
     const dw = cw * scale;
     const dh = ch * scale;

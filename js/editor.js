@@ -228,20 +228,17 @@ function renderEditor() {
             const optDiv = document.createElement('div');
             optDiv.className = 'option-card';
 
-            // --- UPDATED: Swap Colors for Top/Back Toggle (Top=Blue, Back=Red) ---
+            // Top/Back spin toggle — active colors come from .sc-opt.active in style.css (Top=Blue, Back=Red)
             const toggleHtml = `
                 <div class="spin-row">
                     <span class="spin-label">Rotation:</span>
                     <div class="spin-capsule">
-                        <div class="sc-opt ${type === 'top' ? 'active' : ''}" 
-                             style="${type === 'top' ? 'background:#0984e3' : ''}"
+                        <div class="sc-opt ${type === 'top' ? 'active' : ''}"
                              onclick="window.handleTypeToggle(${stepIndex}, ${optIndex}, 'top')">TOP</div>
-                        <div class="sc-opt ${type === 'back' ? 'active' : ''}" 
-                             style="${type === 'back' ? 'background:var(--danger)' : ''}"
+                        <div class="sc-opt ${type === 'back' ? 'active' : ''}"
                              onclick="window.handleTypeToggle(${stepIndex}, ${optIndex}, 'back')">BACK</div>
                     </div>
                 </div>`;
-            // ---------------------------------------------------------------------
 
             // NOTE: 'Drop' and 'Speed' use onchange to prevent re-rendering while typing negative numbers or clearing input
             const inputsHtml = `
@@ -516,7 +513,6 @@ window.handleNumberStep = (id, delta) => {
 };
 
 window.handleSliderStep = (id, delta) => {
-    console.log("dddd");
     const el = document.getElementById(id);
     if (!el) return;
     const step = parseFloat(el.step) || 1;

@@ -8,6 +8,7 @@ const $ = (id) => document.getElementById(id);
 let drill = load();
 let editingStep = null;
 let editingBall = null;
+let pendingType = null; // rotation staged in the modal, applied on Save
 
 function load() {
     try {
@@ -249,6 +250,7 @@ function removeVariant(step, ball, dir) {
 function openModal(step, ball) {
     editingStep = step;
     editingBall = ball;
+    pendingType = ball.type;
     $('alexa-ball-speed').value = ball.speed;
     $('alexa-ball-spin').value = ball.spin;
     $('alexa-ball-freq').value = ball.frequency;
@@ -262,21 +264,18 @@ function openModal(step, ball) {
 
 function setAlexaBallType(type) {
     if (!editingBall) return;
-    editingBall.type = type;
+    // Rotation is applied on Save (like every other modal field); here we only
+    // stage the pending value and update the button visuals via CSS classes.
+    pendingType = type;
     const top = $('alexa-type-top');
     const back = $('alexa-type-back');
-    if (top) {
-        top.classList.toggle('active', type === 'top');
-        top.style.background = type === 'top' ? '#0984e3' : '';
-    }
-    if (back) {
-        back.classList.toggle('active', type === 'back');
-        back.style.background = type === 'back' ? 'var(--danger)' : '';
-    }
+    if (top) top.classList.toggle('active', type === 'top');
+    if (back) back.classList.toggle('active', type === 'back');
 }
 window.setAlexaBallType = setAlexaBallType;
 
 function closeModal() {
+    pendingType = null;
     $('alexa-ball-modal')?.classList.remove('open');
 }
 
@@ -295,6 +294,7 @@ window.saveAlexaBall = () => {
     editingBall.drop = num('alexa-ball-drop');
     editingBall.reps = num('alexa-ball-reps');
     editingBall.scatter = num('alexa-ball-scatter');
+    editingBall.type = pendingType ?? editingBall.type;
     editingBall.delay = 0;
     editingBall.clamp();
     save();
@@ -303,12 +303,22 @@ window.saveAlexaBall = () => {
 };
 
 window.deleteAlexaBall = () => {
-    if (editingStep) {
-        drill.steps = drill.steps.filter((s) => s !== editingStep);
-        save();
-        render();
+    if (!editingStep || !editingBall) return;
+    const stepIndex = drill.steps.indexOf(editingStep);
+    if (stepIndex < 0) return;
+    const pos = editingStep.balls.indexOf(editingBall);
+    if (pos >= 0 && editingStep.balls.length > 1) {
+        // Variant step — remove only the tapped ball.
+        editingStep.balls.splice(pos, 1);
+    } else {
+        // Single/empty step — remove the whole step.
+        drill.steps.splice(stepIndex, 1);
     }
+    editingStep = null;
+    editingBall = null;
     closeModal();
+    save();
+    render();
 };
 
 window.updateAlexaBall = (index, patch) => {
