@@ -509,7 +509,7 @@ function collectLandings() {
         index += 1;
         const spin = b.type === 'back' ? -(b.spin ?? 0) : (b.spin ?? 0);
         const l = window.getBallLanding?.(b.speed ?? 0, spin, b.height ?? 50, b.drop ?? 0);
-        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0 });
+        if (l) landings.push({ xCm: l.xCm, yCm: l.yCm, index, drop: b.drop ?? 0, speed: b.speed ?? 0, type: b.type, spin: b.spin ?? 0 });
     };
     for (const step of (drill?.steps || [])) {
         (step?.balls || []).forEach(pushBall);

@@ -160,19 +160,71 @@
                 <div class="modal-close" onclick="window.closeAlexaBallModal()">×</div>
             </div>
             <div class="modal-body alexa-ball-form">
-                <div class="control-pill"><label>Speed</label><input type="number" id="alexa-ball-speed" min="0" max="10" step="0.5"></div>
-                <div class="control-pill"><label>Spin</label><input type="number" id="alexa-ball-spin" min="0" max="10" step="0.5"></div>
-                <div class="control-pill"><label>Freq (BPM)</label><input type="number" id="alexa-ball-freq" min="30" max="120" step="1"></div>
-                <div class="control-pill"><label>Type</label>
-                    <select id="alexa-ball-type">
-                        <option value="top">Topspin</option>
-                        <option value="back">Backspin</option>
-                    </select>
+                <div class="spin-row">
+                    <span class="spin-label">Rotation:</span>
+                    <div class="spin-capsule">
+                        <div class="sc-opt" id="alexa-type-top" onclick="window.setAlexaBallType('top')">TOP</div>
+                        <div class="sc-opt" id="alexa-type-back" onclick="window.setAlexaBallType('back')">BACK</div>
+                    </div>
                 </div>
-                <div class="control-pill"><label>Height</label><input type="number" id="alexa-ball-height" min="-50" max="100" step="1"></div>
-                <div class="control-pill"><label>Drop</label><input type="number" id="alexa-ball-drop" min="-10" max="10" step="0.5"></div>
-                <div class="control-pill"><label>Reps</label><input type="number" id="alexa-ball-reps" min="1" max="200" step="1"></div>
-                <div class="control-pill"><label>Scatter</label><input type="number" id="alexa-ball-scatter" min="0" max="10" step="0.5"></div>
+                <div class="editor-grid">
+                    <div class="editor-field">
+                        <div class="field-header"><label>Speed</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-speed',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-speed" step="0.5" min="0" max="10">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-speed',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Spin</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-spin',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-spin" step="0.5" min="0" max="10">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-spin',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Height</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-height',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-height" step="1" min="-50" max="100">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-height',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Drop</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-drop',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-drop" step="0.5" min="-10" max="10">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-drop',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>BPM</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-freq',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-freq" step="1" min="30" max="120">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-freq',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Reps</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-reps',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-reps" step="1" min="1" max="200">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-reps',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Scatter</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-scatter',-1)">−</button>
+                            <input type="number" inputmode="decimal" id="alexa-ball-scatter" step="0.5" min="0" max="10">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-scatter',1)">+</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-modal btn-delete" onclick="window.deleteAlexaBall()">Delete</button>

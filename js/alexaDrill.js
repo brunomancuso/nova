@@ -252,13 +252,29 @@ function openModal(step, ball) {
     $('alexa-ball-speed').value = ball.speed;
     $('alexa-ball-spin').value = ball.spin;
     $('alexa-ball-freq').value = ball.frequency;
-    $('alexa-ball-type').value = ball.type;
+    setAlexaBallType(ball.type);
     $('alexa-ball-height').value = ball.height;
     $('alexa-ball-drop').value = ball.drop;
     $('alexa-ball-reps').value = ball.reps;
     $('alexa-ball-scatter').value = ball.scatter;
     $('alexa-ball-modal')?.classList.add('open');
 }
+
+function setAlexaBallType(type) {
+    if (!editingBall) return;
+    editingBall.type = type;
+    const top = $('alexa-type-top');
+    const back = $('alexa-type-back');
+    if (top) {
+        top.classList.toggle('active', type === 'top');
+        top.style.background = type === 'top' ? '#0984e3' : '';
+    }
+    if (back) {
+        back.classList.toggle('active', type === 'back');
+        back.style.background = type === 'back' ? 'var(--danger)' : '';
+    }
+}
+window.setAlexaBallType = setAlexaBallType;
 
 function closeModal() {
     $('alexa-ball-modal')?.classList.remove('open');
@@ -275,7 +291,6 @@ window.saveAlexaBall = () => {
     editingBall.speed = num('alexa-ball-speed');
     editingBall.spin = num('alexa-ball-spin');
     editingBall.frequency = num('alexa-ball-freq');
-    editingBall.type = $('alexa-ball-type')?.value || 'top';
     editingBall.height = num('alexa-ball-height');
     editingBall.drop = num('alexa-ball-drop');
     editingBall.reps = num('alexa-ball-reps');

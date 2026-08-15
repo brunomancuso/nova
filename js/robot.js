@@ -164,6 +164,8 @@ export function getLandingMarkerPositions(landings) {
         r: ballR,
         drop: l.drop,
         speed: l.speed,
+        type: l.type,
+        spin: l.spin,
     }));
 }
 
@@ -179,11 +181,16 @@ export function drawLandingMarkers(canvas, landings, selectedIndex = null) {
             ctx.lineWidth = 4;
             ctx.stroke();
         }
-        // Ball body (no border)
+        // Ball body
         ctx.beginPath();
         ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
+        // Spin-type border (thicker)
+        const spinVal = m.spin ?? 0;
+        ctx.strokeStyle = spinVal < 1 ? '#9ca3af' : (m.type === 'back' ? '#dc2626' : '#16a34a');
+        ctx.lineWidth = Math.max(2, m.r * 0.25);
+        ctx.stroke();
         // Index label — rotated 90° CCW so it reads upright on the rotated table
         if (m.index != null) {
             ctx.save();
