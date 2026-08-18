@@ -1,5 +1,8 @@
 // js/alexaDrill.js — persistent drill/ball editing for Alexa mode.
 import { Ball, Step, Drill } from './model/index.js';
+import { showToast } from './utils.js';
+import { bleState } from './bluetooth.js';
+import { startDrillFromParams } from './runner.js';
 
 const STORAGE_KEY = 'nova_alexa_drill';
 
@@ -346,6 +349,74 @@ window.deleteAlexaDrill = () => {
     closeModal();
     save();
     render();
+};
+
+window.runAlexaDrill = () => {
+    if (!bleState.isConnected) {
+        showToast("Device not connected");
+        return;
+    }
+    if (drill.steps.length === 0) {
+        showToast('no balls to play');
+        return;
+    }
+    // Fresh copies so the run doesn't mutate the stored drill.
+    startDrillFromParams(drill.steps.map(s => s.clone()), drill.random, drill.name);
+};
+
+// Drills loaded from drills_data.json for the import picker.
+let importDrills = null;
+
+window.importAlexaDrill = async () => {
+    const list = $('alexa-import-list');
+    if (!list) return;
+    $('alexa-import-modal')?.classList.add('open');
+    list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">Loading…</p>';
+
+    let data;
+    try {
+        const res = await fetch('drills_data.json');
+        if (!res.ok) throw new Error('fetch failed');
+        data = await res.json();
+        importDrills = data;
+    } catch {
+        list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">Could not load drills_data.json</p>';
+        return;
+    }
+
+    let html = '';
+    for (const cat of ['dataA', 'dataB', 'dataC']) {
+        const arr = data[cat] || [];
+        if (!arr.length) continue;
+        const label = 'Custom ' + cat.replace('data', '');
+        html += `<div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase; letter-spacing:0.5px; margin:14px 2px 6px;">${label}</div>`;
+        arr.forEach((d, i) => {
+            const ballCount = (d.steps || []).reduce((n, s) => n + (s.balls || []).length, 0);
+            html += `<div onclick="window.importAlexaDrillFromList('${cat}', ${i})"
+                 style="padding:10px 14px; margin-bottom:6px; border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">${d.name || 'Untitled'}</span>
+                <span style="font-size:0.7rem; color:var(--text-light); white-space:nowrap;">${ballCount} balls</span>
+            </div>`;
+        });
+    }
+    list.innerHTML = html || '<p style="color:var(--text-light); text-align:center; padding:20px;">No drills found in drills_data.json</p>';
+};
+
+window.closeAlexaImportModal = () => {
+    $('alexa-import-modal')?.classList.remove('open');
+};
+
+window.importAlexaDrillFromList = (cat, index) => {
+    const d = importDrills?.[cat]?.[index];
+    if (!d) return;
+    drill = Drill.fromJSON(d);
+    editingStep = null;
+    editingBall = null;
+    closeModal();
+    save();
+    render();
+    window.closeAlexaImportModal();
+    showToast(`Imported "${d.name || 'drill'}"`);
 };
 
 window.closeAlexaBallModal = closeModal;

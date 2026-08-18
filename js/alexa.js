@@ -217,6 +217,9 @@ function sendToAgent(text) {
         id: `alexa-${reqSeq}`,
         prompt: text,
         drill: getAlexaDrill(),
+        pause_before: parseFloat(el('input-start-pause')?.value) || 0,
+        count: parseInt(el('input-reps')?.value) || 1,
+        pause_between: parseFloat(el('input-pause')?.value) || 0,
     }));
 }
 
@@ -244,6 +247,23 @@ function handleAgentMessage(msg) {
             break;
         case 'execute_drill':
             setStatus('Executing drill…');
+            if (msg.drill) {
+                setAlexaDrill(msg.drill);
+            }
+            // First apply the agent's run settings to the controls.
+            if (typeof msg.pause_before === 'number') {
+                const i = el('input-start-pause'); if (i) i.value = msg.pause_before;
+            }
+            if (typeof msg.count === 'number') {
+                const i = el('input-reps'); if (i) i.value = msg.count;
+            }
+            if (typeof msg.pause_between === 'number') {
+                const i = el('input-pause'); if (i) i.value = msg.pause_between;
+            }
+            // Then run the drill.
+            if (window.runAlexaDrill) {
+                window.runAlexaDrill();
+            }
             addAgentMessage('note', '▶ Executing drill');
             break;
         case 'test_ball':

@@ -84,22 +84,28 @@ export function startDrillSequence(cat, name) {
          return;
     }
 
-    const executableSteps = drill.steps;
+    // --- SAVE LAST PLAYED STATE ---
+    setLastPlayed(cat, drill.name);
+    updateLastPlayedHighlight();
 
-    if (executableSteps.length === 0) {
+    startDrillFromParams(drill.steps, drill.random, drill.name);
+}
+
+// Start running an arbitrary drill. Used by the main page (via
+// startDrillSequence) and by the Alexa page's "Run" button.
+export function startDrillFromParams(steps, random, name) {
+    const executableSteps = steps;
+
+    if (!executableSteps || executableSteps.length === 0) {
         showToast("no balls to play");
         document.querySelectorAll('.btn-drill').forEach(b => b.classList.remove('running'));
         return;
     }
     
     activeDrillParams = executableSteps;
-    activeDrillRandom = !!drill.random;
-    activeDrillName = drill.name;
+    activeDrillRandom = !!random;
+    activeDrillName = name || '';
     
-    // --- SAVE LAST PLAYED STATE ---
-    setLastPlayed(cat, drill.name);
-    updateLastPlayedHighlight();
-
     // --- LOCK SCROLL ON START ---
     if (!isInlineStop()) toggleBodyScroll(true);
     openRunUI();

@@ -115,6 +115,10 @@
     <div id="alexa-table-panel" class="alexa-table-panel">
         <div class="alexa-drill-meta">
             <span id="alexa-drill-name" class="alexa-drill-name"></span>
+            <button id="alexa-run-drill" class="alexa-run-drill" onclick="window.runAlexaDrill()" title="Run drill">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                <span>Run</span>
+            </button>
         </div>
         <div class="alexa-table-body">
             <canvas id="alexa-table-canvas" width="520" height="360"></canvas>
@@ -126,6 +130,9 @@
                         <input type="checkbox" id="alexa-random">
                         <div class="toggle-switch"></div>
                     </label>
+                    <button id="alexa-import-drill" class="alexa-import-drill" onclick="window.importAlexaDrill()" title="Import drill">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
                     <button id="alexa-delete-drill" class="alexa-delete-drill" onclick="window.deleteAlexaDrill()" title="Delete drill">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg>
                     </button>
@@ -230,6 +237,16 @@
                 <button class="btn-modal btn-delete" onclick="window.deleteAlexaBall()">Delete</button>
                 <button class="btn-modal btn-save" onclick="window.saveAlexaBall()">Save</button>
             </div>
+        </div>
+    </div>
+
+    <div id="alexa-import-modal" class="modal-overlay">
+        <div class="modal" style="height:auto; max-height:80vh;">
+            <div class="modal-header">
+                <div class="modal-title">Import Drill</div>
+                <div class="modal-close" onclick="window.closeAlexaImportModal()">×</div>
+            </div>
+            <div class="modal-body" id="alexa-import-list" style="padding:12px; overflow-y:auto;"></div>
         </div>
     </div>
 

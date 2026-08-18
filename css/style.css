@@ -732,6 +732,7 @@ body.alexa-active .alexa-table-panel {
     gap: 8px;
 }
 .alexa-drill-meta {
+    position: relative;
     display: flex;
     justify-content: center;
     width: 100%;
@@ -741,6 +742,12 @@ body.alexa-active .alexa-table-panel {
     font-size: 1.15rem;
     font-weight: 700;
     color: var(--text-light);
+}
+.alexa-run-drill {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
 }
 .alexa-random-toggle .toggle-label {
     color: var(--text-light);
@@ -768,7 +775,8 @@ body.alexa-active .alexa-table-panel {
     cursor: pointer;
     box-shadow: 0 2px 6px var(--shadow);
 }
-.alexa-delete-drill {
+.alexa-delete-drill,
+.alexa-import-drill {
     width: 32px;
     height: 32px;
     background: transparent;
@@ -780,9 +788,34 @@ body.alexa-active .alexa-table-panel {
     align-items: center;
     justify-content: center;
 }
-.alexa-delete-drill svg {
+.alexa-delete-drill svg,
+.alexa-import-drill svg {
     width: 20px;
     height: 20px;
+}
+.alexa-run-drill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 36px;
+    padding: 0 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px var(--shadow);
+}
+.alexa-run-drill svg {
+    width: 16px;
+    height: 16px;
+}
+.alexa-run-drill:active {
+    transform: scale(0.97);
 }
 .alexa-add-ball::before,
 .alexa-add-ball::after {
