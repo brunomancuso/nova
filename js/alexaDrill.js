@@ -361,7 +361,7 @@ window.runAlexaDrill = () => {
         return;
     }
     // Fresh copies so the run doesn't mutate the stored drill.
-    startDrillFromParams(drill.steps.map(s => s.clone()), drill.random, drill.name);
+    startDrillFromParams(drill.steps.map(s => s.clone()), drill.random, drill.name, drill.disableScatter, drill.deltaSpeed);
 };
 
 // Drills loaded from drills_data.json for the import picker.
@@ -385,11 +385,14 @@ window.importAlexaDrill = async () => {
     }
 
     let html = '';
-    for (const cat of ['dataA', 'dataB', 'dataC']) {
+    for (const cat of ['dataA', 'dataB', 'dataC', 'dataD']) {
         const arr = data[cat] || [];
         if (!arr.length) continue;
         const label = 'Custom ' + cat.replace('data', '');
-        html += `<div style="font-size:0.75rem; font-weight:700; color:var(--text-light); text-transform:uppercase; letter-spacing:0.5px; margin:14px 2px 6px;">${label}</div>`;
+        html += `<div class="import-cat-sep" title="Importing from ${label}">
+            <span class="import-cat-label">${label}</span>
+            <span class="import-cat-count">${arr.length}</span>
+        </div>`;
         arr.forEach((d, i) => {
             const ballCount = (d.steps || []).reduce((n, s) => n + (s.balls || []).length, 0);
             html += `<div onclick="window.importAlexaDrillFromList('${cat}', ${i})"

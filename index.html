@@ -53,20 +53,41 @@
         </div>
 
         <div class="controls-row">
-            <div class="control-pill" id="ui-start-pause">
+            <div class="control-stack">
+                <div class="preset-spacer" aria-hidden="true"></div>
+                <div class="control-pill" id="ui-start-pause">
                     <label>Start (s)</label> <input type="number" id="input-start-pause" value="1" min="0" max="10" step="1">
                 </div>
-            <div class="control-pill" id="ui-reps">
-                <label>Count</label>
-                <input type="number" id="input-reps" value="10">
             </div>
-            <div class="control-pill hidden" id="ui-time">
-                <label>Time (s)</label>
-                <input type="number" id="input-time" value="60" step="10">
-            </div>
-                <div class="control-pill">
-                    <label>Pause (s)</label> <input type="number" id="input-pause" value="0.0" step="0.1">
+            <div class="control-stack">
+                <div class="drills-presets">
+                    <button class="preset-circle-btn" onclick="window.setDrillsPreset(5)" title="5 drills">5</button>
+                    <button class="preset-circle-btn" onclick="window.setDrillsPreset(10)" title="10 drills">10</button>
+                    <button class="preset-circle-btn" onclick="window.setDrillsPreset(15)" title="15 drills">15</button>
+                    <button class="preset-circle-btn" onclick="window.setDrillsPreset(20)" title="20 drills">20</button>
                 </div>
+                <div class="control-pill" id="ui-reps">
+                    <label>Drills</label>
+                    <input type="number" id="input-reps" value="10">
+                </div>
+            </div>
+            <div class="control-stack hidden" id="ui-time">
+                <div class="preset-spacer" aria-hidden="true"></div>
+                <div class="control-pill">
+                    <label>Time (s)</label>
+                    <input type="number" id="input-time" value="60" step="10">
+                </div>
+            </div>
+            <div class="control-stack">
+                <div class="pause-presets">
+                    <button class="preset-circle-btn" onclick="window.setPausePreset(0)" title="Reset pause to 0 s">0</button>
+                    <button class="preset-circle-btn" onclick="window.setPausePreset(4)" title="Set default pause (4 s)">4</button>
+                </div>
+                <div class="control-pill">
+                    <label>Pause (s)</label>
+                    <input type="number" id="input-pause" value="0.0" step="0.1">
+                </div>
+            </div>
         </div>
         <div class="stats-inline-row">
             <button id="alexa-btn" class="stats-inline-btn" title="Voice commands (Whisper)">
@@ -282,11 +303,18 @@
              ondragover="window.allowTabDrop(event)">
             <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom C
         </div>
+        <div class="tab-btn" 
+             onclick="switchTab('dataD', this)"
+             ondrop="window.handleTabDrop(event, 'dataD')" 
+             ondragover="window.allowTabDrop(event)">
+            <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom D
+        </div>
     </div>
 
     <div id="view-dataA" class="drill-list"></div>
     <div id="view-dataB" class="drill-list hidden"></div>
     <div id="view-dataC" class="drill-list hidden"></div>
+    <div id="view-dataD" class="drill-list hidden"></div>
 
     <div class="footer-row">
         <div id="stats-display">Balls: 0 | Drills: 0</div>
@@ -368,6 +396,27 @@
     </div>
 </div>
 
+<div id="delta-speed-modal" class="modal-overlay">
+    <div class="modal" style="height:auto; max-width:380px;">
+        <div class="modal-header">
+            <div class="modal-title">Delta Speed (%)</div>
+            <div class="modal-close" onclick="window.closeDeltaSpeedModal()">×</div>
+        </div>
+        <div class="modal-body" style="padding:10px 4px 4px;">
+            <div class="delta-speed-value" id="delta-speed-value">0%</div>
+            <input type="range" id="delta-speed-slider" min="-100" max="100" step="1" value="0"
+                   oninput="window.updateDeltaSpeedValue(this.value)">
+            <div class="delta-speed-scale">
+                <span>-100%</span><span>0</span><span>+100%</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-delete" onclick="window.resetDeltaSpeed()">Reset</button>
+            <button class="btn-modal btn-save" onclick="window.saveDeltaSpeed()">OK</button>
+        </div>
+    </div>
+</div>
+
 <div id="save-as-modal" class="modal-overlay">
     <div class="modal" style="height:auto; min-height:300px;">
         <div class="modal-header">
@@ -386,6 +435,7 @@
                     <div class="mode-option active" onclick="window.selectSaveCategory('dataA', this)">Custom A</div>
                     <div class="mode-option" onclick="window.selectSaveCategory('dataB', this)">Custom B</div>
                     <div class="mode-option" onclick="window.selectSaveCategory('dataC', this)">Custom C</div>
+                    <div class="mode-option" onclick="window.selectSaveCategory('dataD', this)">Custom D</div>
                 </div>
             </div>
         </div>

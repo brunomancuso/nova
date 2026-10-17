@@ -182,12 +182,13 @@ window.setMode = (mode, btn) => {
     if(btn) btn.classList.add('active');
     
     const uiReps = document.getElementById('ui-reps');
+    const uiRepsStack = uiReps?.closest('.control-stack');
     const uiTime = document.getElementById('ui-time');
     if(mode === 'reps') {
-        uiReps?.classList.remove('hidden');
+        uiRepsStack?.classList.remove('hidden');
         uiTime?.classList.add('hidden');
     } else {
-        uiReps?.classList.add('hidden');
+        uiRepsStack?.classList.add('hidden');
         uiTime?.classList.remove('hidden');
     }
 };
@@ -209,6 +210,18 @@ window.getRobotXcm        = getRobotXcm;
 
 window.toggleEditorMode   = toggleEditorMode;
 window.simLog             = simLog;
+
+window.setPausePreset = (value) => {
+    const input = document.getElementById('input-pause');
+    if (!input) return;
+    input.value = Number(value).toFixed(1);
+};
+
+window.setDrillsPreset = (value) => {
+    const input = document.getElementById('input-reps');
+    if (!input) return;
+    input.value = value;
+};
 
 window.handleDrillClick = (cat, index, name, btn) => {
     if (!bleState.isConnected) {

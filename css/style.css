@@ -220,18 +220,30 @@ h1 {
     transition: opacity 0.3s; 
 }
 
-.controls-row { display: flex; gap: 10px; margin-bottom: 5px; }
+.controls-row { display: flex; gap: 10px; margin-bottom: 5px; align-items: flex-end; }
+
+.control-stack {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.control-stack .control-pill { width: 100%; }
+.preset-spacer { height: 22px; }   /* same height as the preset circle row */
 
 .control-pill { 
     background: var(--surface); 
     border-radius: 15px; 
     padding: 10px; 
     flex: 1; 
+    min-width: 0;
     display: flex; 
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
     box-shadow: 0 2px 5px var(--shadow); 
+    box-sizing: border-box;
 }
 
 .control-pill label { 
@@ -241,6 +253,45 @@ h1 {
     font-weight: 700; 
     text-transform: uppercase; 
 }
+
+/* Circular preset buttons above the inputs */
+.drills-presets,
+.pause-presets {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.preset-circle-btn {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--primary);
+    font-size: 0.65rem;
+    font-weight: 900;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+}
+.preset-circle-btn::before {
+    content: "";
+    position: absolute;
+    inset: -4px;              /* larger touch target */
+}
+.preset-circle-btn:hover {
+    background: var(--primary);
+    color: #fff;
+}
+.preset-circle-btn:active { transform: scale(0.9); }
 
 input[type="number"] { 
     border: none; 
@@ -330,7 +381,7 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     padding: 10px; 
     margin-bottom: 20px; 
     display: grid; 
-    grid-template-columns: 1fr 1fr 1fr; 
+    grid-template-columns: repeat(4, 1fr); 
     gap: 10px; 
 }
 
@@ -423,23 +474,111 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     text-overflow: ellipsis; 
 }
 
-/* Random Badge (Right side now) */
-.mark-random { 
-    position: static;
-    width: 22px; 
-    height: 22px; 
-    border: 1.5px solid var(--danger); 
-    color: var(--danger); 
-    border-radius: 50%; 
-    font-size: 0.65rem; 
-    font-weight: 900; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    background: transparent; 
-    line-height: 1; 
+/* Scatter badge (S) */
+.mark-scatter {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    color: var(--primary);
+    font-size: 0.65rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    line-height: 1;
     flex-shrink: 0;
+    cursor: pointer;
+    transition: color 0.2s, opacity 0.2s, transform 0.1s;
 }
+.mark-scatter::before {
+    content: "";
+    position: absolute;
+    inset: -7px;              /* larger touch target */
+}
+.mark-scatter:active { transform: scale(0.9); }
+.mark-scatter.disabled {
+    color: var(--text-light);
+    opacity: 1;
+}
+.mark-scatter.active {
+    color: var(--primary);
+}
+.mark-scatter.ghost {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Delta-speed badge (B) */
+.mark-delta {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    color: var(--text-light);
+    font-size: 0.65rem;
+    font-weight: 900;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: color 0.2s, background 0.15s, transform 0.1s;
+}
+.mark-delta.active { color: var(--primary); }
+.mark-delta::before {
+    content: "";
+    position: absolute;
+    inset: -7px;              /* larger touch target */
+}
+.mark-delta:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.mark-delta:active { transform: scale(0.9); }
+
+/* Random checkbox (right of the edit pencil) */
+.random-checkbox {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--text-light);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+}
+.random-checkbox::before {
+    content: "";
+    position: absolute;
+    inset: -8px;              /* larger touch target */
+}
+.random-checkbox::after {
+    content: "";
+    width: 4px;
+    height: 8px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.15s;
+    margin-top: -1px;
+}
+.random-checkbox.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.random-checkbox.checked::after { transform: rotate(45deg) scale(1); }
+.random-checkbox:active { transform: scale(0.9); }
 
 /* Sorting Grip Handle */
 .drill-grab-handle {
@@ -793,6 +932,69 @@ body.alexa-active .alexa-table-panel {
     width: 20px;
     height: 20px;
 }
+
+/* Import drill picker: category separators */
+.import-cat-sep {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 -12px 8px;
+    padding: 12px 14px 8px;
+    background: var(--surface);
+    color: var(--text-light);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.import-cat-sep:first-child { margin-top: -12px; }
+.import-cat-sep::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+.import-cat-label { color: var(--primary); }
+.import-cat-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 9px;
+    background: var(--primary-dim);
+    color: var(--primary);
+    font-size: 0.65rem;
+}
+
+/* Import pickers: smooth themed scrolling */
+#alexa-import-list,
+#import-ball-list {
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    scroll-padding-top: 36px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+#alexa-import-list::-webkit-scrollbar,
+#import-ball-list::-webkit-scrollbar { width: 5px; }
+#alexa-import-list::-webkit-scrollbar-track,
+#import-ball-list::-webkit-scrollbar-track { background: transparent; }
+#alexa-import-list::-webkit-scrollbar-thumb,
+#import-ball-list::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+    transition: background 0.2s;
+}
+#alexa-import-list::-webkit-scrollbar-thumb:hover,
+#import-ball-list::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+#alexa-import-list::-webkit-scrollbar-corner,
+#import-ball-list::-webkit-scrollbar-corner { background: transparent; }
+
 .alexa-run-drill {
     display: inline-flex;
     align-items: center;
@@ -1345,7 +1547,8 @@ body.alexa-active .drill-list {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: 1;
+    flex: 0 1 auto;              /* hug the title instead of filling the row */
+    max-width: calc(100% - 40px);
     min-width: 0;
     cursor: pointer;
     margin-right: 10px;
@@ -1358,6 +1561,7 @@ body.alexa-active .drill-list {
     white-space: nowrap; 
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 0;
 }
 
 #editor-drill-edit-icon {
@@ -1381,6 +1585,29 @@ body.alexa-active .drill-list {
 .random-toggle-container { margin-right: 0; }
 
 .modal-close { font-size: 1.5rem; color: var(--text-light); cursor: pointer; line-height: 1; }
+
+/* Delta speed modal */
+.delta-speed-value {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 4px 0 16px;
+    font-variant-numeric: tabular-nums;
+}
+#delta-speed-slider {
+    width: 100%;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+.delta-speed-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-top: 6px;
+    padding: 0 2px;
+}
 
 /* Edit-mode canvas + BPM slider row */
 .edit-mode-canvas-row { display: flex; gap: 8px; align-items: flex-start; margin: 2px 0; }
@@ -1438,15 +1665,31 @@ body.alexa-active .drill-list {
 .reps-value { font-size: 1rem; font-weight: 700; color: var(--text); min-width: 22px; text-align: center; }
 .modal-body { overflow-y: auto; flex: 1; padding-right: 5px; }
 
-#editor-body::-webkit-scrollbar { width: 5px; }
-#editor-body::-webkit-scrollbar-track { background: transparent; }
+#editor-body {
+    padding-right: 36px;              /* finger-width blank drag surface */
+    scrollbar-gutter: stable;         /* always reserve the scrollbar lane */
+    overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;              /* vertical drags scroll, never tap */
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+#editor-body::-webkit-scrollbar { width: 12px; }  /* wider, touch-friendly target */
+#editor-body::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
 #editor-body::-webkit-scrollbar-thumb {
     background: var(--border);
+    background-clip: padding-box;
+    border-left: 4px solid transparent;   /* extra inset space before the thumb */
     border-radius: 10px;
+    min-height: 44px;
     transition: background 0.2s;
 }
 #editor-body::-webkit-scrollbar-thumb:hover { background: var(--primary); }
-#editor-body { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+#editor-body::-webkit-scrollbar-corner { background: transparent; }
 
 /* --- EDITOR SPECIFIC (Smart Grid Layout) --- */
 
@@ -1717,6 +1960,9 @@ body.alexa-active .drill-list {
 
 .btn-act-clone { background: #0984e3; }
 .btn-act-clone:hover { background: #00cec9; }
+
+.btn-act-copy { background: #636e72; }
+.btn-act-copy:hover { background: #2d3436; }
 
 .btn-act-del { background: var(--danger); }
 .btn-act-del:hover { opacity: 0.8; }

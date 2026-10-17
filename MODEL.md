@@ -6,7 +6,8 @@
 DrillStore
   ├── dataA: Drill[]
   ├── dataB: Drill[]
-  └── dataC: Drill[]
+  ├── dataC: Drill[]
+  └── dataD: Drill[]
 
 Drill { name, steps: Step[], random }
 
@@ -73,6 +74,8 @@ A named drill with an ordered sequence of steps.
 | `name` | string | Display name |
 | `steps` | Step[] | Ordered step sequence |
 | `random` | boolean | Shuffle step order during execution |
+| `disableScatter` | boolean | Disable scatter for this drill |
+| `deltaSpeed` | number | Drill-level speed offset (default `0`) |
 
 ---
 
@@ -85,6 +88,7 @@ Flat drill storage grouped by category A/B/C.
 | `dataA` | Drill[] | Category A drills |
 | `dataB` | Drill[] | Category B drills |
 | `dataC` | Drill[] | Category C drills |
+| `dataD` | Drill[] | Category D drills |
 
 ### JSON format
 
@@ -101,6 +105,7 @@ Flat drill storage grouped by category A/B/C.
     }
   ],
   "dataB": [],
-  "dataC": []
+  "dataC": [],
+  "dataD": []
 }
 ```

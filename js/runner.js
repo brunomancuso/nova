@@ -21,6 +21,14 @@ let _perBallDoneResolve = null; // resolves when DONE received between per-ball 
 let activeDrillParams = null;
 let activeDrillRandom = false;
 let activeDrillName = '';
+let activeDrillDisableScatter = false;
+let activeDrillDeltaSpeed = 0;
+let _testDoneResolve = null; // test-drill DONE waiter (works with real + simulated runs)
+
+/** Resolve when the robot reports DONE (used by the editor's test drill). */
+export function waitForRobotDone() {
+    return new Promise(resolve => { _testDoneResolve = resolve; });
+}
 
 // UI Elements (Cached for performance)
 const ui = {
@@ -88,12 +96,12 @@ export function startDrillSequence(cat, name) {
     setLastPlayed(cat, drill.name);
     updateLastPlayedHighlight();
 
-    startDrillFromParams(drill.steps, drill.random, drill.name);
+    startDrillFromParams(drill.steps, drill.random, drill.name, drill.disableScatter, drill.deltaSpeed);
 }
 
 // Start running an arbitrary drill. Used by the main page (via
 // startDrillSequence) and by the Alexa page's "Run" button.
-export function startDrillFromParams(steps, random, name) {
+export function startDrillFromParams(steps, random, name, disableScatter = false, deltaSpeed = 0) {
     const executableSteps = steps;
 
     if (!executableSteps || executableSteps.length === 0) {
@@ -105,6 +113,8 @@ export function startDrillFromParams(steps, random, name) {
     activeDrillParams = executableSteps;
     activeDrillRandom = !!random;
     activeDrillName = name || '';
+    activeDrillDisableScatter = !!disableScatter;
+    activeDrillDeltaSpeed = Number(deltaSpeed) || 0;
     
     // --- LOCK SCROLL ON START ---
     if (!isInlineStop()) toggleBodyScroll(true);
@@ -177,7 +187,8 @@ export function beginDrillExecution() {
             }
         }, 1000);
     } else {
-        targetCount = parseInt(document.getElementById('input-reps').value) || 1;
+        // Input value = number of drill repetitions to send.
+        targetCount = Math.max(1, parseInt(document.getElementById('input-reps').value) || 1);
         currentCount = 0;
         setDisplay(targetCount);
         ui.progress.style.transition = 'stroke-dashoffset 0.5s ease';
@@ -191,8 +202,7 @@ async function runIteration() {
 
     if (runMode === 'reps') {
         currentCount++;
-        const remaining = targetCount - currentCount;
-        setDisplay(Math.max(0, remaining));
+        setDisplay(Math.max(0, targetCount - currentCount));
         
         const fractionCompleted = currentCount / targetCount;
         ui.progress.style.strokeDashoffset = 565 * fractionCompleted;
@@ -219,6 +229,15 @@ async function runIteration() {
         }
         if (!(tempBall instanceof Ball)) return;
         tempBall = tempBall.clone();
+
+        // Drill-level override: never apply scatter when disabled
+        if (activeDrillDisableScatter) tempBall.scatter = 0;
+
+        // Drill-level delta speed: scale BPM by (1 + delta/100), clamped to 30-120
+        if (activeDrillDeltaSpeed) {
+            const factor = 1 + activeDrillDeltaSpeed / 100;
+            tempBall.frequency = clamp(Math.round(tempBall.frequency * factor), 30, 120);
+        }
 
         const scatter = tempBall.scatter || 0;
         if (scatter > 0) {
@@ -273,6 +292,13 @@ async function runIteration() {
 
 // Callback from bluetooth.js when robot finishes
 export function handleDone() {
+    // Resolve a pending test-drill wait before the run-state guard.
+    if (_testDoneResolve) {
+        const res = _testDoneResolve;
+        _testDoneResolve = null;
+        res();
+        return;
+    }
     if(!isRunning) return;
 
     // If we're mid-sequence waiting for DONE before the next ball, resolve and return

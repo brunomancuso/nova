@@ -6,7 +6,7 @@ export const SALT = "Mjgx1jAwXDBaMFcxCz3JBgNVBAYT4kJF7Rkw";
 export const MSG_DONE = "00020300050100";
 
 export const CATEGORIES = {
-    "custom-a": [], "custom-b": [], "custom-c": []
+    "custom-a": [], "custom-b": [], "custom-c": [], "custom-d": []
 };
 
 // Physics Constants

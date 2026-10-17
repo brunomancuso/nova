@@ -1,19 +1,21 @@
 // ─── Drill Store ──────────────────────────────────────────────────────────
-// Flat drill storage grouped by category A/B/C.
+// Flat drill storage grouped by category A/B/C/D.
 //   dataA: [Drill, Drill, ...]
 //   dataB: [Drill, ...]
 //   dataC: [Drill, ...]
+//   dataD: [Drill, ...]
 
 import { Drill } from './Drill.js';
 
 export class DrillStore {
-    constructor({ dataA = [], dataB = [], dataC = [] } = {}) {
+    constructor({ dataA = [], dataB = [], dataC = [], dataD = [] } = {}) {
         this.dataA = dataA;
         this.dataB = dataB;
         this.dataC = dataC;
+        this.dataD = dataD;
     }
 
-    static CATS = ['dataA', 'dataB', 'dataC'];
+    static CATS = ['dataA', 'dataB', 'dataC', 'dataD'];
 
     // ── Access ────────────────────────────────────────────────────────────
 
@@ -46,6 +48,7 @@ export class DrillStore {
             dataA: this.dataA.map(d => d.toJSON()),
             dataB: this.dataB.map(d => d.toJSON()),
             dataC: this.dataC.map(d => d.toJSON()),
+            dataD: this.dataD.map(d => d.toJSON()),
         };
     }
 

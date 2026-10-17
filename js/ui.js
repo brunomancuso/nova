@@ -8,6 +8,52 @@ import { bleState } from './bluetooth.js';
 import { showToast } from './utils.js'; 
 import { openEditor } from './editor.js';
 
+// --- Delta speed modal ---
+let _deltaSpeedDrill = null;
+
+function openDeltaSpeedModal(drill) {
+    const modal = document.getElementById('delta-speed-modal');
+    const slider = document.getElementById('delta-speed-slider');
+    if (!modal || !slider) return;
+    _deltaSpeedDrill = drill;
+    const val = Number(drill.deltaSpeed) || 0;
+    slider.value = String(val);
+    window.updateDeltaSpeedValue(val);
+    modal.classList.add('open');
+}
+
+window.updateDeltaSpeedValue = (value) => {
+    const el = document.getElementById('delta-speed-value');
+    if (!el) return;
+    const v = Math.round(Number(value) || 0);
+    el.textContent = (v > 0 ? '+' : '') + v + '%';
+    el.style.color = v === 0 ? 'var(--text-light)' : 'var(--primary)';
+};
+
+window.closeDeltaSpeedModal = () => {
+    document.getElementById('delta-speed-modal')?.classList.remove('open');
+    _deltaSpeedDrill = null;
+};
+
+window.resetDeltaSpeed = () => {
+    const slider = document.getElementById('delta-speed-slider');
+    if (slider) slider.value = '0';
+    window.updateDeltaSpeedValue(0);
+    window.saveDeltaSpeed();   // saves 0 and closes the modal
+};
+
+window.saveDeltaSpeed = () => {
+    const slider = document.getElementById('delta-speed-slider');
+    if (_deltaSpeedDrill && slider) {
+        const val = Math.round(Number(slider.value) || 0);
+        _deltaSpeedDrill.deltaSpeed = val;
+        saveDrillsToStorage();
+        renderDrillButtons();
+        showToast(`Delta speed: ${val}%`);
+    }
+    window.closeDeltaSpeedModal();
+};
+
 // --- Handle Create New Drill ---
 window.handleCreateNewDrill = (cat) => {
     if (store.count(cat) >= 100) {
@@ -65,7 +111,7 @@ window.handleTabDrop = (e, targetCat) => {
 // --- EXISTING UI LOGIC ---
 
 export function renderDrillButtons() {
-    ['dataA', 'dataB', 'dataC'].forEach(cat => {
+    ['dataA', 'dataB', 'dataC', 'dataD'].forEach(cat => {
         const container = document.getElementById(`view-${cat}`);
         if (!container) return;
         container.innerHTML = '';
@@ -123,13 +169,6 @@ function createButton(container, cat, index, drill) {
     const span = document.createElement('span');
     span.textContent = drill.name;
     btn.appendChild(span);
-
-    if (drill.random) {
-        const rMark = document.createElement('div');
-        rMark.className = 'mark-random';
-        rMark.textContent = 'R';
-        btn.appendChild(rMark);
-    }
     
     const grip = document.createElement('div');
     grip.className = 'drill-grab-handle';
@@ -185,6 +224,81 @@ function createButton(container, cat, index, drill) {
     editBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
     editBtn.onclick = (e) => { e.stopPropagation(); openEditor(cat, index); };
     btn.appendChild(editBtn);
+
+    // Delta-speed button (left of the scatter badge)
+    const deltaMark = document.createElement('div');
+    deltaMark.className = 'mark-delta' + (drill.deltaSpeed ? ' active' : '');
+    deltaMark.textContent = 'S';
+    deltaMark.title = `Delta speed: ${drill.deltaSpeed ?? 0}% (click to edit)`;
+    deltaMark.setAttribute('role', 'button');
+    deltaMark.tabIndex = 0;
+    deltaMark.addEventListener('mousedown', (e) => e.stopPropagation());
+    deltaMark.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+    const openDelta = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        openDeltaSpeedModal(drill);
+    };
+    deltaMark.onclick = openDelta;
+    deltaMark.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') openDelta(e);
+    });
+    btn.appendChild(deltaMark);
+
+    // Scatter badge (left of the random checkbox)
+    // Always occupies space; invisible when no ball has scatter.
+    const hasScatter = (drill.steps || []).some(step =>
+        (step.balls || []).some(ball => (ball.scatter || 0) > 0));
+    const sMark = document.createElement('div');
+    sMark.textContent = 'D';
+    if (hasScatter) {
+        sMark.className = 'mark-scatter' + (drill.disableScatter ? ' disabled' : ' active');
+        sMark.title = drill.disableScatter ? 'Scatter disabled' : 'Scatter enabled';
+        sMark.setAttribute('role', 'button');
+        sMark.setAttribute('aria-pressed', String(!!drill.disableScatter));
+        sMark.tabIndex = 0;
+        sMark.addEventListener('mousedown', (e) => e.stopPropagation());
+        sMark.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+        const toggleScatter = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            drill.disableScatter = !drill.disableScatter;
+            saveDrillsToStorage();
+            renderDrillButtons();
+            showToast(drill.disableScatter ? 'Scatter disabled' : 'Scatter enabled');
+        };
+        sMark.onclick = toggleScatter;
+        sMark.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') toggleScatter(e);
+        });
+    } else {
+        sMark.className = 'mark-scatter ghost';
+        sMark.setAttribute('aria-hidden', 'true');
+    }
+    btn.appendChild(sMark);
+
+    // Random toggle (checkbox)
+    const randomBox = document.createElement('div');
+    randomBox.className = 'random-checkbox' + (drill.random ? ' checked' : '');
+    randomBox.title = drill.random ? 'Random: on — click to turn off' : 'Random: off — click to turn on';
+    randomBox.setAttribute('role', 'checkbox');
+    randomBox.setAttribute('aria-checked', String(!!drill.random));
+    randomBox.tabIndex = 0;
+    randomBox.addEventListener('mousedown', (e) => e.stopPropagation());
+    randomBox.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+    const toggleRandom = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        drill.random = !drill.random;
+        saveDrillsToStorage();
+        renderDrillButtons();
+        showToast(drill.random ? 'Random enabled' : 'Random disabled');
+    };
+    randomBox.onclick = toggleRandom;
+    randomBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') toggleRandom(e);
+    });
+    btn.appendChild(randomBox);
 
     // Run button (play icon)
     const runBtn = document.createElement('div');
@@ -252,7 +366,7 @@ export function setTheme(themeName) {
 }
 
 export function switchTab(catName, btn) {
-    const tabs = ['dataA','dataB','dataC'];
+    const tabs = ['dataA','dataB','dataC','dataD'];
     tabs.forEach(c => {
         const el = document.getElementById('view-'+c);
         if(el) el.classList.add('hidden');

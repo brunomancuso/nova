@@ -31,6 +31,7 @@ window._redrawAdjPreviews = () => {
 };
 import { SPIN_LIMITS } from './constants.js';
 import { sendPacket, packBall, bleState } from './bluetooth.js';
+import { waitForRobotDone } from './runner.js';
 import { showToast, clamp, toggleBodyScroll } from './utils.js';
 
 // --- Local State ---
@@ -143,6 +144,7 @@ export function saveDrillChanges() {
 
     showToast("Configuration saved");
     document.dispatchEvent(new CustomEvent('drills-updated'));
+    closeEditor();
 }
 
 // --- RENDER EDITOR ---
@@ -299,14 +301,11 @@ function renderEditor() {
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-reps-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
                     </div>` : ''}
-                    <div class="editor-field">
-                        <div class="field-header"><label>Delay (ms)</label></div>
-                        <div class="field-stepper-row">
-                            <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -100)">−</button>
-                            <input type="number" inputmode="decimal" id="inp-delay-${stepIndex}-${optIndex}" value="${b.delay ?? 0}" step="10" min="0" max="10000"
-                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 11, this.value)">
-                            <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 100)">+</button>
-                        </div>
+                    <div class="editor-field" style="flex-direction:row; align-items:center; gap:6px; padding:2px 6px; background:var(--bg); border:1px solid var(--border);">
+                        <label style="font-size:0.6rem; color:var(--text-light); font-weight:800; text-transform:uppercase;">Delay (ms)</label>
+                        <input type="number" inputmode="numeric" id="inp-delay-${stepIndex}-${optIndex}" value="${b.delay ?? 0}" step="10" min="0" max="10000"
+                            style="width:52px; text-align:center; font-weight:bold; color:var(--primary); font-size:0.9rem;"
+                            onchange="window.handleDelayChange(${stepIndex}, ${optIndex}, this.value)">
                     </div>
                 </div>`;
 
@@ -317,6 +316,9 @@ function renderEditor() {
                      <button class="btn-action btn-act-test" 
                              onclick="window.handleTestBall(${stepIndex}, ${optIndex})" 
                              ${isConnected ? '' : 'disabled'}>Test</button>
+                     <button class="btn-action btn-act-copy" 
+                             onclick="window.handleCopyBall(${stepIndex}, ${optIndex})" 
+                             title="Copy ball to a new step">Copy</button>
                      <button class="btn-action btn-act-clone" 
                              onclick="window.handleAddVariant(${stepIndex}, ${optIndex})">+ Variant</button>
                      <button class="btn-action btn-act-del" 
@@ -332,12 +334,15 @@ function renderEditor() {
                 const spinColor    = spinSliderVal < 0 ? '#e53935' : '#43a047';
                 const heightColor  = b.height < 0 ? '#9e9e9e' : '#0984e3';
                 const canvasId     = `editor-robot-canvas-${stepIndex}-${optIndex}`;
+                const delayInputHtml = `
+                        <span class="reps-label">Delay</span>
+                        <input type="number" inputmode="numeric" value="${b.delay ?? 0}" step="10" min="0" max="10000"
+                            style="width:52px; text-align:center; font-weight:bold; color:var(--primary); font-size:0.85rem; background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:2px 4px;"
+                            onchange="window.handleDelayChange(${stepIndex}, ${optIndex}, this.value)">
+                        <span class="reps-label">ms</span>`;
                 const multiRepsHtml = !isSingle ? `
                     <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
-                        <span class="reps-label">Delay</span>
-                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -10)">−</button>
-                        <span class="reps-value">${b.delay ?? 0}ms</span>
-                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
+                        ${delayInputHtml}
                         <span class="reps-label" style="margin-left:10px;">Drop</span>
                         <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${b.drop ?? 0}</span>
                         ${window.getDropLockIconHtml?.() ?? ''}
@@ -347,10 +352,7 @@ function renderEditor() {
                         <button class="field-step-btn" onclick="window.handleRepsStep(${stepIndex}, ${optIndex}, 1)">+</button>
                     </div>` : `
                     <div class="reps-stepper" style="margin-bottom:4px; justify-content:flex-start;">
-                        <span class="reps-label">Delay</span>
-                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, -10)">−</button>
-                        <span class="reps-value">${b.delay ?? 0}ms</span>
-                        <button class="field-step-btn" onclick="window.handleDelayStep(${stepIndex}, ${optIndex}, 10)">+</button>
+                        ${delayInputHtml}
                         <span class="reps-label" style="margin-left:10px;">Drop</span>
                         <span class="reps-value" id="drop-val-${stepIndex}-${optIndex}">${b.drop ?? 0}</span>
                         ${window.getDropLockIconHtml?.() ?? ''}
@@ -537,6 +539,17 @@ window.handleDelayStep = (stepIdx, optIdx, delta) => {
     const ball = step.balls[optIdx];
     if (!(ball instanceof Ball)) return;
     ball.delay = Math.max(0, Math.min(10000, (ball.delay ?? 0) + delta));
+    renderEditor();
+};
+
+window.handleDelayChange = (stepIdx, optIdx, value) => {
+    if (!tempDrillData) return;
+    const step = tempDrillData[stepIdx];
+    if (!(step instanceof Step)) return;
+    const ball = step.balls[optIdx];
+    if (!(ball instanceof Ball)) return;
+    const val = parseFloat(value);
+    ball.delay = Math.max(0, Math.min(10000, isNaN(val) ? 0 : val));
     renderEditor();
 };
 
@@ -805,6 +818,18 @@ window.handleAddVariant = (stepIndex, sourceOptIndex) => {
     renderEditor();
 };
 
+window.handleCopyBall = (stepIndex, optIndex) => {
+    if (!tempDrillData) return;
+    const step = tempDrillData[stepIndex];
+    if (!(step instanceof Step)) return;
+    const base = step.balls[optIndex];
+    const ball = base instanceof Ball ? base.clone() : Ball.fromArray(base);
+    if (!ball) return;
+    // Insert a copy of the chosen ball as a new step right after this one.
+    tempDrillData.splice(stepIndex + 1, 0, new Step({ balls: [ball] }));
+    renderEditor();
+};
+
 window.handleDeleteBall = (stepIdx, optIdx) => {
     const step = tempDrillData[stepIdx];
     if (!(step instanceof Step)) return;
@@ -823,21 +848,26 @@ window.handleDeleteBall = (stepIdx, optIdx) => {
 window.openImportBallModal = () => {
     const list = document.getElementById('import-ball-list');
     if (!list) return;
-    const allDrills = [];
-    for (const cat of ['dataA', 'dataB', 'dataC']) {
-        const catLabel = cat.replace('data', '');
-        store.get(cat).forEach((d, i) => allDrills.push({ cat, index: i, name: d.name, label: catLabel }));
-    }
-    if (allDrills.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-light); text-align:center; padding:20px;">No drills saved yet.</p>';
-    } else {
-        list.innerHTML = allDrills.map(d => `
-            <div onclick="window.importBallFromDrill('${d.cat}', ${d.index})"
+
+    let html = '';
+    for (const cat of ['dataA', 'dataB', 'dataC', 'dataD']) {
+        const drills = store.get(cat) || [];
+        if (!drills.length) continue;
+        const label = 'Custom ' + cat.replace('data', '');
+        html += `<div class="import-cat-sep" title="Importing from ${label}">
+            <span class="import-cat-label">${label}</span>
+            <span class="import-cat-count">${drills.length}</span>
+        </div>`;
+        html += drills.map((d, i) => {
+            const ballCount = (d.steps || []).reduce((n, s) => n + (s.balls || []).length, 0);
+            return `<div onclick="window.importBallFromDrill('${cat}', ${i})"
                  style="padding:10px 14px; margin-bottom:6px; border:1px solid var(--border); border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:700;">${d.name}</span>
-                <span style="font-size:0.7rem; color:var(--text-light); background:var(--bg); padding:2px 7px; border-radius:4px;">Custom ${d.label}</span>
-            </div>`).join('');
+                <span style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-right:8px;">${d.name}</span>
+                <span style="font-size:0.7rem; color:var(--text-light); white-space:nowrap;">${ballCount} balls</span>
+            </div>`;
+        }).join('');
     }
+    list.innerHTML = html || '<p style="color:var(--text-light); text-align:center; padding:20px;">No drills saved yet.</p>';
     document.getElementById('import-ball-modal').classList.add('open');
 };
 
@@ -894,9 +924,12 @@ window.performSaveAs = () => {
     }
 
     const chk = document.getElementById('chk-drill-random');
+    const srcDrill = store.getDrill(editingCat, editingIndex);
     const newDrill = new Drill(newName, {
         steps: tempDrillData,
         random: chk?.checked || false,
+        disableScatter: !!srcDrill?.disableScatter,
+        deltaSpeed: srcDrill?.deltaSpeed ?? 0,
     });
     store.add(targetCat, newDrill);
     saveDrillsToStorage(); 
@@ -964,7 +997,9 @@ window.handleTestBall = async (stepIdx, optIdx) => {
     const d = s instanceof Step ? s.balls[optIdx] : null;
     if (!(d instanceof Ball)) return;
     const rpm = d.getRPMs();
-    const ballData = packBall(rpm.top, rpm.bot, d.height, d.drop, d.frequency, 1); 
+    const deltaSpeed = Number(store.getDrill(editingCat, editingIndex)?.deltaSpeed) || 0;
+    const bpm = deltaSpeed ? clamp(Math.round(d.frequency * (1 + deltaSpeed / 100)), 30, 120) : d.frequency;
+    const ballData = packBall(rpm.top, rpm.bot, d.height, d.drop, bpm, 1); 
     const buffer = new ArrayBuffer(31); 
     const view = new DataView(buffer);
     view.setUint8(0, 0x81); view.setUint16(1, 28, true); 
@@ -979,7 +1014,8 @@ window.handleTestBall = async (stepIdx, optIdx) => {
 window.handleTestCombo = async () => {
     if (!bleState.isConnected) { showToast("Device not connected"); return; }
     if (!tempDrillData || tempDrillData.length === 0) return;
-    const balls = [];
+    const packets = [];
+    const delays = [];
     tempDrillData.forEach(step => {
         if (!(step instanceof Step)) return;
         const first = step.balls[0];
@@ -987,7 +1023,10 @@ window.handleTestCombo = async () => {
         if (!d) return;
         
         // --- SCATTER LOGIC FOR TEST COMBO ---
-        const scatter = d.scatter || 0;
+        const srcDrill = store.getDrill(editingCat, editingIndex);
+        const disableScatter = !!srcDrill?.disableScatter;
+        const deltaSpeed = Number(srcDrill?.deltaSpeed) || 0;
+        const scatter = disableScatter ? 0 : (d.scatter || 0);
         if (scatter > 0) {
             const currentDrop = d.drop;
             const minDrop = currentDrop - scatter;
@@ -1001,19 +1040,44 @@ window.handleTestCombo = async () => {
         }
         
         const rpm = d.getRPMs();
-        balls.push(packBall(rpm.top, rpm.bot, d.height, d.drop, d.frequency, 1));
+        const bpm = deltaSpeed
+            ? clamp(Math.round(d.frequency * (1 + deltaSpeed / 100)), 30, 120)
+            : d.frequency;
+        packets.push(packBall(rpm.top, rpm.bot, d.height, d.drop, bpm, 1));
+        delays.push(d.delay ?? 0);
     });
-    if (balls.length === 0) { showToast("No active balls"); return; }
-    const totalLen = 7 + (balls.length * 24);
-    const buffer = new ArrayBuffer(totalLen);
-    const view = new DataView(buffer);
-    const uint8 = new Uint8Array(buffer);
-    view.setUint8(0, 0x81); view.setUint16(1, 4 + (balls.length * 24), true); 
-    view.setUint8(3, 1);
-    view.setUint16(4, 1, true); 
-    view.setUint8(6, 0);
-    let offset = 7;
-    balls.forEach(b => { uint8.set(b, offset); offset += 24; });
-    try { await sendPacket(uint8); showToast("Testing Drill..."); } 
+    if (packets.length === 0) { showToast("No active balls"); return; }
+
+    const buildPacket = (list) => {
+        const buffer = new ArrayBuffer(7 + list.length * 24);
+        const view = new DataView(buffer);
+        const uint8 = new Uint8Array(buffer);
+        view.setUint8(0, 0x81); view.setUint16(1, 4 + (list.length * 24), true);
+        view.setUint8(3, 1);
+        view.setUint16(4, 1, true);
+        view.setUint8(6, 0);
+        let offset = 7;
+        list.forEach(b => { uint8.set(b, offset); offset += 24; });
+        return uint8;
+    };
+
+    try {
+        showToast("Testing Drill...");
+        if (!delays.some(d => d > 0)) {
+            await sendPacket(buildPacket(packets));
+        } else {
+            // Send ball by ball so per-ball delays apply, waiting for DONE in between.
+            for (let i = 0; i < packets.length; i++) {
+                if (delays[i] > 0) await new Promise(r => setTimeout(r, delays[i]));
+                if (i < packets.length - 1) {
+                    const done = waitForRobotDone();
+                    await sendPacket(buildPacket([packets[i]]));
+                    await done;
+                } else {
+                    await sendPacket(buildPacket([packets[i]]));
+                }
+            }
+        }
+    }
     catch (e) { console.error(e); showToast("Test Failed"); }
 };
