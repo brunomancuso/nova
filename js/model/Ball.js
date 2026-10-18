@@ -16,6 +16,7 @@ export class Ball {
         type      = 'top',
         scatter   = 0,
         delay     = 0,
+        description = '',
     } = {}) {
         this.height    = height;    // int  -50..100   Launch height
         this.drop      = drop;      // num  -10..10    Landing position offset (0.5 steps)
@@ -26,6 +27,7 @@ export class Ball {
         this.type      = type;      // 'top'|'back'    Spin direction
         this.scatter   = scatter;   // num  0–10       Random drop variation
         this.delay     = delay;     // int  0+ ms      Per-ball send delay
+        this.description = description; // string     Optional note
     }
 
     // ── Compute top/bottom RPMs on demand (NOT stored) ────────────────────
@@ -119,6 +121,7 @@ export class Ball {
             type:      this.type,
             scatter:   this.scatter,
             delay:     this.delay,
+            description: this.description,
         };
     }
 

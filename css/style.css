@@ -848,11 +848,123 @@ body.alexa-active .alexa-table-panel {
     gap: 12px;
 }
 .alexa-table-body {
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: flex-start;
     gap: 10px;
     width: 100%;
+}
+
+/* Top/Back rotation toggle above the table (same capsule as the ball modal) */
+.alexa-rotation-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 50%;              /* match the table canvas column */
+    align-self: flex-start;
+}
+.alexa-rotation-row .spin-capsule {
+    border-radius: 10px;
+    padding: 1px;
+}
+.alexa-rotation-row .sc-opt {
+    padding: 2px 8px;
+    font-size: 0.58rem;
+    border-radius: 8px;
+}
+.alexa-rotation-row.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* Delay + Scatter sliders above the table, under the TOP/BACK toggle */
+.alexa-delay-row,
+.alexa-scatter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 50%;              /* match the table canvas column */
+    align-self: flex-start;
+}
+.alexa-delay-row.disabled,
+.alexa-scatter-row.disabled {
+    opacity: 0.35;
+    pointer-events: none;
+}
+.alexa-delay-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    width: 46px;          /* fixed so both rows' tracks start at the same x */
+    flex-shrink: 0;
+}
+.alexa-delay-slider {
+    flex: 1;
+    min-width: 0;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+.alexa-delay-slider:disabled {
+    opacity: 0.3;            /* visible but translucent until a ball is selected */
+    cursor: not-allowed;
+}
+.alexa-delay-value {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--primary);
+    font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+    min-width: 4.2ch;     /* fits "0.0s" and "10.0" */
+    text-align: right;
+    flex-shrink: 0;
+}
+
+/* Vertical sliders for the selected ball (rotated horizontal ranges for cross-browser consistency) */
+.alexa-speed-slider,
+.alexa-spin-slider,
+.alexa-height-slider,
+.alexa-bpm-slider {
+    position: absolute;
+    z-index: 6;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+    touch-action: none;
+    transform-origin: top left;
+    transform: rotate(90deg);   /* vertical track */
+    direction: rtl;             /* drag up = increase, down = decrease */
+}
+.alexa-speed-slider:disabled,
+.alexa-spin-slider:disabled,
+.alexa-height-slider:disabled,
+.alexa-bpm-slider:disabled {
+    opacity: 0.3;            /* visible but translucent until a ball is selected */
+    cursor: not-allowed;
+}
+
+/* Horizontal drop slider below the table */
+.alexa-drop-slider {
+    position: absolute;
+    z-index: 6;
+    height: 22px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primary);
+    cursor: pointer;
+    touch-action: none;
+}
+.alexa-drop-slider:disabled {
+    opacity: 0.3;            /* visible but translucent until a ball is selected */
+    cursor: not-allowed;
 }
 .alexa-table-panel canvas {
     display: block;
@@ -1041,6 +1153,19 @@ body.alexa-active .alexa-table-panel {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%;
+}
+/* Number + comment column. Fixed width keeps the ball cards aligned,
+   whether or not a ball has a comment. */
+.alexa-ball-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    width: 56px;
+    flex-shrink: 0;
+    min-width: 0;
 }
 .alexa-ball-index {
     font-size: 1.25rem;
@@ -1049,42 +1174,26 @@ body.alexa-active .alexa-table-panel {
     font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
     line-height: 1;
     text-align: center;
-    min-width: 2ch;
 }
-.alexa-ball-height {
-    position: relative;
-    width: 10px;
-    height: 45px; /* 70% of the 64px ball diameter */
-    flex-shrink: 0;
-    touch-action: none;
-}
-.alexa-ball-height::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    transform: translateX(-50%);
-    background: #9ca3af;
-    border-radius: 1px;
-}
-.alexa-ball-height::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: var(--pos, 50%);
-    width: 7px;
-    height: 2px;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    border-radius: 1px;
+.alexa-ball-desc {
+    width: 100%;
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .alexa-ball-height-value {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text);
     min-width: 2.5ch;
+    text-align: center;
     line-height: 1;
 }
 .alexa-ball-spin {
@@ -1133,7 +1242,7 @@ body.alexa-active .alexa-table-panel {
     border-radius: 50%;
     background: #000000;
     color: #fff;
-    opacity: 0;
+    opacity: 0.22;
     transition: opacity 0.15s;
     z-index: 3;
     pointer-events: auto;
@@ -1157,7 +1266,7 @@ body.alexa-active .alexa-table-panel {
     border-radius: 50%;
     background: #000000;
     color: #fff;
-    opacity: 0;
+    opacity: 0.22;
     transition: opacity 0.15s;
     z-index: 3;
     pointer-events: auto;
@@ -1181,7 +1290,7 @@ body.alexa-active .alexa-table-panel {
     border-radius: 50%;
     background: #000000;
     color: #fff;
-    opacity: 0;
+    opacity: 0.22;
     transition: opacity 0.15s;
     z-index: 3;
     pointer-events: auto;
@@ -1200,6 +1309,12 @@ body.alexa-active .alexa-table-panel {
 .alexa-ball-card .abc-move-down svg {
     width: 10px;
     height: 10px;
+}
+.alexa-ball-card:hover .abc-edit,
+.alexa-ball-card:hover .abc-play,
+.alexa-ball-card:hover .abc-move-up,
+.alexa-ball-card:hover .abc-move-down {
+    opacity: 1;
 }
 .alexa-ball-card.chain-above::before {
     content: '';
@@ -1847,6 +1962,8 @@ body.alexa-active .drill-list {
     color: #b2bec3; 
 }
 
+.alexa-field-full { grid-column: 1 / -1; }
+
 /* Fast Input Styling */
 .editor-field input { 
     border: none;
@@ -1860,6 +1977,20 @@ body.alexa-active .drill-list {
     -moz-appearance: textfield; 
 }
 .editor-field input:focus { outline: none; color: var(--primary); }
+
+/* Full-width text field (Alexa ball comment) */
+.editor-field.alexa-field-full input {
+    box-sizing: border-box;
+    text-align: left;
+    padding: 4px 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.editor-field.alexa-field-full input::placeholder {
+    color: var(--text-light);
+    opacity: 0.6;
+    font-weight: 500;
+}
 
 .preset-row { display: flex; gap: 2px; margin: 1px 0 3px; }
 .preset-btn {

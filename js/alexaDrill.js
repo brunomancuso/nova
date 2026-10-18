@@ -60,6 +60,12 @@ function render() {
             label.className = 'alexa-ball-index';
             label.textContent = String(idx);
 
+            // Fixed-width column holding the number with its comment underneath,
+            // so every ball card lines up horizontally.
+            const head = document.createElement('div');
+            head.className = 'alexa-ball-head';
+            head.appendChild(label);
+
             const card = document.createElement('button');
             card.className = 'alexa-ball-card';
             if (prevStep === step) card.classList.add('chain-above');
@@ -120,12 +126,6 @@ function render() {
 
             if (window.getSelectedAlexaBall?.() === ballIdx) card.classList.add('selected');
 
-            const heightPct = Math.max(0, Math.min(100, ((ball.height + 50) / 150) * 100));
-            const pos = Math.max(3, Math.min(97, 100 - heightPct));
-            const gauge = document.createElement('span');
-            gauge.className = 'alexa-ball-height';
-            gauge.style.setProperty('--pos', pos + '%');
-
             const heightVal = document.createElement('span');
             heightVal.className = 'alexa-ball-height-value';
             heightVal.textContent = String(ball.height ?? 0);
@@ -135,41 +135,18 @@ function render() {
             spinArrow.className = 'alexa-ball-spin ' + (hasSpin ? (isTop ? 'top' : 'back') : 'gray');
             spinArrow.textContent = isTop ? '↑' : '↓';
 
-            // Drag the vertical gauge to change the ball's height.
-            let dragY = null;
-            let dragStartHeight = null;
-            gauge.addEventListener('pointerdown', (e) => {
-                dragY = e.clientY;
-                dragStartHeight = ball.height ?? 0;
-                gauge.setPointerCapture(e.pointerId);
-                e.preventDefault();
-                e.stopPropagation();
-            });
-            gauge.addEventListener('pointermove', (e) => {
-                if (dragY === null) return;
-                e.preventDefault();
-                const rect = gauge.getBoundingClientRect();
-                const pxPerUnit = (rect.height || 45) / 150;
-                const dy = e.clientY - dragY;
-                const h = Math.round(Math.max(-50, Math.min(100, dragStartHeight - dy / pxPerUnit)));
-                ball.height = h;
-                const pct = ((h + 50) / 150) * 100;
-                gauge.style.setProperty('--pos', Math.max(3, Math.min(97, 100 - pct)) + '%');
-                heightVal.textContent = String(h);
-            });
-            const endDrag = () => {
-                if (dragY === null) return;
-                dragY = null;
-                dragStartHeight = null;
-                save();
-                window.drawAlexaTable?.();
-            };
-            gauge.addEventListener('pointerup', endDrag);
-            gauge.addEventListener('pointercancel', endDrag);
-
             item.appendChild(label);
+
+            if (ball.description) {
+                const desc = document.createElement('span');
+                desc.className = 'alexa-ball-desc';
+                desc.textContent = ball.description;
+                desc.title = ball.description;
+                head.appendChild(desc);
+            }
+
+            item.appendChild(head);
             item.appendChild(card);
-            item.appendChild(gauge);
             item.appendChild(heightVal);
             item.appendChild(spinArrow);
             box.appendChild(item);
@@ -262,6 +239,8 @@ function openModal(step, ball) {
     $('alexa-ball-drop').value = ball.drop;
     $('alexa-ball-reps').value = ball.reps;
     $('alexa-ball-scatter').value = ball.scatter;
+    $('alexa-ball-delay').value = ball.delay ?? 0;
+    $('alexa-ball-desc').value = ball.description || '';
     $('alexa-ball-modal')?.classList.add('open');
 }
 
@@ -297,8 +276,9 @@ window.saveAlexaBall = () => {
     editingBall.drop = num('alexa-ball-drop');
     editingBall.reps = num('alexa-ball-reps');
     editingBall.scatter = num('alexa-ball-scatter');
+    editingBall.delay = num('alexa-ball-delay');
+    editingBall.description = ($('alexa-ball-desc')?.value || '').trim();
     editingBall.type = pendingType ?? editingBall.type;
-    editingBall.delay = 0;
     editingBall.clamp();
     save();
     render();
@@ -332,6 +312,12 @@ window.updateAlexaBall = (index, patch) => {
             if (i === index) {
                 if (patch && 'drop' in patch) ball.drop = patch.drop;
                 if (patch && 'speed' in patch) ball.speed = patch.speed;
+                if (patch && 'spin' in patch) ball.spin = patch.spin;
+                if (patch && 'height' in patch) ball.height = patch.height;
+                if (patch && 'frequency' in patch) ball.frequency = patch.frequency;
+                if (patch && 'delay' in patch) ball.delay = patch.delay;
+                if (patch && 'scatter' in patch) ball.scatter = patch.scatter;
+                if (patch && 'type' in patch) ball.type = patch.type;
                 ball.clamp();
                 save();
                 render();
@@ -413,6 +399,12 @@ window.importAlexaDrillFromList = (cat, index) => {
     const d = importDrills?.[cat]?.[index];
     if (!d) return;
     drill = Drill.fromJSON(d);
+    // Single-ball drills: the ball's comment becomes the drill name.
+    // Multi-ball drills keep each source ball's own comment.
+    const importedBalls = drill.steps.flatMap(s => s.allBalls());
+    if (importedBalls.length === 1) {
+        importedBalls[0].description = drill.name;
+    }
     editingStep = null;
     editingBall = null;
     closeModal();

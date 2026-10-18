@@ -3,6 +3,7 @@ import { showToast } from './utils.js';
 import { drawStaticRobot, drawLandingMarkers, getLandingMarkerPositions } from './robot.js';
 import { getAlexaDrill, setAlexaDrill } from './alexaDrill.js';
 import { Ball } from './model/index.js';
+import { SPIN_LIMITS } from './constants.js';
 import { sendSingleBall } from './runner.js';
 
 // The whisper server (server.py) runs on this machine by default.
@@ -456,7 +457,11 @@ function startAudio() {
 }
 
 window.toggleAlexa = () => {
-    if (active) {
+    // Use the panel itself as the source of truth: `active` only becomes true
+    // once the whisper socket connects, so a failed connection (or a denied
+    // mic) would otherwise leave the panel visible with no way to close it.
+    const panelOpen = document.body.classList.contains('alexa-active');
+    if (panelOpen || active) {
         release();
         hidePanel();
         setStatus('');
@@ -515,10 +520,246 @@ if (whisperStopBtn) {
 
 // Top-down table view below the Alexa panel (rotated 90° clockwise).
 const tableCanvas = el('alexa-table-canvas');
+const speedSlider = el('alexa-speed-slider');
+const spinSlider = el('alexa-spin-slider');
+const heightSlider = el('alexa-height-slider');
+const bpmSlider = el('alexa-bpm-slider');
+const dropSlider = el('alexa-drop-slider');
+const delaySlider = el('alexa-delay-slider');
+const scatterSlider = el('alexa-scatter-slider');
 
 let selectedBallIndex = null;
 let alexaLandingPositions = [];
 let tableDrag = null;
+
+// Match the visible bitmap geometry used by drawAlexaTable():
+// bitmap 400x600, table surface y=10..510, net at y=260.
+function positionAlexaSliders() {
+    if (!tableCanvas) return;
+    const body = tableCanvas.closest('.alexa-table-body');
+    if (!body) return;
+    const cRect = tableCanvas.getBoundingClientRect();
+    const bRect = body.getBoundingClientRect();
+    if (!cRect.width || !cRect.height) return; // panel hidden
+
+    const bw = tableCanvas.width || 400;
+    const bh = tableCanvas.height || 600;
+    const scale = Math.min(cRect.width / bw, cRect.height / bh);
+    const cw = bw * scale;
+    const ch = bh * scale;
+    const offX = cRect.left - bRect.left + (cRect.width - cw) / 2;
+    const offY = cRect.top - bRect.top;           // object-position: top center
+
+    // Vertical sliders are rotated horizontal ranges: place by their visual
+    // left/top and use `width` as the track length (22px thickness).
+    const placeV = (el, left, top, length) => {
+        if (!el) return;
+        const x = Math.max(0, left);
+        el.style.left = `${Math.round(x + 22)}px`;  // visual right edge (rotation origin)
+        el.style.top = `${Math.round(top)}px`;
+        el.style.width = `${Math.round(length)}px`;
+        el.style.height = '22px';
+    };
+
+    placeV(speedSlider,
+        offX + cw * 0.05 - 11,
+        offY + ch * (260 / 600),
+        ch * ((510 - 260) / 600));
+
+    placeV(spinSlider,
+        offX + cw * 0.05 - 11,
+        offY + ch * (10 / 600),
+        ch * ((260 - 10) / 600));
+
+    // Right side mirrors the left: Height on the top half, BPM on the bottom.
+    placeV(heightSlider,
+        offX + cw * 0.95 - 11,
+        offY + ch * (10 / 600),
+        ch * ((260 - 10) / 600));
+
+    placeV(bpmSlider,
+        offX + cw * 0.95 - 11,
+        offY + ch * (260 / 600),
+        ch * ((510 - 260) / 600));
+
+    if (dropSlider) {
+        // Horizontal, spanning the table width just below its bottom edge.
+        dropSlider.style.left = `${Math.round(offX + cw * (40 / 400))}px`;
+        dropSlider.style.top = `${Math.round(offY + ch * (510 / 600) + 6)}px`;
+        dropSlider.style.width = `${Math.round(cw * ((360 - 40) / 400))}px`;
+        dropSlider.style.height = '22px';
+    }
+}
+
+// Blend two RGB colors (t = 0..1).
+function mixColor(from, to, t) {
+    const k = Math.max(0, Math.min(1, t));
+    const c = from.map((v, i) => Math.round(v + (to[i] - v) * k));
+    return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
+const SPEED_SLOW_COLOR = [156, 163, 175]; // gray  – slow
+const SPEED_FAST_COLOR = [220, 38, 38];   // red   – fast
+
+function syncAlexaSliders() {
+    const ball = selectedBallIndex !== null ? findAlexaBallByIndex(selectedBallIndex) : null;
+
+    if (speedSlider) {
+        speedSlider.disabled = !ball;
+        if (ball) {
+            const speed = ball.speed ?? 2;
+            speedSlider.value = String(speed);
+            speedSlider.title = `Speed: ${speed}`;
+            // Gray while slow, blending to red only in the upper range.
+            const t = Math.max(0, Math.min(1, (speed - 3) / 7));
+            speedSlider.style.accentColor = mixColor(SPEED_SLOW_COLOR, SPEED_FAST_COLOR, t);
+        } else {
+            speedSlider.title = 'Select a ball to change its speed';
+        }
+    }
+
+    if (dropSlider) {
+        dropSlider.disabled = !ball;
+        if (ball) {
+            dropSlider.value = String(ball.drop ?? 0);
+            dropSlider.title = `Drop: ${ball.drop ?? 0}`;
+        } else {
+            dropSlider.title = 'Select a ball to change its drop';
+        }
+    }
+
+    if (spinSlider) {
+        spinSlider.disabled = !ball;
+        if (ball) {
+            const maxSpin = SPIN_LIMITS[String(ball.speed)] ?? 10;
+            spinSlider.max = String(maxSpin);
+            spinSlider.value = String(Math.min(ball.spin ?? 0, maxSpin));
+            spinSlider.title = `Spin: ${ball.spin ?? 0}`;
+            // Green for top spin, red for back spin.
+            spinSlider.style.accentColor = ball.type === 'back' ? '#dc2626' : '#16a34a';
+        } else {
+            spinSlider.title = 'Select a ball to change its spin';
+        }
+    }
+
+    if (heightSlider) {
+        heightSlider.disabled = !ball;
+        if (ball) {
+            heightSlider.value = String(ball.height ?? 50);
+            heightSlider.title = `Height: ${ball.height ?? 50}`;
+            heightSlider.style.accentColor = '#0984e3'; // blue while active
+        } else {
+            heightSlider.title = 'Select a ball to change its height';
+        }
+    }
+
+    if (bpmSlider) {
+        bpmSlider.disabled = !ball;
+        if (ball) {
+            bpmSlider.value = String(ball.frequency ?? 50);
+            bpmSlider.title = `BPM: ${ball.frequency ?? 50}`;
+        } else {
+            bpmSlider.title = 'Select a ball to change its BPM';
+        }
+    }
+
+    // Top/Back rotation toggle
+    const rotationRow = document.getElementById('alexa-table-rotation');
+    const topBtn = document.getElementById('alexa-table-type-top');
+    const backBtn = document.getElementById('alexa-table-type-back');
+    if (rotationRow) rotationRow.classList.toggle('disabled', !ball);
+    if (topBtn) topBtn.classList.toggle('active', !!ball && ball.type !== 'back');
+    if (backBtn) backBtn.classList.toggle('active', !!ball && ball.type === 'back');
+
+    // Delay (seconds, 0–3) for the selected ball
+    const delayRow = document.getElementById('alexa-table-delay');
+    const delayValEl = document.getElementById('alexa-delay-value');
+    const delaySec = ball ? Math.min(3, (ball.delay ?? 0) / 1000) : 0;
+    if (delayRow) delayRow.classList.toggle('disabled', !ball);
+    if (delaySlider) {
+        delaySlider.disabled = !ball;
+        delaySlider.value = String(Math.round(delaySec * 10) / 10);
+        delaySlider.title = ball
+            ? `Delay: ${delaySec.toFixed(1)}s`
+            : 'Select a ball to change its delay';
+    }
+    if (delayValEl) delayValEl.textContent = delaySec.toFixed(1);
+
+    // Scatter (0–10, same max as drop) for the selected ball
+    const scatterRow = document.getElementById('alexa-table-scatter');
+    const scatterValEl = document.getElementById('alexa-scatter-value');
+    const scatterVal = ball ? (ball.scatter ?? 0) : 0;
+    if (scatterRow) scatterRow.classList.toggle('disabled', !ball);
+    if (scatterSlider) {
+        scatterSlider.disabled = !ball;
+        scatterSlider.value = String(Math.round(scatterVal * 2) / 2);
+        scatterSlider.title = ball
+            ? `Scatter: ${scatterVal}`
+            : 'Select a ball to change its scatter';
+    }
+    if (scatterValEl) scatterValEl.textContent = scatterVal.toFixed(1);
+}
+
+if (speedSlider) {
+    speedSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(speedSlider.value) * 10) / 10;
+        window.updateAlexaBall?.(selectedBallIndex, { speed: val });
+    });
+}
+
+if (dropSlider) {
+    dropSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(dropSlider.value) * 2) / 2;
+        window.updateAlexaBall?.(selectedBallIndex, { drop: val });
+    });
+}
+
+if (spinSlider) {
+    spinSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(spinSlider.value) * 2) / 2;
+        window.updateAlexaBall?.(selectedBallIndex, { spin: val });
+    });
+}
+
+if (heightSlider) {
+    heightSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(heightSlider.value));
+        window.updateAlexaBall?.(selectedBallIndex, { height: val });
+    });
+}
+
+if (bpmSlider) {
+    bpmSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(bpmSlider.value));
+        window.updateAlexaBall?.(selectedBallIndex, { frequency: val });
+    });
+}
+
+if (delaySlider) {
+    delaySlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const ms = Math.round(parseFloat(delaySlider.value) * 1000);
+        window.updateAlexaBall?.(selectedBallIndex, { delay: ms });
+    });
+}
+
+if (scatterSlider) {
+    scatterSlider.addEventListener('input', () => {
+        if (selectedBallIndex === null) return;
+        const val = Math.round(parseFloat(scatterSlider.value) * 2) / 2;
+        window.updateAlexaBall?.(selectedBallIndex, { scatter: val });
+    });
+}
+
+window.setAlexaTableType = (type) => {
+    if (selectedBallIndex === null) return;
+    window.updateAlexaBall?.(selectedBallIndex, { type });
+};
+window.addEventListener('resize', positionAlexaSliders);
 
 function collectLandings() {
     const drill = getAlexaDrill();
@@ -563,6 +804,9 @@ function drawAlexaTable() {
     ctx.rotate(Math.PI / 2);
     ctx.drawImage(off, -off.width / 2, -off.height / 2);
     ctx.restore();
+
+    positionAlexaSliders();
+    syncAlexaSliders();
 }
 
 window.drawAlexaTable = drawAlexaTable;
@@ -677,7 +921,7 @@ attachAlexaTableInteractions();
 document.addEventListener('click', (e) => {
     if (selectedBallIndex === null) return;
     const t = e.target;
-    if (t && t.closest && (t.closest('.alexa-ball-card') || t.closest('#alexa-table-canvas'))) return;
+    if (t && t.closest && (t.closest('.alexa-ball-card') || t.closest('#alexa-table-canvas') || t.closest('#alexa-speed-slider') || t.closest('#alexa-spin-slider') || t.closest('#alexa-height-slider') || t.closest('#alexa-bpm-slider') || t.closest('#alexa-drop-slider') || t.closest('#alexa-delay-slider') || t.closest('#alexa-table-delay') || t.closest('#alexa-scatter-slider') || t.closest('#alexa-table-scatter') || t.closest('#alexa-table-rotation'))) return;
     selectedBallIndex = null;
     window.renderAlexaBalls?.();
 });

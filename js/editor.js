@@ -880,7 +880,14 @@ window.importBallFromDrill = (cat, index) => {
     if (!drill || !drill.steps || drill.steps.length === 0) {
         showToast("No data for this drill"); return;
     }
-    drill.steps.forEach(s => tempDrillData.push(s.clone()));
+    const importedSteps = drill.steps.map(s => s.clone());
+    // Single-ball drills: the ball's comment becomes the drill name.
+    // Multi-ball drills keep each source ball's own comment.
+    const importedBalls = importedSteps.flatMap(s => s.allBalls());
+    if (importedBalls.length === 1) {
+        importedBalls[0].description = drill.name;
+    }
+    importedSteps.forEach(s => tempDrillData.push(s));
     window.closeImportBallModal();
     renderEditor();
     showToast("Balls imported");

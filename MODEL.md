@@ -32,8 +32,7 @@ A single ball configuration — the atomic unit sent to the robot.
 | `spin` | number | 0–10 | Spin intensity |
 | `type` | string | `"top"`\|`"back"` | Spin direction |
 | `scatter` | number | 0–10 | Random drop variation |
-| `delay` | int | 0+ ms | Per-ball send delay |
-
+| `delay` | int | 0+ ms | Per-ball send delay || `description` | string | — | Optional free-text note |
 ### Derived RPMs
 
 `topRPM` / `bottomRPM` are NOT stored — they are computed on demand via `getRPMs()`.

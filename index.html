@@ -81,6 +81,9 @@
             <div class="control-stack">
                 <div class="pause-presets">
                     <button class="preset-circle-btn" onclick="window.setPausePreset(0)" title="Reset pause to 0 s">0</button>
+                    <button class="preset-circle-btn" onclick="window.setPausePreset(1)" title="Set pause to 1 s">1</button>
+                    <button class="preset-circle-btn" onclick="window.setPausePreset(2)" title="Set pause to 2 s">2</button>
+                    <button class="preset-circle-btn" onclick="window.setPausePreset(3)" title="Set pause to 3 s">3</button>
                     <button class="preset-circle-btn" onclick="window.setPausePreset(4)" title="Set default pause (4 s)">4</button>
                 </div>
                 <div class="control-pill">
@@ -141,7 +144,42 @@
                 <span>Run</span>
             </button>
         </div>
+        <div class="alexa-rotation-row" id="alexa-table-rotation">
+            <div class="spin-capsule">
+                <div class="sc-opt" id="alexa-table-type-top" onclick="window.setAlexaTableType('top')">TOP</div>
+                <div class="sc-opt" id="alexa-table-type-back" onclick="window.setAlexaTableType('back')">BACK</div>
+            </div>
+        </div>
+        <div class="alexa-delay-row" id="alexa-table-delay">
+            <span class="alexa-delay-label">Delay</span>
+            <input type="range" id="alexa-delay-slider" class="alexa-delay-slider"
+                   min="0" max="3" step="0.1" value="0"
+                   aria-label="Selected ball delay" title="Select a ball to change its delay" disabled>
+            <span class="alexa-delay-value" id="alexa-delay-value">0.0</span>
+        </div>
+        <div class="alexa-scatter-row" id="alexa-table-scatter">
+            <span class="alexa-delay-label">Scatter</span>
+            <input type="range" id="alexa-scatter-slider" class="alexa-delay-slider"
+                   min="0" max="10" step="0.5" value="0"
+                   aria-label="Selected ball scatter" title="Select a ball to change its scatter" disabled>
+            <span class="alexa-delay-value" id="alexa-scatter-value">0.0</span>
+        </div>
         <div class="alexa-table-body">
+            <input type="range" id="alexa-speed-slider" class="alexa-speed-slider"
+                   min="0" max="10" step="0.1" value="2"
+                   aria-label="Selected ball speed" title="Select a ball to change its speed" disabled>
+            <input type="range" id="alexa-spin-slider" class="alexa-spin-slider"
+                   min="0" max="10" step="0.5" value="2"
+                   aria-label="Selected ball spin" title="Select a ball to change its spin" disabled>
+            <input type="range" id="alexa-height-slider" class="alexa-height-slider"
+                   min="-50" max="100" step="1" value="50"
+                   aria-label="Selected ball height" title="Select a ball to change its height" disabled>
+            <input type="range" id="alexa-bpm-slider" class="alexa-bpm-slider"
+                   min="30" max="120" step="1" value="50"
+                   aria-label="Selected ball BPM" title="Select a ball to change its BPM" disabled>
+            <input type="range" id="alexa-drop-slider" class="alexa-drop-slider"
+                   min="-10" max="10" step="0.5" value="0"
+                   aria-label="Selected ball drop" title="Select a ball to change its drop" disabled>
             <canvas id="alexa-table-canvas" width="520" height="360"></canvas>
             <div class="alexa-balls-col">
                 <div id="alexa-balls" class="alexa-balls"></div>
@@ -251,6 +289,18 @@
                             <input type="number" inputmode="decimal" id="alexa-ball-scatter" step="0.5" min="0" max="10">
                             <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-scatter',1)">+</button>
                         </div>
+                    </div>
+                    <div class="editor-field">
+                        <div class="field-header"><label>Delay (ms)</label></div>
+                        <div class="field-stepper-row">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-delay',-1)">−</button>
+                            <input type="number" inputmode="numeric" id="alexa-ball-delay" step="10" min="0" max="10000">
+                            <button class="field-step-btn" onclick="window.handleNumberStep('alexa-ball-delay',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="editor-field alexa-field-full">
+                        <div class="field-header"><label>Comment</label></div>
+                        <input type="text" id="alexa-ball-desc" maxlength="40" placeholder="Optional note" autocomplete="off">
                     </div>
                 </div>
             </div>
