@@ -79,6 +79,7 @@ function render() {
                 `<span class="abc-label">Speed</span><span class="abc-val">${ball.speed}</span>` +
                 `<span class="abc-label">Spin</span><span class="abc-val">${ball.spin}</span>` +
                 `<span class="abc-freq">${ball.frequency} bpm</span>` +
+                `<span class="abc-height">H ${ball.height ?? 0}</span>` +
                 `</span>` +
                 `<span class="abc-edit" title="Edit ball"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></span>` +
                 `<span class="abc-play" title="Test ball"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` +
@@ -126,10 +127,6 @@ function render() {
 
             if (window.getSelectedAlexaBall?.() === ballIdx) card.classList.add('selected');
 
-            const heightVal = document.createElement('span');
-            heightVal.className = 'alexa-ball-height-value';
-            heightVal.textContent = String(ball.height ?? 0);
-
             const spinArrow = document.createElement('span');
             const hasSpin = (ball.spin ?? 0) >= 1;
             spinArrow.className = 'alexa-ball-spin ' + (hasSpin ? (isTop ? 'top' : 'back') : 'gray');
@@ -138,17 +135,44 @@ function render() {
             item.appendChild(label);
 
             if (ball.description) {
+                const descWrap = document.createElement('span');
+                descWrap.className = 'alexa-ball-desc-wrap';
+
                 const desc = document.createElement('span');
                 desc.className = 'alexa-ball-desc';
                 desc.textContent = ball.description;
                 desc.title = ball.description;
-                head.appendChild(desc);
+
+                const descEdit = document.createElement('button');
+                descEdit.className = 'alexa-ball-desc-edit';
+                descEdit.title = 'Edit comment';
+                descEdit.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+                descEdit.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.openAlexaDescModal?.(ballIdx);
+                });
+
+                descWrap.appendChild(desc);
+                descWrap.appendChild(descEdit);
+                head.appendChild(descWrap);
             }
 
             item.appendChild(head);
             item.appendChild(card);
-            item.appendChild(heightVal);
             item.appendChild(spinArrow);
+
+            // Swap this ball with the next one in the list.
+            const swapBtn = document.createElement('button');
+            swapBtn.className = 'alexa-ball-swap';
+            swapBtn.title = idx < total ? 'Swap with next ball' : 'No ball below to swap with';
+            swapBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>';
+            if (idx >= total) swapBtn.classList.add('ghost');
+            swapBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.swapAlexaBallWithNext?.(ballIdx);
+            });
+            item.appendChild(swapBtn);
+
             box.appendChild(item);
             prevStep = step;
         }
@@ -261,10 +285,61 @@ function closeModal() {
     $('alexa-ball-modal')?.classList.remove('open');
 }
 
+// ── Comment (description) quick edit ──────────────
+let editingDescIndex = null;
+
+window.openAlexaDescModal = (flatIndex) => {
+    const loc = locateBall(flatIndex);
+    if (!loc) return;
+    editingDescIndex = flatIndex;
+    const input = $('alexa-desc-input');
+    if (input) input.value = drill.steps[loc.stepIndex].balls[loc.ballIndex].description || '';
+    $('alexa-desc-modal')?.classList.add('open');
+    setTimeout(() => input?.focus(), 60);
+};
+
+window.closeAlexaDescModal = () => {
+    editingDescIndex = null;
+    $('alexa-desc-modal')?.classList.remove('open');
+};
+
+window.saveAlexaDesc = () => {
+    if (editingDescIndex === null) return;
+    const val = ($('alexa-desc-input')?.value || '').trim();
+    const target = editingDescIndex;
+    window.closeAlexaDescModal();
+    window.updateAlexaBall?.(target, { description: val });
+};
+
 window.addAlexaBall = () => {
     drill.steps.push(new Step({ balls: [new Ball()] }));
     save();
     render();
+};
+
+// Duplicate the selected ball as a new step right after its own step.
+window.copyAlexaBall = () => {
+    const target = window.getSelectedAlexaBall?.();
+    if (target === null || target === undefined) {
+        showToast('Select a ball to copy');
+        return;
+    }
+    let i = 0;
+    for (const step of drill.steps) {
+        for (const ball of step.allBalls()) {
+            i++;
+            if (i !== target) continue;
+            const stepIndex = drill.steps.indexOf(step);
+            drill.steps.splice(stepIndex + 1, 0, new Step({ balls: [ball.clone()] }));
+            save();
+            render();
+            // Select the copy so the sliders target it right away. Deferred so
+            // the document-level "click elsewhere" deselect can't undo it.
+            setTimeout(() => window.selectAlexaTableBall?.(target + 1), 0);
+            showToast('Ball copied');
+            return;
+        }
+    }
 };
 
 window.saveAlexaBall = () => {
@@ -317,6 +392,7 @@ window.updateAlexaBall = (index, patch) => {
                 if (patch && 'frequency' in patch) ball.frequency = patch.frequency;
                 if (patch && 'delay' in patch) ball.delay = patch.delay;
                 if (patch && 'scatter' in patch) ball.scatter = patch.scatter;
+                if (patch && 'description' in patch) ball.description = patch.description;
                 if (patch && 'type' in patch) ball.type = patch.type;
                 ball.clamp();
                 save();
@@ -326,6 +402,24 @@ window.updateAlexaBall = (index, patch) => {
         }
     }
     return false;
+};
+
+// Exchange a ball with the next ball in the list (works inside variant steps
+// and across steps).
+window.swapAlexaBallWithNext = (index) => {
+    const flats = [];
+    drill.steps.forEach((step) => {
+        step.allBalls().forEach((ball, bi) => flats.push({ step, bi, ball }));
+    });
+    const a = flats[index - 1];
+    const b = flats[index];
+    if (!a || !b) return;
+    a.step.balls[a.bi] = b.ball;
+    b.step.balls[b.bi] = a.ball;
+    save();
+    render();
+    window.selectAlexaTableBall?.(index);
+    showToast('Balls swapped');
 };
 
 window.deleteAlexaDrill = () => {
@@ -398,24 +492,43 @@ window.closeAlexaImportModal = () => {
 window.importAlexaDrillFromList = (cat, index) => {
     const d = importDrills?.[cat]?.[index];
     if (!d) return;
-    drill = Drill.fromJSON(d);
+    const imported = Drill.fromJSON(d);
     // Single-ball drills: the ball's comment becomes the drill name.
     // Multi-ball drills keep each source ball's own comment.
-    const importedBalls = drill.steps.flatMap(s => s.allBalls());
+    const importedBalls = imported.steps.flatMap(s => s.allBalls());
     if (importedBalls.length === 1) {
-        importedBalls[0].description = drill.name;
+        importedBalls[0].description = imported.name || d.name || '';
     }
+
+    // Append to the drill already being edited instead of replacing it.
+    const hadSteps = drill.steps.length > 0;
+    drill.steps.push(...imported.steps);
+    if (!hadSteps && imported.name) drill.name = imported.name;
+
     editingStep = null;
     editingBall = null;
     closeModal();
     save();
     render();
     window.closeAlexaImportModal();
-    showToast(`Imported "${d.name || 'drill'}"`);
+    showToast(`Added "${d.name || 'drill'}"`);
 };
 
 window.closeAlexaBallModal = closeModal;
 window.renderAlexaBalls = render;
+
+// Load a whole drill into the designer (used by the drill-list design button).
+window.loadAlexaDrill = (json) => {
+    const loaded = Drill.fromJSON(json || {});
+    const balls = loaded.steps.flatMap(s => s.allBalls());
+    if (balls.length === 1) balls[0].description = loaded.name || balls[0].description;
+    drill = loaded;
+    editingStep = null;
+    editingBall = null;
+    closeModal();
+    save();
+    render();
+};
 
 // ── Exposed for alexa.js → nova-agent integration ─────────────────────────
 export function getAlexaDrill() {
@@ -426,6 +539,19 @@ export function setAlexaDrill(json) {
     drill = Drill.fromJSON(json || {});
     save();
     render();
+}
+
+// Comment modal: Enter saves, Escape cancels.
+const descInput = $('alexa-desc-input');
+if (descInput) {
+    descInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            window.saveAlexaDesc();
+        } else if (e.key === 'Escape') {
+            window.closeAlexaDescModal();
+        }
+    });
 }
 
 // Random toggle wiring

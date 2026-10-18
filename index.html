@@ -145,6 +145,11 @@
             </button>
         </div>
         <div class="alexa-rotation-row" id="alexa-table-rotation">
+            <label class="random-toggle-container alexa-random-toggle">
+                <span class="toggle-label">Random</span>
+                <input type="checkbox" id="alexa-random">
+                <div class="toggle-switch"></div>
+            </label>
             <div class="spin-capsule">
                 <div class="sc-opt" id="alexa-table-type-top" onclick="window.setAlexaTableType('top')">TOP</div>
                 <div class="sc-opt" id="alexa-table-type-back" onclick="window.setAlexaTableType('back')">BACK</div>
@@ -184,13 +189,11 @@
             <div class="alexa-balls-col">
                 <div id="alexa-balls" class="alexa-balls"></div>
                 <div class="alexa-balls-footer">
-                    <label class="random-toggle-container alexa-random-toggle">
-                        <span class="toggle-label">Random</span>
-                        <input type="checkbox" id="alexa-random">
-                        <div class="toggle-switch"></div>
-                    </label>
                     <button id="alexa-import-drill" class="alexa-import-drill" onclick="window.importAlexaDrill()" title="Import drill">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </button>
+                    <button id="alexa-copy-ball" class="alexa-copy-ball" onclick="window.copyAlexaBall()" title="Copy selected ball">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                     </button>
                     <button id="alexa-delete-drill" class="alexa-delete-drill" onclick="window.deleteAlexaDrill()" title="Delete drill">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm2 3h14v13H5V9zm3-5h6v2H8V4zm9 5H7v11h10V9z"/></svg>
@@ -311,6 +314,25 @@
         </div>
     </div>
 
+    <div id="alexa-desc-modal" class="modal-overlay">
+        <div class="modal" style="height:auto; max-width:420px;">
+            <div class="modal-header">
+                <div class="modal-title">Comment</div>
+                <div class="modal-close" onclick="window.closeAlexaDescModal()">×</div>
+            </div>
+            <div class="modal-body alexa-ball-form">
+                <div class="editor-field alexa-field-full">
+                    <div class="field-header"><label>Comment</label></div>
+                    <input type="text" id="alexa-desc-input" maxlength="40" placeholder="Optional note" autocomplete="off">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-save-as" onclick="window.closeAlexaDescModal()">Cancel</button>
+                <button class="btn-modal btn-save" onclick="window.saveAlexaDesc()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="alexa-import-modal" class="modal-overlay">
         <div class="modal" style="height:auto; max-height:80vh;">
             <div class="modal-header">
@@ -358,6 +380,12 @@
              ondrop="window.handleTabDrop(event, 'dataD')" 
              ondragover="window.allowTabDrop(event)">
             <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Custom D
+        </div>
+        <div class="tab-btn" 
+             id="tab-design"
+             onclick="switchTab('design', this)" 
+             title="Ball designer (no mic / agent)">
+            <div class="icon-grid"><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div><div class="icon-dot"></div></div> Design
         </div>
     </div>
 

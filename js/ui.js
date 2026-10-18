@@ -213,7 +213,6 @@ function createButton(container, cat, index, drill) {
     });
 
     grip.onclick = (e) => e.stopPropagation();
-    btn.appendChild(grip);
 
     // Edit button (pencil)
     const editBtn = document.createElement('div');
@@ -224,6 +223,21 @@ function createButton(container, cat, index, drill) {
     editBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
     editBtn.onclick = (e) => { e.stopPropagation(); openEditor(cat, index); };
     btn.appendChild(editBtn);
+
+    // Design button (pencil on paper) — opens the designer with this drill.
+    const designBtn = document.createElement('div');
+    designBtn.className = 'drill-design-btn';
+    designBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.5 22H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7l5 5v3"/><path d="M13 2v5h5"/><path d="M21.4 13.6a2 2 0 0 0-2.8-2.8L13 16.4V20h3.6l4.8-6.4z"/></svg>';
+    designBtn.title = 'Open in designer';
+    designBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    designBtn.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+    designBtn.onclick = (e) => {
+        e.stopPropagation();
+        const json = drill.toJSON ? drill.toJSON() : JSON.parse(JSON.stringify(drill));
+        window.loadAlexaDrill?.(json);
+        switchTab('design', document.getElementById('tab-design'));
+    };
+    btn.appendChild(designBtn);
 
     // Delta-speed button (left of the scatter badge)
     const deltaMark = document.createElement('div');
@@ -300,6 +314,9 @@ function createButton(container, cat, index, drill) {
     });
     btn.appendChild(randomBox);
 
+    // Drag handle lives at the far right so it never sits under the play button.
+    btn.appendChild(grip);
+
     // Run button (play icon)
     const runBtn = document.createElement('div');
     runBtn.className = 'drill-run-btn';
@@ -367,15 +384,32 @@ export function setTheme(themeName) {
 
 export function switchTab(catName, btn) {
     const tabs = ['dataA','dataB','dataC','dataD'];
+    const isDesign = catName === 'design';
+
+    // Design tab: show the ball designer only (no mic / Nova Agent).
+    // Leave the voice panel first so the microphone is released.
+    if (isDesign && document.body.classList.contains('alexa-active')) {
+        window.toggleAlexa?.();
+    }
+    document.body.classList.toggle('design-mode', isDesign);
+
     tabs.forEach(c => {
         const el = document.getElementById('view-'+c);
         if(el) el.classList.add('hidden');
     });
-    const target = document.getElementById('view-' + catName);
-    if(target) target.classList.remove('hidden');
-    
+    if (!isDesign) {
+        const target = document.getElementById('view-' + catName);
+        if(target) target.classList.remove('hidden');
+    }
+
     document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
     if(btn) btn.classList.add('active');
+
+    if (isDesign) {
+        // The Alexa table/ball list is the designer; redraw it now that it is visible.
+        window.renderAlexaBalls?.();
+        window.drawAlexaTable?.();
+    }
 }
 
 function formatDrillName(key) {

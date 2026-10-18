@@ -381,8 +381,8 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     padding: 10px; 
     margin-bottom: 20px; 
     display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
-    gap: 10px; 
+    grid-template-columns: repeat(5, minmax(0, 1fr)); 
+    gap: 6px; 
 }
 
 .tab-btn { 
@@ -432,7 +432,7 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    gap: 15px; /* Spacing between icon, text, badge */
+    gap: 10px; /* Spacing between icon, text, badge */
     
     background: var(--surface); 
     border: 1px solid transparent; 
@@ -603,21 +603,24 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
     color: var(--primary);
 }
 
-.drill-edit-btn {
+.drill-edit-btn,
+.drill-design-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
+    width: 18px;
     height: 100%;
     cursor: pointer;
     color: var(--text-light);
     opacity: 0.35;
-    font-size: 1.1rem;
-    margin-left: 4px;
+    font-size: 1rem;
+    margin-left: 0;
     flex-shrink: 0;
     transition: opacity 0.2s, color 0.2s;
 }
-.drill-edit-btn:hover { opacity: 1; color: var(--primary); }
+.drill-edit-btn:hover,
+.drill-design-btn:hover { opacity: 1; color: var(--primary); }
+.drill-design-btn svg { width: 13px; height: 13px; }
 
 .drill-run-btn {
     position: absolute;
@@ -874,7 +877,7 @@ body.alexa-active .alexa-table-panel {
     font-size: 0.58rem;
     border-radius: 8px;
 }
-.alexa-rotation-row.disabled {
+.alexa-rotation-row.disabled .spin-capsule {
     opacity: 0.35;
     pointer-events: none;
 }
@@ -1018,6 +1021,7 @@ body.alexa-active .alexa-table-panel {
     position: relative;
     width: 40px;
     height: 40px;
+    flex-shrink: 0;          /* keep it a perfect circle */
     background: var(--primary);
     color: #fff;
     border: none;
@@ -1027,9 +1031,11 @@ body.alexa-active .alexa-table-panel {
     box-shadow: 0 2px 6px var(--shadow);
 }
 .alexa-delete-drill,
-.alexa-import-drill {
+.alexa-import-drill,
+.alexa-copy-ball {
     width: 32px;
     height: 32px;
+    flex-shrink: 0;
     background: transparent;
     color: var(--primary);
     border: none;
@@ -1040,7 +1046,8 @@ body.alexa-active .alexa-table-panel {
     justify-content: center;
 }
 .alexa-delete-drill svg,
-.alexa-import-drill svg {
+.alexa-import-drill svg,
+.alexa-copy-ball svg {
     width: 20px;
     height: 20px;
 }
@@ -1175,7 +1182,19 @@ body.alexa-active .alexa-table-panel {
     line-height: 1;
     text-align: center;
 }
+/* Comment with a pencil that appears on hover, to the right of the text */
+.alexa-ball-desc-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    min-width: 0;
+}
 .alexa-ball-desc {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: block;
     width: 100%;
     font-size: 0.5rem;
     font-weight: 700;
@@ -1188,14 +1207,22 @@ body.alexa-active .alexa-table-panel {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.alexa-ball-height-value {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: var(--text);
-    min-width: 2.5ch;
-    text-align: center;
-    line-height: 1;
+.alexa-ball-desc-edit {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
+    transform: translate(1px, -3px); /* up and to the right of the comment */
 }
+.alexa-ball-desc-edit svg { width: 11px; height: 11px; }
+.alexa-ball-desc-wrap:hover .alexa-ball-desc-edit { display: flex; }
 .alexa-ball-spin {
     font-size: 2rem;
     font-weight: 900;
@@ -1206,6 +1233,27 @@ body.alexa-active .alexa-table-panel {
 .alexa-ball-spin.top { color: #16a34a; }
 .alexa-ball-spin.back { color: #dc2626; }
 .alexa-ball-spin.gray { color: #9ca3af; }
+.alexa-ball-swap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    opacity: 0.65;
+    cursor: pointer;
+    transition: opacity 0.15s, color 0.15s;
+    /* Sit in the gap between this ball and the next one
+       (half the 64px row + half the 8px list gap). */
+    transform: translateY(36px);
+}
+.alexa-ball-swap svg { width: 16px; height: 16px; transform: rotate(90deg); }
+.alexa-ball-swap:hover { opacity: 1; color: var(--primary); }
+.alexa-ball-swap.ghost { visibility: hidden; pointer-events: none; }
 .alexa-ball-card {
     position: relative;
     width: 64px;
@@ -1333,6 +1381,7 @@ body.alexa-active .alexa-table-panel {
     column-gap: 0;
     line-height: 1.15;
     position: relative;
+    top: 2px;              /* nudge the block down (less empty space at the bottom) */
     z-index: 1;
 }
 .alexa-ball-card .abc-label {
@@ -1348,6 +1397,12 @@ body.alexa-active .alexa-table-panel {
     grid-column: 1 / -1;
     font-weight: 700;
     color: #666;
+    font-size: 0.5rem;
+}
+.alexa-ball-card .abc-height {
+    grid-column: 1 / -1;
+    font-weight: 800;
+    color: #0984e3;
     font-size: 0.5rem;
 }
 .alexa-ball-card .abc-arrow {
@@ -1511,6 +1566,29 @@ body.alexa-active .tabs-container,
 body.alexa-active .drill-list {
     display: none !important;
 }
+
+/* Design tab: ball designer only — table + balls, no mic / agent panels */
+body.design-mode .alexa-panel,
+body.design-mode .alexa-agent-panel,
+body.design-mode .section-label,
+body.design-mode .drill-list,
+body.design-mode .footer-row,
+body.design-mode .log-box {
+    display: none !important;
+}
+body.design-mode .alexa-table-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+/* Keep the tab bar reachable above the designer */
+body.design-mode .container {
+    display: flex;
+    flex-direction: column;
+}
+body.design-mode header { order: -2; }
+body.design-mode .settings-card,
+body.design-mode .tabs-container { order: -1; }
 
 /* --- SWAP BUTTON (Between Balls) --- */
 .swap-zone {

@@ -622,6 +622,7 @@ function syncAlexaSliders() {
         if (ball) {
             dropSlider.value = String(ball.drop ?? 0);
             dropSlider.title = `Drop: ${ball.drop ?? 0}`;
+            dropSlider.style.accentColor = '#0984e3'; // blue while active
         } else {
             dropSlider.title = 'Select a ball to change its drop';
         }
@@ -921,7 +922,7 @@ attachAlexaTableInteractions();
 document.addEventListener('click', (e) => {
     if (selectedBallIndex === null) return;
     const t = e.target;
-    if (t && t.closest && (t.closest('.alexa-ball-card') || t.closest('#alexa-table-canvas') || t.closest('#alexa-speed-slider') || t.closest('#alexa-spin-slider') || t.closest('#alexa-height-slider') || t.closest('#alexa-bpm-slider') || t.closest('#alexa-drop-slider') || t.closest('#alexa-delay-slider') || t.closest('#alexa-table-delay') || t.closest('#alexa-scatter-slider') || t.closest('#alexa-table-scatter') || t.closest('#alexa-table-rotation'))) return;
+    if (t && t.closest && (t.closest('.alexa-ball-card') || t.closest('.alexa-ball-swap') || t.closest('.alexa-ball-desc-edit') || t.closest('.alexa-balls-footer') || t.closest('#alexa-table-canvas') || t.closest('#alexa-speed-slider') || t.closest('#alexa-spin-slider') || t.closest('#alexa-height-slider') || t.closest('#alexa-bpm-slider') || t.closest('#alexa-drop-slider') || t.closest('#alexa-delay-slider') || t.closest('#alexa-table-delay') || t.closest('#alexa-scatter-slider') || t.closest('#alexa-table-scatter') || t.closest('#alexa-table-rotation'))) return;
     selectedBallIndex = null;
     window.renderAlexaBalls?.();
 });
