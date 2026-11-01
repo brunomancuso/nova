@@ -74,7 +74,7 @@ A named drill with an ordered sequence of steps.
 | `steps` | Step[] | Ordered step sequence |
 | `random` | boolean | Shuffle step order during execution |
 | `disableScatter` | boolean | Disable scatter for this drill |
-| `deltaSpeed` | number | Drill-level speed offset (default `0`) |
+| `deltaSpeed` | number | Drill-level BPM offset % (default `0`). Applied per ball at run time only — never written back into the stored ball BPM |
 
 ---
 

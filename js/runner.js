@@ -96,7 +96,10 @@ export function startDrillSequence(cat, name) {
     setLastPlayed(cat, drill.name);
     updateLastPlayedHighlight();
 
-    startDrillFromParams(drill.steps, drill.random, drill.name, drill.disableScatter, drill.deltaSpeed);
+    // Run on clones: drill-level overrides applied at send time (delta speed,
+    // scatter) must never mutate the stored drill. The saved BPM stays exactly
+    // as configured, so resetting the delta restores the original tempo.
+    startDrillFromParams(drill.steps.map(s => s.clone()), drill.random, drill.name, drill.disableScatter, drill.deltaSpeed);
 }
 
 // Start running an arbitrary drill. Used by the main page (via
@@ -233,7 +236,8 @@ async function runIteration() {
         // Drill-level override: never apply scatter when disabled
         if (activeDrillDisableScatter) tempBall.scatter = 0;
 
-        // Drill-level delta speed: scale BPM by (1 + delta/100), clamped to 30-120
+        // Drill-level delta speed: scale BPM by (1 + delta/100), clamped to 30-120.
+        // Applied to this throw-away clone only — the drill's stored BPM is untouched.
         if (activeDrillDeltaSpeed) {
             const factor = 1 + activeDrillDeltaSpeed / 100;
             tempBall.frequency = clamp(Math.round(tempBall.frequency * factor), 30, 120);
