@@ -448,6 +448,27 @@ input[type="number"]:disabled { opacity: 0.5; cursor: not-allowed; color: var(--
 
 .btn-drill:active { transform: scale(0.98); }
 .btn-drill.running { border-color: var(--primary); background: var(--primary-dim); color: var(--primary); }
+
+/* Selected drill panel (clicked / run / edited) */
+.btn-drill.selected {
+    border-color: var(--primary);
+    background: var(--primary-dim);
+    color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-dim), 0 2px 6px var(--shadow);
+}
+.btn-drill.selected::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 9px;
+    bottom: 9px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--primary);
+}
+.btn-drill.selected .drill-icon { opacity: 1; }
+.btn-drill.selected .drill-icon .d-dot { background-color: var(--primary); }
+.btn-drill.selected span { color: var(--primary); }
 .btn-drill:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; background: rgba(0,0,0,0.05); }
 
 /* Left-side visual icon */

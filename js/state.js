@@ -12,6 +12,16 @@ export function setLastPlayed(cat, name) {
 }
 // ------------------------------
 
+// --- Selected Drill State (highlighted panel in the main list) ---
+export let selectedDrill = localStorage.getItem('nova_selected_drill') || null;
+
+export function setSelectedDrill(cat, name) {
+    selectedDrill = (cat && name) ? `${cat}:${name}` : null;
+    if (selectedDrill) localStorage.setItem('nova_selected_drill', selectedDrill);
+    else localStorage.removeItem('nova_selected_drill');
+}
+// ------------------------------
+
 export async function initData() {
     const savedTheme = localStorage.getItem('nova_theme_pref');
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);

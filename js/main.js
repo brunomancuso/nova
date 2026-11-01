@@ -24,6 +24,7 @@ import {
     setTheme, 
     toggleMenu, 
     switchTab,
+    selectDrill,
 } from './ui.js';
 
 import { showToast } from './utils.js';
@@ -232,3 +233,15 @@ window.handleDrillClick = (cat, index, name, btn) => {
     btn.classList.add('running');
     startDrillSequence(cat, name);
 };
+
+// Single place that marks a drill panel as selected: any click inside a panel
+// (body, run button, edit button, badges) selects that drill. Capture phase so
+// it still runs when inner buttons stop propagation in the bubble phase.
+document.addEventListener('click', (e) => {
+    const btn = e.target instanceof Element ? e.target.closest('.btn-drill') : null;
+    const selKey = btn?.dataset.selKey;   // `${cat}:${drillName}`
+    if (!selKey) return;
+    const i = selKey.indexOf(':');
+    if (i < 0) return;
+    selectDrill(selKey.slice(0, i), selKey.slice(i + 1));
+}, true);

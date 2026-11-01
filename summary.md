@@ -86,6 +86,7 @@ All runtime state and localStorage synchronization:
 - `exportCustomDrills()` — serializes drills back to CSV
 - `factoryReset()` / `resetStats()` — destructive resets with confirmation
 - `setLastPlayed(cat, name)` — remembers the most recently played drill
+- `setSelectedDrill(cat, name)` / `selectedDrill` — remembers the drill panel highlighted as selected (persisted as `nova_selected_drill`)
 
 #### `js/bluetooth.js` — BLE Communication
 Manages the full Bluetooth lifecycle:
@@ -122,6 +123,7 @@ Handles all dynamic DOM work:
 - `renderDrillButtons()` — populates all 6 tab views
 - Drill buttons: icon grid, label, Random badge, drag grip, long-press (600 ms) to edit, click to run
 - `updateLastPlayedHighlight()` — highlights the last executed drill
+- `selectDrill(cat, name)` / `applySelectedHighlight()` — marks a drill panel as selected (`.selected` styling) when clicked, run, or edited
 - `switchTab()` / `toggleMenu()` / `setTheme()` — navigation and theming
 - **Drag-to-reorder**: grip handle on custom drills; drop zones for reordering and moving between custom categories; order persisted to localStorage
 

@@ -2,6 +2,8 @@ import {
     store,
     saveDrillsToStorage,
     lastPlayedDrill,
+    selectedDrill,
+    setSelectedDrill,
 } from './state.js';
 import { Drill } from './model/index.js';
 import { bleState } from './bluetooth.js';
@@ -142,6 +144,20 @@ export function renderDrillButtons() {
     });
 
     updateLastPlayedHighlight();
+    applySelectedHighlight();
+}
+
+// Marks the drill panel matching the current selection with `.selected`.
+export function applySelectedHighlight() {
+    document.querySelectorAll('.btn-drill').forEach(b => {
+        b.classList.toggle('selected', !!selectedDrill && b.dataset.selKey === selectedDrill);
+    });
+}
+
+// Selects (and highlights) a drill panel in the main list.
+export function selectDrill(cat, name) {
+    setSelectedDrill(cat, name);
+    applySelectedHighlight();
 }
 
 export function updateLastPlayedHighlight() {
@@ -158,6 +174,7 @@ function createButton(container, cat, index, drill) {
     const btn = document.createElement('button');
     btn.className = 'btn-drill';
     btn.dataset.key = key;
+    btn.dataset.selKey = `${cat}:${drill.name}`;
     
     const iconDiv = document.createElement('div');
     iconDiv.className = 'drill-icon';
