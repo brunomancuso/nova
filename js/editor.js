@@ -250,7 +250,7 @@ function renderEditor() {
                         <div class="field-stepper-row">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-speed-${stepIndex}-${optIndex}',-1)">−</button>
                             <input type="number" inputmode="decimal" id="inp-speed-${stepIndex}-${optIndex}" value="${speed}" step="0.5" min="0" max="10"
-                                onchange="window.handleEditorInput(${stepIndex}, ${optIndex}, 7, this.value)">
+                                oninput="window.handleEditorInput(${stepIndex}, ${optIndex}, 7, this.value)">
                             <button class="field-step-btn" onclick="window.handleNumberStep('inp-speed-${stepIndex}-${optIndex}',1)">+</button>
                         </div>
                     </div>
@@ -751,7 +751,18 @@ window.handleEditModeSpeed = (stepIdx, optIdx, value) => {
     const v = clamp(parseFloat(value), 0, 10);
     ball.speed = v;
     const maxSpin = SPIN_LIMITS[v.toString()] ?? 10;
-    if (ball.spin > maxSpin) ball.spin = maxSpin;
+    if (ball.spin > maxSpin) {
+        // Clamping spin changes the throw — keep the spin slider/label in sync
+        // so the UI never shows a spin the model no longer has.
+        ball.spin = maxSpin;
+        const spinSlider = document.getElementById(`rng-spin-${stepIdx}-${optIdx}`);
+        if (spinSlider) spinSlider.value = ball.type === 'back' ? -maxSpin : maxSpin;
+        const spinEl = document.getElementById(`spin-val-${stepIdx}-${optIdx}`);
+        if (spinEl) {
+            const shown = ball.type === 'back' ? -maxSpin : maxSpin;
+            spinEl.textContent = (shown > 0 ? '+' : '') + shown;
+        }
+    }
     const el = document.getElementById(`speed-val-${stepIdx}-${optIdx}`);
     if (el) el.textContent = v.toFixed(2);
     _redrawEditorCanvas(stepIdx, optIdx);

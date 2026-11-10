@@ -55,7 +55,11 @@ window.openAdjustModal = () => {
         klr: stored?.klr ?? DEFAULT_KLR,
     };
     // Default preview ball: speed=2, no spin, angle=50, drop=0
-    window._adjBallData = [50, 50, 50, 0, 0, 1, 1, 2, 0, 'top'];
+    // Must be a real Ball instance: the editor's slider handlers (speed,
+    // height, BPM, canvas drag) bail out when the ball is not a Ball.
+    window._adjBallData = new Ball({
+        height: 50, drop: 0, frequency: 60, reps: 1, speed: 2, spin: 0, type: 'top'
+    });
     document.getElementById('adjust-modal')?.classList.add('open');
     requestAnimationFrame(() => { _adjRefresh(); window.renderAdjTable?.(); });
 };
