@@ -1032,16 +1032,26 @@ window.handleTestBall = async (stepIdx, optIdx) => {
 window.handleTestCombo = async () => {
     if (!bleState.isConnected) { showToast("Device not connected"); return; }
     if (!tempDrillData || tempDrillData.length === 0) return;
+
+    const srcDrill = store.getDrill(editingCat, editingIndex);
+
+    // A random drill plays exactly one step per repetition — test it the same way.
+    const isRandom = !!document.getElementById('chk-drill-random')?.checked;
+    let stepsToSend = tempDrillData;
+    if (isRandom) {
+        const pool = tempDrillData.filter(s => s instanceof Step && s.balls.length > 0);
+        if (pool.length) stepsToSend = [pool[Math.floor(Math.random() * pool.length)]];
+    }
+
     const packets = [];
     const delays = [];
-    tempDrillData.forEach(step => {
+    stepsToSend.forEach(step => {
         if (!(step instanceof Step)) return;
         const first = step.balls[0];
         const d = first instanceof Ball ? first.clone() : Ball.fromArray(first);
         if (!d) return;
         
         // --- SCATTER LOGIC FOR TEST COMBO ---
-        const srcDrill = store.getDrill(editingCat, editingIndex);
         const disableScatter = !!srcDrill?.disableScatter;
         const deltaSpeed = Number(srcDrill?.deltaSpeed) || 0;
         const scatter = disableScatter ? 0 : (d.scatter || 0);

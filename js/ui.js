@@ -311,7 +311,9 @@ function createButton(container, cat, index, drill) {
     // Random toggle (checkbox)
     const randomBox = document.createElement('div');
     randomBox.className = 'random-checkbox' + (drill.random ? ' checked' : '');
-    randomBox.title = drill.random ? 'Random: on — click to turn off' : 'Random: off — click to turn on';
+    randomBox.title = drill.random
+        ? 'Random: on (one random step per repetition) — click to turn off'
+        : 'Random: off (all steps play in order) — click to turn on';
     randomBox.setAttribute('role', 'checkbox');
     randomBox.setAttribute('aria-checked', String(!!drill.random));
     randomBox.tabIndex = 0;

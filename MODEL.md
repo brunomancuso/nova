@@ -72,7 +72,7 @@ A named drill with an ordered sequence of steps.
 |-------|------|-------------|
 | `name` | string | Display name |
 | `steps` | Step[] | Ordered step sequence |
-| `random` | boolean | Shuffle step order during execution |
+| `random` | boolean | Random drill: the steps are a pool — exactly **one** randomly chosen step plays per repetition (a variant step still resolves to one ball). When off, every step plays in order |
 | `disableScatter` | boolean | Disable scatter for this drill |
 | `deltaSpeed` | number | Drill-level BPM offset % (default `0`). Applied per ball at run time only — never written back into the stored ball BPM |
 

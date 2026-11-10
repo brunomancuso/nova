@@ -200,6 +200,12 @@ export function beginDrillExecution() {
     runIteration();
 }
 
+/** A step that can actually produce a ball (used for the random drill pool). */
+function isPlayableStep(step) {
+    if (step instanceof Step) return step.balls.length > 0;
+    return Array.isArray(step) && step.length > 0;   // legacy Ball[] step
+}
+
 async function runIteration() {
     if(!isRunning || isPaused) return;
 
@@ -211,13 +217,14 @@ async function runIteration() {
         ui.progress.style.strokeDashoffset = 565 * fractionCompleted;
     }
 
-    let sequence = activeDrillParams; 
+    // Random drill: the steps are a POOL — exactly one randomly chosen step
+    // plays per repetition (a variant step still resolves to a single ball).
+    // Non-random drill: every step plays, in order.
+    let sequence = activeDrillParams;
     if (activeDrillRandom) {
-        sequence = [...activeDrillParams]; 
-        for (let i = sequence.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [sequence[i], sequence[j]] = [sequence[j], sequence[i]];
-        }
+        const pool = activeDrillParams.filter(isPlayableStep);
+        const candidates = pool.length ? pool : activeDrillParams;
+        sequence = [candidates[Math.floor(Math.random() * candidates.length)]];
     }
 
     const balls = [];
