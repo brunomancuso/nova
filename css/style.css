@@ -2696,3 +2696,125 @@ body.inline-stop .inline-run-section:not(.active) .btn-run-ctrl {
 
 /* Highlight the most-recently appended line */
 .sim-line:last-child { color: #e6edf3; }
+
+/* --- DRILL PROFILES --- */
+.profile-chip {
+    position: absolute;
+    left: 0;
+    max-width: 46%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+    color: var(--text-light);
+    font-family: inherit;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    z-index: 101;
+    transition: transform 0.1s, border-color 0.15s;
+}
+.profile-chip:hover { border-color: var(--primary); color: var(--primary); }
+.profile-chip:active { transform: scale(0.96); }
+.profile-chip #profile-chip-name { overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; }
+.profile-chip .pc-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--primary); flex: none;
+}
+
+#profile-modal .modal-footer .btn-modal { flex: 1; }
+
+.profile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 42vh;
+    overflow-y: auto;
+}
+
+.profile-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 14px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+.profile-row .pr-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+.profile-row .pr-current {
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--text-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 5px;
+}
+.profile-row .pr-check {
+    color: var(--primary);
+    font-weight: 900;
+    opacity: 0;
+    width: 12px;
+    text-align: center;
+}
+.profile-row.selected {
+    border-color: var(--primary);
+    background: var(--primary-dim);
+}
+.profile-row.selected .pr-check { opacity: 1; }
+
+.profile-new-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+.profile-new-row #profile-new-name {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.profile-new-row #profile-new-name:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+.profile-new-row .btn-modal { flex: 0 0 auto; padding: 11px 14px; }
+.profile-new-row .btn-new-ok {
+    background: var(--primary);
+    color: #fff;
+    padding: 11px 16px;
+}
+.profile-new-row .btn-new-cancel {
+    background: transparent;
+    border: 2px solid var(--text);
+    color: var(--text);
+}

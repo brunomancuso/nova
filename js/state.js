@@ -22,31 +22,51 @@ export function setSelectedDrill(cat, name) {
 }
 // ------------------------------
 
+// Theme only. Drills are loaded per profile — see js/profile.js.
 export async function initData() {
     const savedTheme = localStorage.getItem('nova_theme_pref');
     if (savedTheme) document.documentElement.setAttribute('data-theme', savedTheme);
-
-    try {
-        const saved = localStorage.getItem('nova_drills');
-        if (saved) {
-            store = DrillStore.fromJSON(JSON.parse(saved));
-        } else {
-            const res = await fetch('drills_data.json');
-            if (res.ok) {
-                store = DrillStore.fromJSON(await res.json());
-            }
-        }
-    } catch(e) {
-        console.warn('Failed to load drills:', e);
-    }
 }
 
 export function setMode(mode) { runMode = mode; }
 
-export function saveDrillsToStorage() {
+// ── Drill data loading (used by the profile loader) ──────────────────────
+
+export function getStoreJSON() { return store.toJSON(); }
+
+export function loadDrillsFromCache() {
+    try {
+        const saved = localStorage.getItem('nova_drills');
+        if (!saved) return false;
+        store = DrillStore.fromJSON(JSON.parse(saved));
+        return true;
+    } catch(e) {
+        console.warn('Failed to load saved drills:', e);
+        return false;
+    }
+}
+
+export async function fetchDrills(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+    store = DrillStore.fromJSON(await res.json());
+    return store;
+}
+
+let _afterSave = null;
+export function onDrillsSaved(cb) { _afterSave = cb; }
+
+/** Write the local cache only (used when a profile file is loaded). */
+export function saveDrillsToCache() {
     try {
         localStorage.setItem('nova_drills', JSON.stringify(store.toJSON()));
     } catch(e) {
         console.error('Failed to save drills:', e);
     }
+}
+
+/** Write the local cache and notify listeners (profile write-through). */
+export function saveDrillsToStorage() {
+    saveDrillsToCache();
+    if (_afterSave) { try { _afterSave(); } catch(_) {} }
 }

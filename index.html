@@ -12,6 +12,9 @@
     
     <header>
         <h1>Nova Drill Control</h1>
+        <button id="profile-chip" class="profile-chip" onclick="window.openProfileModal()" title="Switch drill profile">
+            <span class="pc-dot"></span><span id="profile-chip-name">profile</span>
+        </button>
         <div class="menu-btn" onclick="toggleMenu()">
             <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </div>
@@ -682,6 +685,30 @@
             <button class="btn-modal btn-delete" onclick="window.resetRobotPos()">Reset</button>
             <button class="btn-modal btn-save-as" onclick="window.cancelRobotPos()">Cancel</button>
             <button class="btn-modal btn-save" onclick="window.saveRobotPos()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div id="profile-modal" class="modal-overlay">
+    <div class="modal" style="height:auto; max-width:400px;">
+        <div class="modal-header">
+            <div class="modal-title">Select Profile</div>
+            <div class="modal-close" onclick="window.closeProfileModal()">×</div>
+        </div>
+        <div class="modal-body" style="padding:2px 0 0; display:flex; flex-direction:column; gap:10px;">
+            <div id="profile-list" class="profile-list"></div>
+            <div id="profile-new-row" class="profile-new-row hidden">
+                <input type="text" id="profile-new-name" maxlength="32" placeholder="Profile name" autocomplete="off"
+                       onkeydown="if (event.key === 'Enter') { event.preventDefault(); window.confirmProfileName(); }">
+                <button class="btn-modal btn-new-ok" onclick="window.confirmProfileName()">OK</button>
+                <button class="btn-modal btn-new-cancel" onclick="window.cancelProfileName()" title="Cancel">×</button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-save-as" onclick="window.createProfilePrompt()">New</button>
+            <button class="btn-modal btn-save-as" onclick="window.copyProfilePrompt()">Copy</button>
+            <button class="btn-modal btn-save-as" onclick="window.renameProfilePrompt()">Rename</button>
+            <button class="btn-modal btn-save" onclick="window.confirmProfileSelection()">Use</button>
         </div>
     </div>
 </div>

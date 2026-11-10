@@ -40,6 +40,7 @@ import {
 import { connectSimulator, disconnectSimulator, simLog } from './simulator.js';
 import { openRobotPosModal, closeRobotPosModal, saveRobotPos, cancelRobotPos, resetRobotPos, applyRobotPos, drawStaticRobot, attachTableClickHint, drawAtCm, getRobotXcm, getLastBallCanvas } from './robot.js';
 import { initCalibration } from './calibration.js';
+import { initProfiles } from './profile.js';
 import './adjust.js';
 import './alexa.js';
 import './alexaDrill.js';
@@ -48,10 +49,14 @@ import './alexaDrill.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     await initData();
-    renderDrillButtons();
     setupEventListeners();
 
     initCalibration();
+
+    // Resolve the drill profile (asks the user on a fresh session) and load
+    // its data file — drills_data.<profile>.json — before the first render.
+    await initProfiles();
+    renderDrillButtons();
 
     // Restore simulator mode preference
     const simEnabled = localStorage.getItem('nova_sim_mode') === '1';
