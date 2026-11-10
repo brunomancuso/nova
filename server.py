@@ -93,16 +93,15 @@ def list_profiles():
     return sorted(names)
 
 
-def seed_data(skip_name):
-    """Drill data used to seed a brand-new profile: the default profile if it
-    exists, otherwise the legacy drills_data.json, otherwise an empty store."""
-    for path in (profile_path('default') if skip_name.lower() != 'default' else None, DATA_FILE):
-        if path and os.path.exists(path):
-            try:
-                with open(path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-            except Exception:
-                pass
+def seed_data():
+    """Drill data used to seed a brand-new profile: the shipped drills_data.json,
+    otherwise an empty store."""
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
     return dict(EMPTY_STORE)
 
 
@@ -184,7 +183,7 @@ class NovaHandler(http.server.SimpleHTTPRequestHandler):
                 with open(profile_path(src), 'r', encoding='utf-8') as f:
                     data = json.load(f)
             else:
-                data = seed_data(name)
+                data = seed_data()
 
             with open(dst, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)

@@ -2739,6 +2739,13 @@ body.inline-stop .inline-run-section:not(.active) .btn-run-ctrl {
     overflow-y: auto;
 }
 
+.profile-empty {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.78rem;
+    padding: 14px 6px;
+}
+
 .profile-row {
     display: flex;
     align-items: center;

@@ -7,7 +7,7 @@
 //
 // The active profile is kept in sessionStorage, so a reload inside the same
 // browser session keeps it while a new session asks the user to pick one.
-// If no profile is available at all, "DEFAULT" is assigned automatically.
+// Profiles are created by the user (New / Copy); there is no built-in profile.
 //
 // "New" and "Copy" create the matching file through the dev server
 // (POST /api/profiles). On a plain static host only the files that ship with
@@ -24,10 +24,10 @@ import { showToast, toggleBodyScroll } from './utils.js';
 
 const SESSION_KEY = 'nova_profile';
 const OWNER_KEY   = 'nova_drills_owner';   // profile the cached drills belong to
-export const DEFAULT_PROFILE = 'DEFAULT';
+const FALLBACK_FILE = 'drills_data.json';  // used while no profile is selected
 const NAME_RE = /^[A-Z0-9][A-Z0-9 _-]{0,31}$/;
 
-let _profiles   = [DEFAULT_PROFILE];
+let _profiles   = [];
 let _selected   = null;
 let _resolvePick = null;
 let _syncTimer  = null;
@@ -76,22 +76,21 @@ async function listProfiles() {
             const names = (data?.profiles || []).map(normalizeName).filter(n => NAME_RE.test(n));
             return [...new Set(names)].sort((a, b) => a.localeCompare(b));
         }
-    } catch (_) { /* static host — fall back to the built-in default */ }
-    return [DEFAULT_PROFILE];
+    } catch (_) { /* static host — profiles cannot be listed */ }
+    return [];
 }
 
 // ── Loading / switching ───────────────────────────────────────────────────
 
-/** Ask the server to create a profile file (best effort). */
-async function ensureProfileExists(name) {
+/** Drills shown while no profile is selected: cache, else drills_data.json. */
+async function loadFallbackDrills() {
+    if (loadDrillsFromCache()) return;
     try {
-        const res = await fetch('/api/profiles', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name }),
-        });
-        return res.ok;
-    } catch (_) { return false; }
+        await fetchDrills(FALLBACK_FILE);
+        saveDrillsToCache();
+    } catch (e) {
+        console.warn(`[profile] cannot load ${FALLBACK_FILE}:`, e);
+    }
 }
 
 /** Load the drill data for a profile. Returns 'cache' | 'file' | 'missing'. */
@@ -146,11 +145,6 @@ export async function selectProfile(name) {
 export async function initProfiles() {
     onDrillsSaved(scheduleProfileSync);
 
-    // Older builds cached drills without recording which profile they belong to.
-    if (localStorage.getItem('nova_drills') && !localStorage.getItem(OWNER_KEY)) {
-        localStorage.setItem(OWNER_KEY, DEFAULT_PROFILE);
-    }
-
     _profiles = await listProfiles();
     const active = getActiveProfile();
 
@@ -161,18 +155,18 @@ export async function initProfiles() {
         if (source === 'missing') showToast(`Profile "${active}" has no data file`);
         return active;
     }
+    if (active) setActiveProfile(null);   // profile file is gone
 
-    // No profile available → assign "default" (creating its file if we can).
-    if (!_profiles.length) {
-        await ensureProfileExists(DEFAULT_PROFILE);
-        _profiles = [DEFAULT_PROFILE];
-        await selectProfile(DEFAULT_PROFILE);
-        return DEFAULT_PROFILE;
-    }
-
-    // Prompt the user to choose.
+    // Ask which profile to use; cancelling keeps the app on the plain
+    // drills_data.json data until the user creates/selects a profile.
     const picked = await openPicker(null);
-    return await selectProfile(picked || DEFAULT_PROFILE);
+    if (!picked) {
+        await loadFallbackDrills();
+        document.dispatchEvent(new CustomEvent('drills-updated'));
+        updateProfileChip();
+        return null;
+    }
+    return await selectProfile(picked);
 }
 
 // ── Picker modal ──────────────────────────────────────────────────────────
@@ -182,9 +176,13 @@ function renderProfileList() {
     if (!list) return;
 
     const active = getActiveProfile();
-    const names  = _profiles.length ? _profiles : [DEFAULT_PROFILE];
 
-    list.innerHTML = names.map(name => {
+    if (!_profiles.length) {
+        list.innerHTML = '<div class="profile-empty">No profiles yet — press New to create one.</div>';
+        return;
+    }
+
+    list.innerHTML = _profiles.map(name => {
         const cls = [
             'profile-row',
             name === _selected ? 'selected' : '',
@@ -201,9 +199,9 @@ function renderProfileList() {
 
 function openPicker(preselect) {
     const modal = document.getElementById('profile-modal');
-    if (!modal) return Promise.resolve(preselect || DEFAULT_PROFILE);
+    if (!modal) return Promise.resolve(preselect || null);
 
-    _selected = preselect || getActiveProfile() || _profiles[0] || DEFAULT_PROFILE;
+    _selected = preselect || getActiveProfile() || _profiles[0] || null;
     cancelNameEntry();
     renderProfileList();
     toggleBodyScroll(true);
@@ -229,7 +227,7 @@ window.openProfileModal = async () => {
 
 window.closeProfileModal = () => closePicker(getActiveProfile());
 window.selectProfileRow  = (name) => { _selected = normalizeName(name); renderProfileList(); };
-window.confirmProfileSelection = () => closePicker(_selected || getActiveProfile() || DEFAULT_PROFILE);
+window.confirmProfileSelection = () => closePicker(_selected || null);
 window.createProfilePrompt = () => startNameEntry('new');
 window.copyProfilePrompt   = () => startNameEntry('copy');
 window.renameProfilePrompt = () => startNameEntry('rename');
@@ -243,7 +241,9 @@ function startNameEntry(mode) {
     const input = document.getElementById('profile-new-name');
     if (!row || !input) return;
 
-    const base = _selected || getActiveProfile() || DEFAULT_PROFILE;
+    const base = _selected || getActiveProfile();
+    if (mode !== 'new' && !base) { showToast('Select a profile first'); return; }
+
     _nameMode = mode;
     input.value = mode === 'copy'   ? `${base}-COPY`
                 : mode === 'rename' ? base
@@ -265,7 +265,8 @@ async function confirmNameEntry() {
     if (!mode || !name) return;
     if (!NAME_RE.test(name)) { showToast('Invalid name (letters, digits, space, - _)'); return; }
 
-    const base = _selected || getActiveProfile() || DEFAULT_PROFILE;
+    const base = _selected || getActiveProfile();
+    if (_nameMode !== 'new' && !base) { showToast('Select a profile first'); return; }
 
     if (mode === 'rename' && name === base) { cancelNameEntry(); return; }
     if (_profiles.includes(name)) {
